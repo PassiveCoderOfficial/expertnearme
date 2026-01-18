@@ -1,10 +1,44 @@
-// File: src/app/api/admin/bookings/[id]/route.ts
-import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db"; // adjust path if needed
 
-const prisma = new PrismaClient();
+// DELETE handler for /api/dashboard/bookings/[id]
+export async function DELETE(
+  request: NextRequest,
+  context: { params: { id: string } }
+): Promise<Response> {
+  try {
+    const { id } = context.params;
 
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  await prisma.booking.delete({ where: { id: Number(params.id) } });
-  return NextResponse.json({ ok: true });
+    await prisma.booking.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Error deleting booking:", error);
+    return NextResponse.json({ ok: false }, { status: 500 });
+  }
+}
+
+// Optional GET handler
+export async function GET(
+  request: NextRequest,
+  context: { params: { id: string } }
+): Promise<Response> {
+  try {
+    const { id } = context.params;
+
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+    });
+
+    if (!booking) {
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(booking);
+  } catch (error) {
+    console.error("Error fetching booking:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
