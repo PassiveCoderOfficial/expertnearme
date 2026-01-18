@@ -1,14 +1,3 @@
-// File: src/app/page.tsx
-
-/**
- * src/app/page.tsx
- *
- * Purpose:
- * --------
- * Public-facing landing page inspired by ShopWave.
- * Includes hero, features, category showcase, and footer.
- */
-
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import Hero from "@/components/Hero";
@@ -23,10 +12,10 @@ export default async function HomePage() {
     <main>
       <Hero />
 
-      {/* ✅ Feature Highlights */}
+      {/* Feature Highlights */}
       {/* ... same as before */}
 
-      {/* ✅ Category Showcase */}
+      {/* Category Showcase */}
       <section className="max-w-6xl mx-auto px-6 py-16">
         <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Popular Categories</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">

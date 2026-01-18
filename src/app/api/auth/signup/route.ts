@@ -1,18 +1,47 @@
-// File: src/app/api/auth/signup/route.ts
+// src/app/api/auth/signup/route.ts
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
-
 export async function POST(req: Request) {
-  const { email, password, role } = await req.json();
+  try {
+    const { name, email, password } = await req.json();
 
-  const hashed = await bcrypt.hash(password, 10);
+    if (!email || !password) {
+      return NextResponse.json({ ok: false, error: "Missing email or password" }, { status: 400 });
+    }
 
-  const user = await prisma.user.create({
-    data: { email, password: hashed, role },
-  });
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return NextResponse.json({ ok: false, error: "Email already registered" }, { status: 400 });
+    }
 
-  return NextResponse.json({ ok: true, user });
+    const hashed = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.create({
+      data: {
+        name: name || null,
+        email,
+        password: hashed,
+        verified: false,
+      },
+    });
+
+    // Read persisted setting from DB
+    const setting = await prisma.setting.findUnique({ where: { key: "emailVerificationRequired" } });
+    const emailVerificationRequired = setting ? setting.value === "ON" : (process.env.EMAIL_VERIFICATION_REQUIRED === "ON");
+
+    if (!emailVerificationRequired) {
+      // mark verified immediately
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { verified: true },
+      });
+    }
+
+    return NextResponse.json({ ok: true, emailVerificationRequired });
+  } catch (err) {
+    console.error("signup error", err);
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
+  }
 }

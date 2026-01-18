@@ -1,4 +1,4 @@
-// File: src/app/dashboard/layout.tsx
+// src/app/dashboard/layout.tsx
 "use client";
 
 import Link from "next/link";
@@ -12,14 +12,14 @@ import {
   MdRateReview,
   MdNotifications,
   MdSettings,
-  MdLightMode,
-  MdDarkMode,
+  MdPeople,
 } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
 
-const navByRole: Record<string, { name: string; href: string; icon: JSX.Element }[]> = {
+const navByRole: Record<string, { name: string; href: string; icon?: JSX.Element }[]> = {
   ADMIN: [
     { name: "Dashboard", href: "/dashboard", icon: <MdDashboard /> },
+    { name: "Users", href: "/dashboard/users", icon: <MdPeople /> }, // added
     { name: "Experts", href: "/dashboard/experts", icon: <MdPerson /> },
     { name: "Categories", href: "/dashboard/categories", icon: <MdCategory /> },
     { name: "Bookings", href: "/dashboard/bookings", icon: <MdCalendarToday /> },
@@ -47,30 +47,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const [darkMode, setDarkMode] = useState(true);
 
-  // Redirect to login if not authenticated (auth-only)
   useEffect(() => {
-    if (!loading) {
-      if (!session || session.authenticated === false) {
-        router.push("/login");
-      }
+    if (!loading && (!session || session.authenticated === false)) {
+      router.push("/login");
     }
   }, [session, loading, router]);
 
-  // While session is loading, show a loader (prevents flicker)
-  if (loading || !session) {
+  if (loading) {
     return (
-      <div className={darkMode ? "bg-gray-900 text-white min-h-screen" : "bg-gray-100 text-gray-900 min-h-screen"}>
-        <header className={`flex items-center justify-between px-6 py-3 border-b ${darkMode ? "border-gray-700 bg-gray-900" : "border-gray-300 bg-white"}`}>
-          <h1 className="text-lg font-bold">ExpertNear.Me Dashboard</h1>
-        </header>
-        <div className="flex">
-          <aside className={`w-64 border-r ${darkMode ? "border-gray-700 bg-gray-800" : "border-gray-300 bg-white"} p-4`}>
-            <div className="text-sm text-gray-400">Loading...</div>
-          </aside>
-          <main className="flex-1 p-6">Loading session…</main>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#b84c4c]"></div>
       </div>
     );
+  }
+
+  if (!session?.authenticated) {
+    return null;
   }
 
   const role = session.role || "USER";
@@ -78,31 +70,50 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className={darkMode ? "bg-gray-900 text-white min-h-screen" : "bg-gray-100 text-gray-900 min-h-screen"}>
-      <header className={`flex items-center justify-between px-6 py-3 border-b ${darkMode ? "border-gray-700 bg-gray-900" : "border-gray-300 bg-white"}`}>
+      <header
+        className={`flex items-center justify-between px-6 py-3 border-b ${
+          darkMode ? "border-gray-700 bg-gray-900" : "border-gray-300 bg-white"
+        }`}
+      >
         <h1 className="text-lg font-bold">ExpertNear.Me Dashboard</h1>
 
         <div className="flex items-center gap-4">
           <span className="text-sm px-3 py-1 rounded bg-[#b84c4c] text-white">{role}</span>
 
-          <button onClick={() => setDarkMode(!darkMode)} className="flex items-center gap-2 px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white text-sm">
-            {darkMode ? <MdLightMode /> : <MdDarkMode />}
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className="px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white text-sm"
+          >
             {darkMode ? "Light Mode" : "Dark Mode"}
           </button>
 
-          <button onClick={() => logout()} className="px-3 py-2 rounded border border-gray-600 text-sm">
+          <button
+            onClick={() => logout()}
+            className="px-3 py-2 rounded border border-gray-600 text-sm"
+          >
             Logout
           </button>
         </div>
       </header>
 
       <div className="flex">
-        <aside className={`w-64 border-r ${darkMode ? "border-gray-700 bg-gray-800" : "border-gray-300 bg-white"} p-4`}>
+        <aside
+          className={`w-64 border-r ${
+            darkMode ? "border-gray-700 bg-gray-800" : "border-gray-300 bg-white"
+          } p-4`}
+        >
           <nav className="space-y-2">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 px-3 py-2 rounded ${pathname === item.href ? "bg-[#b84c4c] text-white" : darkMode ? "hover:bg-gray-700 hover:text-white" : "hover:bg-gray-200"}`}
+                className={`flex items-center gap-2 px-3 py-2 rounded ${
+                  pathname === item.href
+                    ? "bg-[#b84c4c] text-white"
+                    : darkMode
+                    ? "hover:bg-gray-700 hover:text-white"
+                    : "hover:bg-gray-200"
+                }`}
               >
                 {item.icon}
                 {item.name}

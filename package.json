@@ -34,5 +34,10 @@
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
+  },
+  "vercel": {
+    "build": {
+      "approve": ["prisma", "@prisma/client", "@prisma/engines"]
+    }
   }
 }
