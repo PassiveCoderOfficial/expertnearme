@@ -1,7 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db"; // adjust path if needed
 
-// GET handler for /api/dashboard/bookings/[id]
+// DELETE handler for /api/dashboard/bookings/[id]
+export async function DELETE(
+  request: NextRequest,
+  context: { params: { id: string } }
+): Promise<Response> {
+  try {
+    const { id } = context.params;
+
+    await prisma.booking.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Error deleting booking:", error);
+    return NextResponse.json({ ok: false }, { status: 500 });
+  }
+}
+
+// Optional GET handler
 export async function GET(
   request: NextRequest,
   context: { params: { id: string } }
