@@ -1,9 +1,8 @@
-// src/app/api/auth/signup/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest): Promise<Response> {
   try {
     const { name, email, password } = await req.json();
 
@@ -27,12 +26,12 @@ export async function POST(req: Request) {
       },
     });
 
-    // Read persisted setting from DB
     const setting = await prisma.setting.findUnique({ where: { key: "emailVerificationRequired" } });
-    const emailVerificationRequired = setting ? setting.value === "ON" : (process.env.EMAIL_VERIFICATION_REQUIRED === "ON");
+    const emailVerificationRequired = setting
+      ? setting.value === "ON"
+      : process.env.EMAIL_VERIFICATION_REQUIRED === "ON";
 
     if (!emailVerificationRequired) {
-      // mark verified immediately
       await prisma.user.update({
         where: { id: user.id },
         data: { verified: true },
