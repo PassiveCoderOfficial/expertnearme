@@ -4,10 +4,10 @@ import { prisma } from "@/lib/db";
 // GET handler for /api/dashboard/bookings/[id]
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ): Promise<Response> {
   try {
-    const { id } = context.params;
+    const { id } = params;
 
     const booking = await prisma.booking.findUnique({
       where: { id },
@@ -27,10 +27,10 @@ export async function GET(
 // DELETE handler for /api/dashboard/bookings/[id]
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ): Promise<Response> {
   try {
-    const { id } = context.params;
+    const { id } = params;
 
     await prisma.booking.delete({
       where: { id },
