@@ -7,12 +7,18 @@ export async function POST(req: NextRequest): Promise<Response> {
     const { name, email, password } = await req.json();
 
     if (!email || !password) {
-      return NextResponse.json({ ok: false, error: "Missing email or password" }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "Missing email or password" },
+        { status: 400 }
+      );
     }
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
-      return NextResponse.json({ ok: false, error: "Email already registered" }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "Email already registered" },
+        { status: 400 }
+      );
     }
 
     const hashed = await bcrypt.hash(password, 10);
@@ -26,10 +32,13 @@ export async function POST(req: NextRequest): Promise<Response> {
       },
     });
 
-    const setting = await prisma.setting.findUnique({ where: { key: "emailVerificationRequired" } });
-    const emailVerificationRequired = setting
-      ? setting.value === "ON"
-      : process.env.EMAIL_VERIFICATION_REQUIRED === "ON";
+    // Read persisted setting from DB
+    const setting = await prisma.setting.findUnique({
+      where: { key: "emailVerificationRequired" },
+    });
+    const emailVerificationRequired =
+      setting?.value === "ON" ||
+      process.env.EMAIL_VERIFICATION_REQUIRED === "ON";
 
     if (!emailVerificationRequired) {
       await prisma.user.update({
@@ -41,6 +50,9 @@ export async function POST(req: NextRequest): Promise<Response> {
     return NextResponse.json({ ok: true, emailVerificationRequired });
   } catch (err) {
     console.error("signup error", err);
-    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
