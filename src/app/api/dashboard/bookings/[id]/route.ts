@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-// GET handler for /api/dashboard/bookings/[id]
+// Helper type: params can be plain or a Promise
+type MaybeAsyncParams = { id: string } | Promise<{ id: string }>;
+
+// GET handler
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: MaybeAsyncParams }
 ): Promise<Response> {
   try {
-    const { id } = params;
+    const { id } = await Promise.resolve(context.params);
 
-    const booking = await prisma.booking.findUnique({
-      where: { id },
-    });
-
+    const booking = await prisma.booking.findUnique({ where: { id } });
     if (!booking) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
@@ -24,18 +24,15 @@ export async function GET(
   }
 }
 
-// DELETE handler for /api/dashboard/bookings/[id]
+// DELETE handler
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: MaybeAsyncParams }
 ): Promise<Response> {
   try {
-    const { id } = params;
+    const { id } = await Promise.resolve(context.params);
 
-    await prisma.booking.delete({
-      where: { id },
-    });
-
+    await prisma.booking.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Error deleting booking:", error);
