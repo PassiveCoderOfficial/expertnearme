@@ -3,7 +3,7 @@
  *
  * Purpose:
  * --------
- * Show providers for a single category by slug.
+ * Show experts for a single category by slug.
  * Fixes the "params is a Promise" error by unwrapping params properly.
  */
 
@@ -12,7 +12,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
-type Provider = {
+type Expert = {
   id: number;
   name: string;
   email: string;
@@ -23,7 +23,7 @@ type CategoryDetail = {
   id: number;
   name: string;
   slug: string;
-  providers: Provider[];
+  experts: Expert[];
 };
 
 export default function CategoryDetailPage(props: { params: Promise<{ slug: string }> }) {
@@ -53,7 +53,7 @@ export default function CategoryDetailPage(props: { params: Promise<{ slug: stri
           setError(json?.error || 'Failed to load category');
           setData(null);
         } else {
-          json.providers = Array.isArray(json.providers) ? json.providers : [];
+          json.experts = Array.isArray(json.experts) ? json.experts : [];
           setData(json);
         }
       } catch (err) {
@@ -80,24 +80,24 @@ export default function CategoryDetailPage(props: { params: Promise<{ slug: stri
           <h1 className="text-2xl font-bold mb-2">{data.name}</h1>
           <p className="text-sm text-gray-500 mb-6">Slug: {data.slug}</p>
 
-          {data.providers.length === 0 ? (
+          {data.experts.length === 0 ? (
             <div className="border border-gray-300 rounded p-4 text-center text-gray-600">
-              <p>No providers listed under this category yet.</p>
+              <p>No experts listed under this category yet.</p>
               <p className="mt-2">
-                <Link className="text-blue-600 hover:underline" href="/providers/new">
-                  Add a provider
+                <Link className="text-blue-600 hover:underline" href="/experts/new">
+                  Add an expert
                 </Link>
               </p>
             </div>
           ) : (
             <ul className="space-y-3">
-              {data.providers.map((p) => (
-                <li key={p.id} className="border border-gray-200 rounded p-3">
-                  <div className="font-semibold">{p.name}</div>
-                  <div className="text-sm text-gray-600">{p.email}</div>
-                  {p.phone && <div className="text-sm text-gray-600">Phone: {p.phone}</div>}
-                  <Link href={`/providers/${p.id}`} className="text-blue-600 hover:underline mt-1 inline-block">
-                    View provider
+              {data.experts.map((e) => (
+                <li key={e.id} className="border border-gray-200 rounded p-3">
+                  <div className="font-semibold">{e.name}</div>
+                  <div className="text-sm text-gray-600">{e.email}</div>
+                  {e.phone && <div className="text-sm text-gray-600">Phone: {e.phone}</div>}
+                  <Link href={`/experts/${e.id}`} className="text-blue-600 hover:underline mt-1 inline-block">
+                    View expert
                   </Link>
                 </li>
               ))}

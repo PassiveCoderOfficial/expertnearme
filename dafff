@@ -1,0 +1,102 @@
+[35mbackup_before_expert.sql[m[36m:[m[32m85[m[36m:[m    "[1;31mprovider[mId" integer NOT NULL,
+[35mbackup_before_expert.sql[m[36m:[m[32m187[m[36m:[mCOPY public."ProviderCategory" ("[1;31mprovider[mId", "categoryId") FROM stdin;
+[35mbackup_before_expert.sql[m[36m:[m[32m210[m[36m:[maf2b5789-26a2-4ce2-9d0e-7765c0a86f9c	b381b704a20832f674fb06551a714e327b25b0885e069827a8206629b37ff439	2026-01-13 07:19:55.038022+00	20260113071954_add_[1;31mprovider[m_flags	\N	\N	2026-01-13 07:19:55.02298+00	1
+[35mbackup_before_expert.sql[m[36m:[m[32m241[m[36m:[m    ADD CONSTRAINT "ProviderCategory_pkey" PRIMARY KEY ("[1;31mprovider[mId", "categoryId");
+[35mbackup_before_expert.sql[m[36m:[m[32m305[m[36m:[m-- Name: ProviderCategory ProviderCategory_[1;31mprovider[mId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+[35mbackup_before_expert.sql[m[36m:[m[32m309[m[36m:[m    ADD CONSTRAINT "ProviderCategory_[1;31mprovider[mId_fkey" FOREIGN KEY ("[1;31mprovider[mId") REFERENCES public."Provider"(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+[35mdump.sql[m[36m:[m[32m732[m[36m:[maf2b5789-26a2-4ce2-9d0e-7765c0a86f9c	b381b704a20832f674fb06551a714e327b25b0885e069827a8206629b37ff439	2026-01-13 07:19:55.038022+00	20260113071954_add_[1;31mprovider[m_flags	\N	\N	2026-01-13 07:19:55.02298+00	1
+[35mprisma/migrations/20260112025704_enable_multicategory/migration.sql[m[36m:[m[32m15[m[36m:[m    "[1;31mprovider[mId" INTEGER NOT NULL,
+[35mprisma/migrations/20260112025704_enable_multicategory/migration.sql[m[36m:[m[32m18[m[36m:[m    CONSTRAINT "ProviderCategory_pkey" PRIMARY KEY ("[1;31mprovider[mId","categoryId")
+[35mprisma/migrations/20260112025704_enable_multicategory/migration.sql[m[36m:[m[32m22[m[36m:[mALTER TABLE "ProviderCategory" ADD CONSTRAINT "ProviderCategory_[1;31mprovider[mId_fkey" FOREIGN KEY ("[1;31mprovider[mId") REFERENCES "Provider"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+[35mprisma/migrations/20260113174657_init_expert_schema/migration.sql[m[36m:[m[32m15[m[36m:[mALTER TABLE "ProviderCategory" DROP CONSTRAINT "ProviderCategory_[1;31mprovider[mId_fkey";
+[35mprisma/migrations/migration_lock.toml[m[36m:[m[32m3[m[36m:[m[1;31mprovider[m = "postgresql"
+[35mprisma/schema.prisma[m[36m:[m[32m2[m[36m:[m  [1;31mprovider[m = "prisma-client-js"
+[35mprisma/schema.prisma[m[36m:[m[32m6[m[36m:[m  [1;31mprovider[m = "postgresql"
+[35msrc/app/api/providers/[id]/route.ts[m[36m:[m[32m1[m[36m:[m// File: src/app/api/[1;31mprovider[ms/[id]/route.ts
+[35msrc/app/api/providers/[id]/route.ts[m[36m:[m[32m10[m[36m:[m// PUT /api/[1;31mprovider[ms/[id] → update [1;31mprovider[m
+[35msrc/app/api/providers/[id]/route.ts[m[36m:[m[32m28[m[36m:[m    const [1;31mprovider[m = await prisma.[1;31mprovider[m.update({
+[35msrc/app/api/providers/[id]/route.ts[m[36m:[m[32m47[m[36m:[m    return NextResponse.json([1;31mprovider[m);
+[35msrc/app/api/providers/[id]/route.ts[m[36m:[m[32m49[m[36m:[m    console.error("PUT /[1;31mprovider[ms/[id] error:", err);
+[35msrc/app/api/providers/[id]/route.ts[m[36m:[m[32m51[m[36m:[m      { error: "Failed to update [1;31mprovider[m" },
+[35msrc/app/api/providers/[id]/route.ts[m[36m:[m[32m57[m[36m:[m// DELETE /api/[1;31mprovider[ms/[id] → delete [1;31mprovider[m
+[35msrc/app/api/providers/[id]/route.ts[m[36m:[m[32m66[m[36m:[m    await prisma.[1;31mprovider[m.delete({ where: { id } });
+[35msrc/app/api/providers/[id]/route.ts[m[36m:[m[32m69[m[36m:[m    console.error("DELETE /[1;31mprovider[ms/[id] error:", err);
+[35msrc/app/api/providers/[id]/route.ts[m[36m:[m[32m71[m[36m:[m      { error: "Failed to delete [1;31mprovider[m" },
+[35msrc/app/api/providers/route.ts[m[36m:[m[32m2[m[36m:[m * src/app/api/[1;31mprovider[ms/route.ts
+[35msrc/app/api/providers/route.ts[m[36m:[m[32m6[m[36m:[m * Handle creation of new [1;31mprovider[ms via POST /api/[1;31mprovider[ms.
+[35msrc/app/api/providers/route.ts[m[36m:[m[32m10[m[36m:[m * - Accepts [1;31mprovider[m details (name, email, phone)
+[35msrc/app/api/providers/route.ts[m[36m:[m[32m11[m[36m:[m * - Accepts an array of category IDs to link the [1;31mprovider[m to
+[35msrc/app/api/providers/route.ts[m[36m:[m[32m14[m[36m:[m * - Creates [1;31mprovider[m and links to categories via join table
+[35msrc/app/api/providers/route.ts[m[36m:[m[32m38[m[36m:[m    const existing = await prisma.[1;31mprovider[m.findUnique({ where: { email } });
+[35msrc/app/api/providers/route.ts[m[36m:[m[32m43[m[36m:[m    // Create [1;31mprovider[m
+[35msrc/app/api/providers/route.ts[m[36m:[m[32m44[m[36m:[m    const [1;31mprovider[m = await prisma.[1;31mprovider[m.create({
+[35msrc/app/api/providers/route.ts[m[36m:[m[32m60[m[36m:[m    return NextResponse.json([1;31mprovider[m, { status: 201 });
+[35msrc/app/api/providers/route.ts[m[36m:[m[32m62[m[36m:[m    console.error('POST /[1;31mprovider[ms error:', err);
+[35msrc/app/api/providers/route.ts[m[36m:[m[32m63[m[36m:[m    return NextResponse.json({ error: 'Failed to create [1;31mprovider[m' }, { status: 500 });
+[35msrc/app/api/search/route.ts[m[36m:[m[32m14[m[36m:[m      return NextResponse.json({ sponsored: null, [1;31mprovider[ms: [], categories: [] });
+[35msrc/app/api/search/route.ts[m[36m:[m[32m24[m[36m:[m    // Sponsored [1;31mprovider[m: must be featured AND match the query (name or category name)
+[35msrc/app/api/search/route.ts[m[36m:[m[32m25[m[36m:[m    const sponsored = await prisma.[1;31mprovider[m.findFirst({
+[35msrc/app/api/search/route.ts[m[36m:[m[32m41[m[36m:[m    // Regular [1;31mprovider[ms: match query, exclude sponsored id if present
+[35msrc/app/api/search/route.ts[m[36m:[m[32m42[m[36m:[m    const [1;31mprovider[ms = await prisma.[1;31mprovider[m.findMany({
+[35msrc/app/api/search/route.ts[m[36m:[m[32m59[m[36m:[m    return NextResponse.json({ sponsored, [1;31mprovider[ms, categories });
+[35msrc/app/api/search/route.ts[m[36m:[m[32m62[m[36m:[m    return NextResponse.json({ sponsored: null, [1;31mprovider[ms: [], categories: [] }, { status: 500 });
+[35msrc/app/categories/[slug]/page.tsx[m[36m:[m[32m6[m[36m:[m * Show [1;31mprovider[ms for a single category by slug.
+[35msrc/app/categories/[slug]/page.tsx[m[36m:[m[32m26[m[36m:[m  [1;31mprovider[ms: Provider[];
+[35msrc/app/categories/[slug]/page.tsx[m[36m:[m[32m56[m[36m:[m          json.[1;31mprovider[ms = Array.isArray(json.[1;31mprovider[ms) ? json.[1;31mprovider[ms : [];
+[35msrc/app/categories/[slug]/page.tsx[m[36m:[m[32m83[m[36m:[m          {data.[1;31mprovider[ms.length === 0 ? (
+[35msrc/app/categories/[slug]/page.tsx[m[36m:[m[32m85[m[36m:[m              <p>No [1;31mprovider[ms listed under this category yet.</p>
+[35msrc/app/categories/[slug]/page.tsx[m[36m:[m[32m87[m[36m:[m                <Link className="text-blue-600 hover:underline" href="/[1;31mprovider[ms/new">
+[35msrc/app/categories/[slug]/page.tsx[m[36m:[m[32m88[m[36m:[m                  Add a [1;31mprovider[m
+[35msrc/app/categories/[slug]/page.tsx[m[36m:[m[32m94[m[36m:[m              {data.[1;31mprovider[ms.map((p) => (
+[35msrc/app/categories/[slug]/page.tsx[m[36m:[m[32m99[m[36m:[m                  <Link href={`/[1;31mprovider[ms/${p.id}`} className="text-blue-600 hover:underline mt-1 inline-block">
+[35msrc/app/categories/[slug]/page.tsx[m[36m:[m[32m100[m[36m:[m                    View [1;31mprovider[m
+[35msrc/app/providers/[id]/page.tsx[m[36m:[m[32m12[m[36m:[m  const [1;31mprovider[m = await prisma.[1;31mprovider[m.findUnique({
+[35msrc/app/providers/[id]/page.tsx[m[36m:[m[32m21[m[36m:[m  if (![1;31mprovider[m) {
+[35msrc/app/providers/[id]/page.tsx[m[36m:[m[32m25[m[36m:[m        <p className="text-gray-600">No [1;31mprovider[m exists with ID {id}.</p>
+[35msrc/app/providers/[id]/page.tsx[m[36m:[m[32m32[m[36m:[m      <h1 className="text-2xl font-bold mb-2">{[1;31mprovider[m.name}</h1>
+[35msrc/app/providers/[id]/page.tsx[m[36m:[m[32m33[m[36m:[m      <p className="text-gray-600 mb-1">Email: {[1;31mprovider[m.email}</p>
+[35msrc/app/providers/[id]/page.tsx[m[36m:[m[32m34[m[36m:[m      {[1;31mprovider[m.phone && <p className="text-gray-600 mb-1">Phone: {[1;31mprovider[m.phone}</p>}
+[35msrc/app/providers/[id]/page.tsx[m[36m:[m[32m36[m[36m:[m        Type: {[1;31mprovider[m.isBusiness ? "Business" : "Individual"}
+[35msrc/app/providers/[id]/page.tsx[m[36m:[m[32m40[m[36m:[m      {[1;31mprovider[m.categories.length === 0 ? (
+[35msrc/app/providers/[id]/page.tsx[m[36m:[m[32m44[m[36m:[m          {[1;31mprovider[m.categories.map((link) => (
+[35msrc/app/providers/new/page.tsx[m[36m:[m[32m1[m[36m:[m// File: src/app/[1;31mprovider[ms/new/page.tsx
+[35msrc/app/providers/new/page.tsx[m[36m:[m[32m57[m[36m:[m      const res = await fetch("/api/[1;31mprovider[ms", {
+[35msrc/app/providers/new/page.tsx[m[36m:[m[32m72[m[36m:[m        setError(data?.error || "Failed to add [1;31mprovider[m");
+[35msrc/app/providers/page.tsx[m[36m:[m[32m6[m[36m:[m  const [[1;31mprovider[ms, setProviders] = useState<any[]>([]);
+[35msrc/app/providers/page.tsx[m[36m:[m[32m19[m[36m:[m      const res = await fetch('/api/[1;31mprovider[ms');
+[35msrc/app/providers/page.tsx[m[36m:[m[32m23[m[36m:[m      console.error('Failed to fetch [1;31mprovider[ms:', err);
+[35msrc/app/providers/page.tsx[m[36m:[m[32m44[m[36m:[m  const startEdit = ([1;31mprovider[m: any) => {
+[35msrc/app/providers/page.tsx[m[36m:[m[32m45[m[36m:[m    setEditingId([1;31mprovider[m.id);
+[35msrc/app/providers/page.tsx[m[36m:[m[32m46[m[36m:[m    setEditName([1;31mprovider[m.name);
+[35msrc/app/providers/page.tsx[m[36m:[m[32m47[m[36m:[m    setEditEmail([1;31mprovider[m.email);
+[35msrc/app/providers/page.tsx[m[36m:[m[32m48[m[36m:[m    setEditPhone([1;31mprovider[m.phone || '');
+[35msrc/app/providers/page.tsx[m[36m:[m[32m49[m[36m:[m    setEditCategories([1;31mprovider[m.categories.map((pc: any) => pc.category.id));
+[35msrc/app/providers/page.tsx[m[36m:[m[32m53[m[36m:[m    await fetch(`/api/[1;31mprovider[ms/${editingId}`, {
+[35msrc/app/providers/page.tsx[m[36m:[m[32m72[m[36m:[m    if (!confirm('Delete this [1;31mprovider[m?')) return;
+[35msrc/app/providers/page.tsx[m[36m:[m[32m73[m[36m:[m    await fetch(`/api/[1;31mprovider[ms/${id}`, { method: 'DELETE' });
+[35msrc/app/providers/page.tsx[m[36m:[m[32m91[m[36m:[m        <div className="text-gray-500 italic">Loading [1;31mprovider[ms...</div>
+[35msrc/app/providers/page.tsx[m[36m:[m[32m92[m[36m:[m      ) : [1;31mprovider[ms.length === 0 ? (
+[35msrc/app/providers/page.tsx[m[36m:[m[32m94[m[36m:[m          <p className="mb-2">No [1;31mprovider[ms found.</p>
+[35msrc/app/providers/page.tsx[m[36m:[m[32m110[m[36m:[m            {[1;31mprovider[ms.map(([1;31mprovider[m) => (
+[35msrc/app/providers/page.tsx[m[36m:[m[32m111[m[36m:[m              <tr key={[1;31mprovider[m.id}>
+[35msrc/app/providers/page.tsx[m[36m:[m[32m112[m[36m:[m                <td className="border p-2">{[1;31mprovider[m.id}</td>
+[35msrc/app/providers/page.tsx[m[36m:[m[32m114[m[36m:[m                  {editingId === [1;31mprovider[m.id ? (
+[35msrc/app/providers/page.tsx[m[36m:[m[32m121[m[36m:[m                    [1;31mprovider[m.name
+[35msrc/app/providers/page.tsx[m[36m:[m[32m125[m[36m:[m                  {editingId === [1;31mprovider[m.id ? (
+[35msrc/app/providers/page.tsx[m[36m:[m[32m132[m[36m:[m                    [1;31mprovider[m.email
+[35msrc/app/providers/page.tsx[m[36m:[m[32m136[m[36m:[m                  {editingId === [1;31mprovider[m.id ? (
+[35msrc/app/providers/page.tsx[m[36m:[m[32m143[m[36m:[m                    [1;31mprovider[m.phone || '-'
+[35msrc/app/providers/page.tsx[m[36m:[m[32m147[m[36m:[m                  {editingId === [1;31mprovider[m.id ? (
+[35msrc/app/providers/page.tsx[m[36m:[m[32m161[m[36m:[m                    [1;31mprovider[m.categories.map((pc: any) => pc.category.name).join(', ')
+[35msrc/app/providers/page.tsx[m[36m:[m[32m165[m[36m:[m                  {editingId === [1;31mprovider[m.id ? (
+[35msrc/app/providers/page.tsx[m[36m:[m[32m183[m[36m:[m                        onClick={() => startEdit([1;31mprovider[m)}
+[35msrc/app/providers/page.tsx[m[36m:[m[32m189[m[36m:[m                        onClick={() => handleDelete([1;31mprovider[m.id)}
+[35msrc/app/search/page.tsx[m[36m:[m[32m43[m[36m:[m              <Link href={`/[1;31mprovider[ms/${p.id}`}>
+[35msrc/components/Navbar.tsx[m[36m:[m[32m21[m[36m:[m          <Link href="/[1;31mprovider[ms/new">Add Expert</Link>
+[35msrc/components/SearchBar.tsx[m[36m:[m[32m14[m[36m:[m  const [[1;31mprovider[ms, setProviders] = useState<ProviderItem[]>([]);
+[35msrc/components/SearchBar.tsx[m[36m:[m[32m42[m[36m:[m      setProviders(data.[1;31mprovider[ms ?? []);
+[35msrc/components/SearchBar.tsx[m[36m:[m[32m50[m[36m:[m    router.push(`/[1;31mprovider[ms/${id}`);
+[35msrc/components/SearchBar.tsx[m[36m:[m[32m61[m[36m:[m  const hasResults = !!sponsored || [1;31mprovider[ms.length > 0 || categories.length > 0;
+[35msrc/components/SearchBar.tsx[m[36m:[m[32m70[m[36m:[m          placeholder="Search [1;31mprovider[ms or categories..."
+[35msrc/components/SearchBar.tsx[m[36m:[m[32m102[m[36m:[m          {[1;31mprovider[ms.length > 0 && (
+[35msrc/components/SearchBar.tsx[m[36m:[m[32m105[m[36m:[m              {[1;31mprovider[ms.map((p) => (

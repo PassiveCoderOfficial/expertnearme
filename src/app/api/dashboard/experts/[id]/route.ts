@@ -1,10 +1,6 @@
-// File: src/app/api/admin/experts/[id]/route.ts
+// File: src/app/api/dashboard/experts/[id]/route.ts
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
-
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  await prisma.expert.delete({ where: { id: Number(params.id) } });
-  return NextResponse.json({ ok: true });
+export async function GET(): Promise<Response> {
+  return NextResponse.json({ disabled: true }, { status: 501 });
 }

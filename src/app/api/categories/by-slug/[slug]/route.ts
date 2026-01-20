@@ -1,65 +1,41 @@
-/**
- * src/app/api/categories/by-slug/[slug]/route.ts
- *
- * Purpose:
- * --------
- * Return a single category by slug with its linked providers.
- *
- * Response example:
- * {
- *   id: 3,
- *   name: "IT",
- *   slug: "it",
- *   providers: [
- *     { id: 10, name: "Muhammad Waliur Rahman", email: "passivecoder.com@gmail.com", phone: "01678669699" }
- *   ]
- * }
- *
- * Notes:
- * ------
- * - Uses ProviderCategory join table to fetch providers.
- * - If category not found, returns 404 JSON.
- * - Ensures providers is always an array.
- */
-
-import { NextResponse } from "next/server";
+// src/app/api/categories/by-slug/[slug]/route.ts
+import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function GET(
-  _req: Request,
-  context: { params: Promise<{ slug: string }> }
-) {
-  const { slug } = await context.params;
+type ParamsContext = { params: { slug: string } } | { params: Promise<{ slug: string }> };
 
+async function resolveSlug(context: ParamsContext) {
+  const { slug } = await Promise.resolve((context as any).params);
+  if (!slug || typeof slug !== "string") throw new Error("Invalid slug");
+  return slug;
+}
+
+export async function GET(_req: NextRequest, context: ParamsContext): Promise<Response> {
   try {
-    const category = await prisma.category.findUnique({ where: { slug } });
+    const slug = await resolveSlug(context);
+
+    const category = await prisma.category.findUnique({
+      where: { slug },
+    });
+
     if (!category) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
 
-    const links = await prisma.providerCategory.findMany({
+    // Find join rows and include the related expert
+    const links = await prisma.expertCategory.findMany({
       where: { categoryId: category.id },
-      include: { provider: true },
+      include: { expert: true },
     });
 
-    const providers = links.map((l) => ({
-      id: l.provider.id,
-      name: l.provider.name,
-      email: l.provider.email,
-      phone: l.provider.phone ?? null,
-      isBusiness: l.provider.isBusiness,
-    }));
+    // Map to the expert objects (remove join metadata)
+    const experts = links.map((l) => l.expert);
 
-    return NextResponse.json({
-      id: category.id,
-      name: category.name,
-      slug: category.slug,
-      providers,
-    });
-  } catch (err) {
-    console.error("GET /api/categories/by-slug/[slug] error:", err);
-    return NextResponse.json({ error: "Failed to fetch category" }, { status: 500 });
+    return NextResponse.json({ category, experts });
+  } catch (err: any) {
+    console.error("GET /categories/by-slug/[slug] error:", err);
+    return NextResponse.json({ error: "Failed to fetch category experts" }, { status: 500 });
   }
 }

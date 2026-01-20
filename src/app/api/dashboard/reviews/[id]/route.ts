@@ -1,10 +1,14 @@
-// File: src/app/api/admin/reviews/[id]/route.ts
+// File: src/app/api/dashboard/<entity>/[id]/route.ts
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+export async function GET(): Promise<Response> {
+  return NextResponse.json({ disabled: true }, { status: 501 });
+}
 
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  await prisma.review.delete({ where: { id: Number(params.id) } });
-  return NextResponse.json({ ok: true });
+export async function DELETE(): Promise<Response> {
+  return NextResponse.json({ disabled: true }, { status: 501 });
+}
+
+export async function PATCH(): Promise<Response> {
+  return NextResponse.json({ disabled: true }, { status: 501 });
 }

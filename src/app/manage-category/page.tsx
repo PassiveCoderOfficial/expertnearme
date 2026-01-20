@@ -227,7 +227,7 @@ export default function ManageCategoryPage() {
 
   // Build table rows (flattened tree traversal)
   const rows = useMemo(() => {
-    const r: JSX.Element[] = [];
+    const r: React.ReactNode[] = [];
     const walk = (nodes: Cat[], depth = 0) => {
       nodes.forEach((cat) => {
         r.push(

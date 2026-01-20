@@ -1,6 +1,7 @@
 // src/app/dashboard/layout.tsx
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -16,10 +17,10 @@ import {
 } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
 
-const navByRole: Record<string, { name: string; href: string; icon?: JSX.Element }[]> = {
+const navByRole: Record<string, { name: string; href: string; icon?: React.ReactNode }[]> = {
   ADMIN: [
     { name: "Dashboard", href: "/dashboard", icon: <MdDashboard /> },
-    { name: "Users", href: "/dashboard/users", icon: <MdPeople /> }, // added
+    { name: "Users", href: "/dashboard/users", icon: <MdPeople /> },
     { name: "Experts", href: "/dashboard/experts", icon: <MdPerson /> },
     { name: "Categories", href: "/dashboard/categories", icon: <MdCategory /> },
     { name: "Bookings", href: "/dashboard/bookings", icon: <MdCalendarToday /> },

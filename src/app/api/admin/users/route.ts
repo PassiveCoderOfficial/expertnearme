@@ -1,29 +1,48 @@
-// src/app/api/admin/users/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest): Promise<Response> {
   try {
     // optional query ?q= or pagination later
     const users = await prisma.user.findMany({
-      select: { id: true, name: true, email: true, role: true, verified: true, createdAt: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        verified: true,
+        createdAt: true,
+      },
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json({ ok: true, users });
   } catch (err) {
     console.error("GET /api/admin/users", err);
-    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest): Promise<Response> {
   try {
     const { name, email, password, role } = await req.json();
-    if (!email || !password) return NextResponse.json({ ok: false, error: "Missing fields" }, { status: 400 });
+    if (!email || !password) {
+      return NextResponse.json(
+        { ok: false, error: "Missing fields" },
+        { status: 400 }
+      );
+    }
 
     const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) return NextResponse.json({ ok: false, error: "Email already exists" }, { status: 400 });
+    if (existing) {
+      return NextResponse.json(
+        { ok: false, error: "Email already exists" },
+        { status: 400 }
+      );
+    }
 
     const hashed = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
@@ -36,17 +55,33 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({ ok: true, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+    return NextResponse.json({
+      ok: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+    });
   } catch (err) {
     console.error("POST /api/admin/users", err);
-    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
-export async function PUT(req: Request) {
+export async function PUT(req: NextRequest): Promise<Response> {
   try {
     const { id, name, email, role, verified } = await req.json();
-    if (!id) return NextResponse.json({ ok: false, error: "Missing id" }, { status: 400 });
+    if (!id) {
+      return NextResponse.json(
+        { ok: false, error: "Missing id" },
+        { status: 400 }
+      );
+    }
 
     const updated = await prisma.user.update({
       where: { id },
@@ -62,19 +97,30 @@ export async function PUT(req: Request) {
     return NextResponse.json({ ok: true, user: updated });
   } catch (err) {
     console.error("PUT /api/admin/users", err);
-    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextRequest): Promise<Response> {
   try {
     const { id } = await req.json();
-    if (!id) return NextResponse.json({ ok: false, error: "Missing id" }, { status: 400 });
+    if (!id) {
+      return NextResponse.json(
+        { ok: false, error: "Missing id" },
+        { status: 400 }
+      );
+    }
 
     await prisma.user.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("DELETE /api/admin/users", err);
-    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
