@@ -67,7 +67,7 @@ export default function MobileNav() {
         <nav className="p-4 grid gap-2">
           <Link href="/" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">Home</Link>
           <Link href="/categories" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">Categories</Link>
-          <Link href="/experts/new" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">Add Expert</Link>
+          <Link href="/create-expert-account" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">Create Expert Account</Link>
           <Link href="/experts/manage" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">Expert Management</Link>
         </nav>
       </div>

@@ -18,7 +18,7 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700">
           <Link href="/">Home</Link>
           <Link href="/categories">Categories</Link>
-          <Link href="/providers/new">Add Expert</Link>
+          <Link href="/create-expert-account">Create Expert Account</Link>
           <Link href="/manage-category">Manage Categories</Link>
         </nav>
 
