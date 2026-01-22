@@ -1,3 +1,5 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -22,6 +24,7 @@ model User {
   notifications Notification[]
   reviews       Review[]
   profile       UserProfile?
+  media         Media[]
 }
 
 model UserProfile {
@@ -43,6 +46,16 @@ model Setting {
   updatedAt DateTime @updatedAt
 }
 
+model Media {
+  id           Int      @id @default(autoincrement())
+  url          String // path or external storage URL
+  filename     String
+  mimetype     String
+  size         Int
+  uploadedById Int
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+}
 
 model AuthToken {
   id        Int       @id @default(autoincrement())

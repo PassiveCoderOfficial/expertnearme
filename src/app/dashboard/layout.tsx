@@ -14,6 +14,7 @@ import {
   MdNotifications,
   MdSettings,
   MdPeople,
+  MdPhotoLibrary, // 👈 new icon for Media Manager
 } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
 
@@ -26,6 +27,11 @@ const navByRole: Record<string, { name: string; href: string; icon?: React.React
     { name: "Bookings", href: "/dashboard/bookings", icon: <MdCalendarToday /> },
     { name: "Reviews", href: "/dashboard/reviews", icon: <MdRateReview /> },
     { name: "Notifications", href: "/dashboard/notifications", icon: <MdNotifications /> },
+
+    // 👇 new Media Manager entry
+    { name: "Media Manager", href: "/dashboard/media", icon: <MdPhotoLibrary /> },
+
+    // Settings stays here for logo/favicon and other admin configs
     { name: "Settings", href: "/dashboard/settings", icon: <MdSettings /> },
   ],
   EXPERT: [
