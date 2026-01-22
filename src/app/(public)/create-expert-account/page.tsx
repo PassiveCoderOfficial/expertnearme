@@ -188,6 +188,7 @@ export default function PricingPage() {
               <li>✅ Website builder & custom mini‑site</li>
               <li>✅ Sponsored search placement (priority & featured slots)</li>
               <li>✅ Verified badge after verification</li>
+              <li>✅ Instant Website Verified badge</li>
               <li>✅ Advanced analytics & conversion reports</li>
               <li>✅ CRM & webhook integrations (outbound webhooks, Zapier/Make, native connectors planned)</li>
               <li>✅ Invoicing, simple accounting, and customer pipeline (VIP dashboard)</li>
