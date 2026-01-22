@@ -162,25 +162,27 @@ export default function PricingPage() {
           </div>
 
           {/* VIP */}
-          <div className="border border-[#f0d6d6] rounded-2xl p-6 bg-gradient-to-b from-white to-[#fff5f5] shadow-lg">
+          <div className="border border-[#7a1f1f]/40 rounded-2xl p-6 bg-[#7a1f1f]/90 backdrop-blur-md text-white shadow-xl">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">VIP</h3>
-              <span className="text-sm text-[#b84c4c] font-medium">Premium business suite</span>
+              <h3 className="text-lg font-semibold text-white">VIP</h3>
+              <span className="text-sm text-pink-200 font-medium">Premium business suite</span>
             </div>
 
             <div className="mt-6">
               <div className="flex items-baseline gap-2">
-                <div className="text-3xl font-extrabold text-gray-900">
+                <div className="text-3xl font-extrabold text-white">
                   ${billingCycle === "monthly" ? vipMonthly : vipAnnual}
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-200">
                   /{billingCycle === "monthly" ? "month" : "year"}
                 </div>
               </div>
-              <p className="mt-2 text-sm text-gray-600">Website builder, sponsored placement, CRM & accounting tools</p>
+              <p className="mt-2 text-sm text-gray-200">
+                Website builder, sponsored placement, CRM & accounting tools
+              </p>
             </div>
 
-            <ul className="mt-6 space-y-3 text-sm text-gray-700">
+            <ul className="mt-6 space-y-3 text-sm text-gray-100">
               <li>✅ Everything in Pro</li>
               <li>✅ Subdomain minisite (e.g., <span className="font-mono">yourname.expertnear.me</span>)</li>
               <li>✅ Website builder & custom mini‑site</li>
@@ -195,14 +197,14 @@ export default function PricingPage() {
             <div className="mt-6 flex flex-col gap-3">
               <Link
                 href="/signup?plan=vip"
-                className="block text-center px-4 py-2 rounded-md bg-[#b84c4c] text-white font-medium hover:bg-[#a43f3f]"
+                className="block text-center px-4 py-2 rounded-md bg-[#ffffff] text-[#7a1f1f] font-medium hover:bg-[#ffffff]/70"
               >
                 Request VIP access
               </Link>
 
               <Link
                 href="/pricing/claim-trial"
-                className="block text-center px-4 py-2 rounded-md bg-[#fff5f5] border border-[#f0d6d6] text-sm text-[#b84c4c] hover:bg-[#fff0f0]"
+                className="block text-center px-4 py-2 rounded-md bg-transparent border border-pink-200 text-sm text-pink-200 hover:bg-[#7a1f1f]/50"
               >
                 Claim 30 Days Free Upgrade to VIP
               </Link>
