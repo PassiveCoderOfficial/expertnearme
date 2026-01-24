@@ -1,16 +1,17 @@
+//src/app/api/media/[id]/route.ts
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { promises as fs } from "fs";
 import path from "path";
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: any }
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    // params may be a Promise in some Next runtimes — await to be safe
-    const resolvedParams = await params;
+    const resolvedParams = await context.params;
     const idRaw = resolvedParams?.id;
     if (!idRaw) {
       return NextResponse.json({ error: "Missing id" }, { status: 400 });
@@ -38,15 +39,13 @@ export async function DELETE(
 
     // Attempt to delete file from disk if it exists
     try {
-      // media.url is expected to be a public path like "/uploads/{folder}/{filename}"
-      const publicPath = media.url?.replace(/^\/+/, ""); // remove leading slash
+      const publicPath = media.url?.replace(/^\/+/, "");
       if (publicPath) {
         const filepath = path.join(process.cwd(), "public", publicPath);
         try {
           await fs.stat(filepath);
           await fs.unlink(filepath);
         } catch (fsErr) {
-          // If file doesn't exist, log and continue — DB record should still be removed
           console.warn(
             "File delete warning:",
             (fsErr as Error)?.message || fsErr
@@ -63,9 +62,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("DELETE /api/media/[id] error:", err);
-    return NextResponse.json(
-      { error: "Server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
