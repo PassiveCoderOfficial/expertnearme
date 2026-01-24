@@ -1,4 +1,4 @@
-//src/app/api/media/[id]/route.ts
+// src/app/api/media/[id]/route.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -11,14 +11,13 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const resolvedParams = await context.params;
-    const idRaw = resolvedParams?.id;
-    if (!idRaw) {
+    const { id } = await context.params;
+    if (!id) {
       return NextResponse.json({ error: "Missing id" }, { status: 400 });
     }
 
-    const id = parseInt(String(idRaw), 10);
-    if (Number.isNaN(id)) {
+    const parsedId = parseInt(String(id), 10);
+    if (Number.isNaN(parsedId)) {
       return NextResponse.json({ error: "Invalid id" }, { status: 400 });
     }
 
@@ -27,17 +26,15 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const media = await prisma.media.findUnique({ where: { id } });
+    const media = await prisma.media.findUnique({ where: { id: parsedId } });
     if (!media) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    // Only allow owner or admin
     if (media.uploadedById !== session.userId && session.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Attempt to delete file from disk if it exists
     try {
       const publicPath = media.url?.replace(/^\/+/, "");
       if (publicPath) {
@@ -46,18 +43,14 @@ export async function DELETE(
           await fs.stat(filepath);
           await fs.unlink(filepath);
         } catch (fsErr) {
-          console.warn(
-            "File delete warning:",
-            (fsErr as Error)?.message || fsErr
-          );
+          console.warn("File delete warning:", (fsErr as Error)?.message || fsErr);
         }
       }
     } catch (err) {
       console.error("Error deleting file from disk:", err);
-      // continue to delete DB record even if file deletion fails
     }
 
-    await prisma.media.delete({ where: { id } });
+    await prisma.media.delete({ where: { id: parsedId } });
 
     return NextResponse.json({ success: true });
   } catch (err) {
