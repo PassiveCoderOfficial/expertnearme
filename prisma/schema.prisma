@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -48,13 +46,19 @@ model Setting {
 
 model Media {
   id           Int      @id @default(autoincrement())
-  url          String // path or external storage URL
+  url          String   // path or external storage URL
   filename     String
   mimetype     String
   size         Int
   uploadedById Int
   uploadedBy   User     @relation(fields: [uploadedById], references: [id])
   createdAt    DateTime @default(now())
+  folder       String?  // optional folder name (e.g. userId or "admin")
+  tags         String?  // optional comma-separated tags
+
+  @@index([uploadedById])
+  @@index([createdAt])
+  @@index([folder])
 }
 
 model AuthToken {
@@ -78,7 +82,7 @@ model Expert {
   coverPhoto     String?
   shortDesc      String?
   createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
+  updatedAt      DateTime           @default(now())
   bookings       Booking[]
   categories     ExpertCategory[]
   pushSubs       PushSubscription[]

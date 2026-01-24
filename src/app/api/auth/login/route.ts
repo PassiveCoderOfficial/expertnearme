@@ -1,3 +1,5 @@
+// File: src/app/api/auth/login/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
@@ -33,18 +35,20 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
 
     const token = jwt.sign(
-      { userId: user.id, role: user.role },
+      { userId: user.id, role: user.role, email: user.email },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
 
+    // Include token in response body for debugging (remove in production)
     const res = NextResponse.json({
       ok: true,
       role: user.role,
       redirect: "/dashboard",
+      token,
     });
 
-    // Set cookie (HttpOnly, Secure in production)
+    // Set HttpOnly token cookie for server-side session verification
     res.cookies.set({
       name: "token",
       value: token,
@@ -53,6 +57,34 @@ export async function POST(req: NextRequest): Promise<Response> {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
+    // Optional non-HttpOnly cookies for convenience/debugging (not required)
+    res.cookies.set({
+      name: "userId",
+      value: String(user.id),
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    res.cookies.set({
+      name: "email",
+      value: user.email,
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    res.cookies.set({
+      name: "role",
+      value: user.role,
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return res;

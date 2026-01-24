@@ -1,10 +1,9 @@
 // src/app/dashboard/layout.tsx
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import {
   MdDashboard,
   MdPerson,
@@ -14,7 +13,7 @@ import {
   MdNotifications,
   MdSettings,
   MdPeople,
-  MdPhotoLibrary, // 👈 new icon for Media Manager
+  MdPhotoLibrary,
 } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
 
@@ -27,11 +26,7 @@ const navByRole: Record<string, { name: string; href: string; icon?: React.React
     { name: "Bookings", href: "/dashboard/bookings", icon: <MdCalendarToday /> },
     { name: "Reviews", href: "/dashboard/reviews", icon: <MdRateReview /> },
     { name: "Notifications", href: "/dashboard/notifications", icon: <MdNotifications /> },
-
-    // 👇 new Media Manager entry
     { name: "Media Manager", href: "/dashboard/media", icon: <MdPhotoLibrary /> },
-
-    // Settings stays here for logo/favicon and other admin configs
     { name: "Settings", href: "/dashboard/settings", icon: <MdSettings /> },
   ],
   EXPERT: [
@@ -52,7 +47,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { session, loading, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
-  const [darkMode, setDarkMode] = useState(true);
 
   useEffect(() => {
     if (!loading && (!session || session.authenticated === false)) {
@@ -76,61 +70,45 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navItems = navByRole[role] || navByRole["USER"];
 
   return (
-    <div className={darkMode ? "bg-gray-900 text-white min-h-screen" : "bg-gray-100 text-gray-900 min-h-screen"}>
-      <header
-        className={`flex items-center justify-between px-6 py-3 border-b ${
-          darkMode ? "border-gray-700 bg-gray-900" : "border-gray-300 bg-white"
-        }`}
-      >
-        <h1 className="text-lg font-bold">ExpertNear.Me Dashboard</h1>
+    <div className="flex min-h-screen bg-gray-50 text-gray-900">
+      {/* Sidebar */}
+      <aside className="w-64 bg-gray-900 text-white flex flex-col">
+        <div className="px-6 py-4 border-b border-gray-800">
+          <h1 className="text-lg font-bold">ExpertNear.Me</h1>
+          <span className="text-xs mt-1 inline-block px-2 py-1 rounded bg-[#b84c4c] text-white">
+            {role}
+          </span>
+        </div>
 
-        <div className="flex items-center gap-4">
-          <span className="text-sm px-3 py-1 rounded bg-[#b84c4c] text-white">{role}</span>
+        <nav className="flex-1 px-4 py-6 space-y-2">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-2 px-3 py-2 rounded transition-colors ${
+                pathname === item.href
+                  ? "bg-[#b84c4c] text-white"
+                  : "hover:bg-gray-800 hover:text-white"
+              }`}
+            >
+              {item.icon}
+              {item.name}
+            </Link>
+          ))}
+        </nav>
 
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white text-sm"
-          >
-            {darkMode ? "Light Mode" : "Dark Mode"}
-          </button>
-
+        <div className="px-4 py-4 border-t border-gray-800">
           <button
             onClick={() => logout()}
-            className="px-3 py-2 rounded border border-gray-600 text-sm"
+            className="w-full px-3 py-2 rounded bg-gray-800 hover:bg-gray-700 text-sm text-white"
           >
             Logout
           </button>
         </div>
-      </header>
+      </aside>
 
-      <div className="flex">
-        <aside
-          className={`w-64 border-r ${
-            darkMode ? "border-gray-700 bg-gray-800" : "border-gray-300 bg-white"
-          } p-4`}
-        >
-          <nav className="space-y-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-2 px-3 py-2 rounded ${
-                  pathname === item.href
-                    ? "bg-[#b84c4c] text-white"
-                    : darkMode
-                    ? "hover:bg-gray-700 hover:text-white"
-                    : "hover:bg-gray-200"
-                }`}
-              >
-                {item.icon}
-                {item.name}
-              </Link>
-            ))}
-          </nav>
-        </aside>
-
-        <main className="flex-1 p-6">{children}</main>
-      </div>
+      {/* Main content */}
+      <main className="flex-1 p-6 bg-gray-50">{children}</main>
     </div>
   );
 }
