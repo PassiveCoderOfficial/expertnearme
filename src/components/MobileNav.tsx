@@ -1,5 +1,4 @@
-// File: src/components/MobileNav.tsx
-
+// src/components/MobileNav.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -10,12 +9,12 @@ import { usePathname } from "next/navigation";
  * MobileNav
  * - Closes on outside click
  * - Closes on route change
- * - Won’t block autocomplete dropdown (z-index and scoped container)
+ * - Uses scoped z-index so it doesn't block global modals
  */
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
 
   // Close on outside click
@@ -36,7 +35,7 @@ export default function MobileNav() {
   }, [pathname]);
 
   return (
-    <div ref={containerRef} className="relative z-40">
+    <div ref={containerRef} className="relative z-20">
       {/* Toggle button */}
       <button
         type="button"
@@ -62,18 +61,25 @@ export default function MobileNav() {
       {/* Panel */}
       <div
         id="mobile-nav-panel"
-        className={`${open ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0 pointer-events-none"} transition fixed top-16 left-0 right-0 mx-4 z-50 rounded-xl bg-white shadow-2xl border border-gray-200`}
+        className={`transition transform fixed top-16 left-0 right-0 mx-4 z-50 rounded-xl bg-white shadow-2xl border border-gray-200 ${
+          open ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0 pointer-events-none"
+        }`}
       >
         <nav className="p-4 grid gap-2">
-          <Link href="/" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">Home</Link>
-          <Link href="/categories" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">Categories</Link>
-          <Link href="/create-expert-account" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">Create Expert Account</Link>
-          <Link href="/experts/manage" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">Expert Management</Link>
+          <Link href="/" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
+            Home
+          </Link>
+          <Link href="/categories" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
+            Categories
+          </Link>
+          <Link href="/create-expert-account" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
+            Create Expert Account
+          </Link>
+          <Link href="/experts/manage" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
+            Expert Management
+          </Link>
         </nav>
       </div>
-
-      {/* Autocomplete should render outside or below, with z-30+ */}
-      <div className="relative z-30">{/* Autocomplete input + dropdown lives here */}</div>
     </div>
   );
 }

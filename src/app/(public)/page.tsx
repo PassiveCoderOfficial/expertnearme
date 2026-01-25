@@ -1,3 +1,4 @@
+// src/app/(public)/page.tsx
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import Hero from "@/components/Hero";
@@ -11,9 +12,6 @@ export default async function HomePage() {
   return (
     <main>
       <Hero />
-
-      {/* Feature Highlights */}
-      {/* ... same as before */}
 
       {/* Category Showcase */}
       <section className="max-w-6xl mx-auto px-6 py-16">
@@ -33,7 +31,7 @@ export default async function HomePage() {
 
       {/* Footer */}
       <footer className="bg-[#f9e5e5]/70 border-t border-[#e0c0c0] py-6 text-center text-sm text-gray-600">
-        &copy; {new Date().getFullYear()} ExpertNear.Me — All rights reserved.
+        &copy; {new Date().getFullYear()} ExpertNear.Me - All rights reserved.
       </footer>
     </main>
   );

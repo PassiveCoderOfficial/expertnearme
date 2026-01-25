@@ -1,10 +1,4 @@
-/**
- * src/app/layout.tsx
- *
- * Root layout with Geist fonts and responsive Navbar.
- * Adds top padding so content doesn’t overlap fixed nav.
- */
-
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -26,7 +20,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ToastProvider>
           <AuthProvider>
+            {/* Navbar is expected to be fixed at top (see your Navbar component) */}
             <Navbar />
+            {/* Reserve space for the fixed navbar so page content doesn't sit under it */}
             <div className="pt-16">{children}</div>
           </AuthProvider>
         </ToastProvider>

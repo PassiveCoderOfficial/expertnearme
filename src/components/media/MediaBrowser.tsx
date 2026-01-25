@@ -35,9 +35,7 @@ export default function MediaBrowser({
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [folderFilter, setFolderFilter] = useState<"all" | "admin" | "mine">(
-    "all"
-  );
+  const [folderFilter, setFolderFilter] = useState<"all" | "admin" | "mine">("all");
   const [tagFilter, setTagFilter] = useState<string>("");
   const [refreshKey, setRefreshKey] = useState(0);
   const { toast, confirm } = useToast();
@@ -146,8 +144,7 @@ export default function MediaBrowser({
   async function requestDelete(id: number) {
     const ok = await confirm({
       title: "Delete media",
-      message:
-        "Are you sure you want to delete this media item? This action cannot be undone.",
+      message: "Are you sure you want to delete this media item? This action cannot be undone.",
       confirmLabel: "Delete",
       cancelLabel: "Cancel",
     });
@@ -174,11 +171,7 @@ export default function MediaBrowser({
     if (!rawUrl) return rawUrl;
     if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
     const path = rawUrl.startsWith("/") ? rawUrl : `/${rawUrl}`;
-    if (
-      typeof window !== "undefined" &&
-      window.location &&
-      window.location.origin
-    ) {
+    if (typeof window !== "undefined" && window.location && window.location.origin) {
       return `${window.location.origin}${path}`;
     }
     return path;
@@ -188,11 +181,7 @@ export default function MediaBrowser({
     const fullUrl = buildAbsoluteUrl(rawUrl);
 
     try {
-      if (
-        typeof navigator !== "undefined" &&
-        navigator.clipboard &&
-        navigator.clipboard.writeText
-      ) {
+      if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(fullUrl);
         toast("Copied to clipboard", { type: "success" });
         return;
@@ -241,23 +230,30 @@ export default function MediaBrowser({
 
   return (
     <div
-      className={
-        mode === "modal"
-          ? "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40"
-          : ""
-      }
+      className={mode === "modal" ? "fixed inset-0 z-60 flex items-center justify-center" : ""}
+      aria-hidden={mode === "modal" ? !open : undefined}
     >
+      {/* Backdrop */}
+      {mode === "modal" && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
       <div
         className={`bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-5xl ${
-          mode === "modal" ? "p-6" : "p-0"
+          mode === "modal" ? "p-6 z-60 relative" : "p-0"
         }`}
+        role="dialog"
+        aria-modal={mode === "modal"}
       >
         {/* Header / Tabs */}
         <div className="flex justify-between items-center mb-4 border-b pb-2">
           <div className="flex gap-2 items-center">
             {["upload", "my", ...(allowAllMedia ? ["all"] : [])].map((key) => {
-              const label =
-                key === "upload" ? "Upload" : key === "my" ? "My Media" : "All Media";
+              const label = key === "upload" ? "Upload" : key === "my" ? "My Media" : "All Media";
               const isActive = tab === (key as "upload" | "my" | "all");
               return (
                 <button
@@ -271,10 +267,7 @@ export default function MediaBrowser({
                 </button>
               );
             })}
-            <button
-              onClick={refresh}
-              className="ml-3 px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200"
-            >
+            <button onClick={refresh} className="ml-3 px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">
               Refresh
             </button>
           </div>
@@ -282,9 +275,7 @@ export default function MediaBrowser({
           <div className="flex items-center gap-3">
             <select
               value={folderFilter}
-              onChange={(e) =>
-                setFolderFilter(e.target.value as "all" | "admin" | "mine")
-              }
+              onChange={(e) => setFolderFilter(e.target.value as "all" | "admin" | "mine")}
               className="px-3 py-1 border rounded-md bg-white text-sm"
             >
               <option value="all">All folders</option>
@@ -308,11 +299,7 @@ export default function MediaBrowser({
         </div>
 
         {/* Upload Tab */}
-        <div
-          className={`transition-opacity duration-300 ${
-            tab === "upload" ? "opacity-100" : "opacity-0 hidden"
-          }`}
-        >
+        <div className={`transition-opacity duration-300 ${tab === "upload" ? "opacity-100" : "opacity-0 hidden"}`}>
           <div
             className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center relative"
             onDragOver={(e) => e.preventDefault()}
@@ -320,30 +307,15 @@ export default function MediaBrowser({
           >
             <p className="mb-4 text-gray-600">Drop files here or click to upload</p>
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="hidden"
-              id="fileInput"
-            />
-            <label
-              htmlFor="fileInput"
-              onClick={() => fileInputRef.current?.click()}
-              className="cursor-pointer px-4 py-2 bg-[#b84c4c] text-white rounded-md inline-block"
-            >
+            <input ref={fileInputRef} type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} className="hidden" id="fileInput" />
+            <label htmlFor="fileInput" onClick={() => fileInputRef.current?.click()} className="cursor-pointer px-4 py-2 bg-[#b84c4c] text-white rounded-md inline-block">
               Choose File
             </label>
 
             {uploading && (
               <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center rounded-lg">
                 <div className="flex items-center gap-3">
-                  <svg
-                    className="animate-spin h-6 w-6 text-gray-700"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="animate-spin h-6 w-6 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                   </svg>
@@ -360,15 +332,9 @@ export default function MediaBrowser({
         </div>
 
         {/* Media Grid */}
-        <div
-          className={`transition-opacity duration-300 ${
-            tab === "my" || tab === "all" ? "opacity-100" : "opacity-0 hidden"
-          }`}
-        >
+        <div className={`transition-opacity duration-300 ${tab === "my" || tab === "all" ? "opacity-100" : "opacity-0 hidden"}`}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4">
-            {displayedItems.length === 0 && (
-              <div className="col-span-full text-center text-sm text-gray-500">No media found.</div>
-            )}
+            {displayedItems.length === 0 && <div className="col-span-full text-center text-sm text-gray-500">No media found.</div>}
 
             {displayedItems.map((m) => (
               <div key={m.id} className="border rounded-lg p-2 flex flex-col items-center">
@@ -384,12 +350,7 @@ export default function MediaBrowser({
                   <div className="w-full h-28 bg-gray-100 rounded overflow-hidden mb-2 flex items-center justify-center cursor-pointer transition-shadow focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400">
                     {m.mimetype.startsWith("image/") ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={m.url}
-                        alt={m.filename}
-                        className="w-full h-full object-cover border-4 border-transparent hover:border-gray-400"
-                        style={{ boxSizing: "border-box" }}
-                      />
+                      <img src={m.url} alt={m.filename} className="w-full h-full object-cover border-4 border-transparent hover:border-gray-400" style={{ boxSizing: "border-box" }} />
                     ) : (
                       <div className="text-xs text-gray-600 px-2">{m.filename}</div>
                     )}
