@@ -1,6 +1,7 @@
+// src/components/MediaBrowser.tsx
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/components/ui/ToastProvider";
 
 type MediaItem = {
@@ -31,22 +32,21 @@ export default function MediaBrowser({
   const [tab, setTab] = useState<"upload" | "my" | "all">("upload");
   const [items, setItems] = useState<MediaItem[]>([]);
   const [file, setFile] = useState<File | null>(null);
-
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
   const [folderFilter, setFolderFilter] = useState<"all" | "admin" | "mine">(
     "all"
   );
   const [tagFilter, setTagFilter] = useState<string>("");
-
   const [refreshKey, setRefreshKey] = useState(0);
-
   const { toast, confirm } = useToast();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (file) uploadFile();
+    if (file) {
+      uploadFile();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file]);
 
@@ -101,14 +101,12 @@ export default function MediaBrowser({
         const xhr = new XMLHttpRequest();
         xhr.open("POST", "/api/media", true);
         xhr.withCredentials = true;
-
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
             const pct = Math.round((e.loaded / e.total) * 100);
             setProgress(pct);
           }
         };
-
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
             try {
@@ -129,7 +127,6 @@ export default function MediaBrowser({
             reject(new Error(msg));
           }
         };
-
         xhr.onerror = () => {
           reject(new Error("Network error during upload"));
         };
@@ -149,12 +146,12 @@ export default function MediaBrowser({
   async function requestDelete(id: number) {
     const ok = await confirm({
       title: "Delete media",
-      message: "Are you sure you want to delete this media item? This action cannot be undone.",
+      message:
+        "Are you sure you want to delete this media item? This action cannot be undone.",
       confirmLabel: "Delete",
       cancelLabel: "Cancel",
     });
     if (!ok) return;
-
     try {
       const res = await fetch(`/api/media/${id}`, {
         method: "DELETE",
@@ -177,7 +174,11 @@ export default function MediaBrowser({
     if (!rawUrl) return rawUrl;
     if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
     const path = rawUrl.startsWith("/") ? rawUrl : `/${rawUrl}`;
-    if (typeof window !== "undefined" && window.location && window.location.origin) {
+    if (
+      typeof window !== "undefined" &&
+      window.location &&
+      window.location.origin
+    ) {
       return `${window.location.origin}${path}`;
     }
     return path;
@@ -187,12 +188,15 @@ export default function MediaBrowser({
     const fullUrl = buildAbsoluteUrl(rawUrl);
 
     try {
-      if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+      if (
+        typeof navigator !== "undefined" &&
+        navigator.clipboard &&
+        navigator.clipboard.writeText
+      ) {
         await navigator.clipboard.writeText(fullUrl);
         toast("Copied to clipboard", { type: "success" });
         return;
       }
-
       // fallback: show toast with action to copy using textarea
       toast("Click Copy to copy the URL", {
         type: "info",
@@ -254,15 +258,13 @@ export default function MediaBrowser({
             {["upload", "my", ...(allowAllMedia ? ["all"] : [])].map((key) => {
               const label =
                 key === "upload" ? "Upload" : key === "my" ? "My Media" : "All Media";
-              const isActive = tab === key;
+              const isActive = tab === (key as "upload" | "my" | "all");
               return (
                 <button
                   key={key}
                   onClick={() => setTab(key as any)}
                   className={`px-4 py-2 rounded-t-md font-medium transition-colors duration-300 ${
-                    isActive
-                      ? "bg-[#b84c4c] text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    isActive ? "bg-[#b84c4c] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
                   {label}
@@ -280,7 +282,9 @@ export default function MediaBrowser({
           <div className="flex items-center gap-3">
             <select
               value={folderFilter}
-              onChange={(e) => setFolderFilter(e.target.value as "all" | "admin" | "mine")}
+              onChange={(e) =>
+                setFolderFilter(e.target.value as "all" | "admin" | "mine")
+              }
               className="px-3 py-1 border rounded-md bg-white text-sm"
             >
               <option value="all">All folders</option>
@@ -297,14 +301,18 @@ export default function MediaBrowser({
 
             {mode === "modal" && (
               <button onClick={onClose} className="text-sm text-gray-500">
-                ✕ Close
+                × Close
               </button>
             )}
           </div>
         </div>
 
         {/* Upload Tab */}
-        <div className={`transition-opacity duration-300 ${tab === "upload" ? "opacity-100" : "opacity-0 hidden"}`}>
+        <div
+          className={`transition-opacity duration-300 ${
+            tab === "upload" ? "opacity-100" : "opacity-0 hidden"
+          }`}
+        >
           <div
             className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center relative"
             onDragOver={(e) => e.preventDefault()}
@@ -313,24 +321,35 @@ export default function MediaBrowser({
             <p className="mb-4 text-gray-600">Drop files here or click to upload</p>
 
             <input
+              ref={fileInputRef}
               type="file"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               className="hidden"
               id="fileInput"
             />
-            <label htmlFor="fileInput" className="cursor-pointer px-4 py-2 bg-[#b84c4c] text-white rounded-md">
+            <label
+              htmlFor="fileInput"
+              onClick={() => fileInputRef.current?.click()}
+              className="cursor-pointer px-4 py-2 bg-[#b84c4c] text-white rounded-md inline-block"
+            >
               Choose File
             </label>
 
             {uploading && (
               <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center rounded-lg">
                 <div className="flex items-center gap-3">
-                  <svg className="animate-spin h-6 w-6 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg
+                    className="animate-spin h-6 w-6 text-gray-700"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                   </svg>
-                  <div className="text-sm text-gray-700">Uploading... {progress}%</div>
+                  <div className="text-sm text-gray-700">Uploading ... {progress}%</div>
                 </div>
+
                 <div className="w-64 h-2 bg-gray-200 rounded mt-4 overflow-hidden">
                   <div style={{ width: `${progress}%` }} className="h-full bg-[#b84c4c] transition-all" />
                 </div>
@@ -341,9 +360,15 @@ export default function MediaBrowser({
         </div>
 
         {/* Media Grid */}
-        <div className={`transition-opacity duration-300 ${tab === "my" || tab === "all" ? "opacity-100" : "opacity-0 hidden"}`}>
+        <div
+          className={`transition-opacity duration-300 ${
+            tab === "my" || tab === "all" ? "opacity-100" : "opacity-0 hidden"
+          }`}
+        >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4">
-            {displayedItems.length === 0 && <div className="col-span-full text-center text-sm text-gray-500">No media found.</div>}
+            {displayedItems.length === 0 && (
+              <div className="col-span-full text-center text-sm text-gray-500">No media found.</div>
+            )}
 
             {displayedItems.map((m) => (
               <div key={m.id} className="border rounded-lg p-2 flex flex-col items-center">

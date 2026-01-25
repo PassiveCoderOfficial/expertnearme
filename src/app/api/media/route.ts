@@ -1,20 +1,19 @@
 // src/app/api/media/route.ts
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { promises as fs } from "fs";
-import path from "path";
-import { Prisma } from "@prisma/client";
+import { supabaseServer } from "@/lib/supabaseServer";
+import { slugify, splitNameExt, getUniqueFilename } from "@/lib/filename";
+import type { Prisma } from "@prisma/client";
 
-const baseUploadDir = path.join(process.cwd(), "public/uploads");
-
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const scope = searchParams.get("scope") || "self";
+  const scope = (searchParams.get("scope") || "self") as "self" | "all";
   const sort = searchParams.get("sort") || "latest";
 
   const session = await getSession();
-  if (!session.authenticated) {
+  if (!session || !session.authenticated) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
@@ -22,52 +21,79 @@ export async function GET(req: Request) {
   if (scope === "self") {
     where = { uploadedById: session.userId };
   } else if (scope === "all" && session.role === "ADMIN") {
-    // admins can see all media
     where = {};
   } else {
-    // non-admins cannot request "all"
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // Ensure orderBy uses Prisma.SortOrder type
+  // Explicitly type orderBy so Prisma's types are satisfied
   const orderBy: Prisma.MediaOrderByWithRelationInput =
     sort === "latest"
-      ? { createdAt: "desc" as Prisma.SortOrder }
+      ? { createdAt: "desc" }
       : sort === "userId"
-      ? { uploadedById: "asc" as Prisma.SortOrder }
-      : { filename: "asc" as Prisma.SortOrder };
+      ? { uploadedById: "asc" }
+      : { filename: "asc" };
 
   const media = await prisma.media.findMany({ where, orderBy });
   return NextResponse.json(media);
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const session = await getSession();
-  if (!session.authenticated) {
+  if (!session || !session.authenticated) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
   const formData = await req.formData();
-  const file = formData.get("file") as File;
+  const file = formData.get("file") as File | null;
   if (!file) {
     return NextResponse.json({ error: "No file" }, { status: 400 });
   }
 
-  const tags = formData.get("tags") as string | null;
-  const folder = session.role === "ADMIN" ? "admin" : String(session.userId);
+  const tags = (formData.get("tags") as string) || null;
+  const accountSlug =
+    (session as any).profile?.slug ||
+    (session as any).slug ||
+    `user-${session.userId}`;
+  const folder = session.role === "ADMIN" ? "admin" : String(accountSlug);
 
-  const uploadDir = path.join(baseUploadDir, folder);
-  await fs.mkdir(uploadDir, { recursive: true });
+  const { base, ext } = splitNameExt(file.name);
+  const sanitizedBase = slugify(base);
+  const sanitizedSlug = slugify(String(accountSlug));
+  const baseName = `${sanitizedSlug}-${sanitizedBase}`;
 
-  const filename = `${Date.now()}-${file.name}`;
-  const filepath = path.join(uploadDir, filename);
+  const bucket = "uploads";
+  const uniqueFilename = await getUniqueFilename(
+    supabaseServer,
+    bucket,
+    folder,
+    baseName,
+    ext
+  );
+
   const buffer = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(filepath, buffer);
+
+  const { error: uploadError } = await supabaseServer.storage
+    .from(bucket)
+    .upload(`${folder}/${uniqueFilename}`, buffer, {
+      contentType: file.type,
+      upsert: false,
+    });
+
+  if (uploadError) {
+    console.error("Supabase upload error:", uploadError);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+  }
+
+  const { data: publicData } = supabaseServer.storage
+    .from(bucket)
+    .getPublicUrl(`${folder}/${uniqueFilename}`);
+  const publicUrl = publicData?.publicUrl ?? "";
 
   const media = await prisma.media.create({
     data: {
-      url: `/uploads/${folder}/${filename}`,
-      filename,
+      url: publicUrl,
+      filename: uniqueFilename,
       mimetype: file.type,
       size: file.size,
       uploadedById: session.userId,

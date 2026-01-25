@@ -12,6 +12,7 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@prisma/client": "6.19.1",
+    "@supabase/supabase-js": "^2.91.1",
     "bcryptjs": "^3.0.3",
     "jsonwebtoken": "^9.0.3",
     "next": "16.1.1",
@@ -38,7 +39,11 @@
   },
   "vercel": {
     "build": {
-      "approve": ["prisma", "@prisma/client", "@prisma/engines"]
+      "approve": [
+        "prisma",
+        "@prisma/client",
+        "@prisma/engines"
+      ]
     }
   }
 }
