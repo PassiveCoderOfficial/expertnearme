@@ -22,9 +22,7 @@ export default function SettingsPage() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const res = await fetch("/api/admin/settings/site", {
-          credentials: "include",
-        });
+        const res = await fetch("/api/admin/settings", { credentials: "include" });
         if (!res.ok) {
           const text = await res.text();
           console.error("Failed to load settings:", text);
@@ -49,12 +47,12 @@ export default function SettingsPage() {
     }
   }, [role, toast]);
 
-  // saveSettings returns { success, message } so caller can show anchored toast
+  // Save settings via PATCH
   async function saveSettings(): Promise<{ success: boolean; message?: string }> {
     setSaving(true);
     try {
-      const res = await fetch("/api/admin/settings/site", {
-        method: "POST",
+      const res = await fetch("/api/admin/settings", {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ logo: logoUrl, favicon: faviconUrl }),
@@ -67,11 +65,10 @@ export default function SettingsPage() {
       }
 
       const data = await res.json();
-      if (data.success) {
-        return { success: true, message: "Settings saved" };
-      } else {
-        return { success: false, message: data.error || "Unknown error" };
+      if (data.error) {
+        return { success: false, message: data.error };
       }
+      return { success: true, message: "Settings saved" };
     } catch (err) {
       console.error("Failed to save settings", err);
       return { success: false, message: "Failed to save settings" };
@@ -80,15 +77,11 @@ export default function SettingsPage() {
     }
   }
 
-  // Inline handler that anchors toast to the clicked button
   async function handleSaveClick(e: React.MouseEvent<HTMLButtonElement>) {
-    // compute bounding rect of the clicked button
     const target = e.currentTarget as HTMLElement;
     const rect = target.getBoundingClientRect();
-    // call save
     const result = await saveSettings();
 
-    // build anchorRect for toast provider (screen coordinates)
     const anchorRect = {
       top: rect.top,
       left: rect.left,
@@ -129,7 +122,6 @@ export default function SettingsPage() {
           <div className="mb-6">
             <h3 className="text-md font-medium mb-2">Logo</h3>
             {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img src={logoUrl} alt="Logo" className="h-12 mb-3" />
             ) : (
               <p className="text-sm text-gray-600 mb-3">No logo selected.</p>
@@ -157,7 +149,6 @@ export default function SettingsPage() {
           <div className="mb-6">
             <h3 className="text-md font-medium mb-2">Favicon</h3>
             {faviconUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img src={faviconUrl} alt="Favicon" className="h-10 mb-3" />
             ) : (
               <p className="text-sm text-gray-600 mb-3">No favicon selected.</p>
@@ -191,7 +182,6 @@ export default function SettingsPage() {
         </section>
       )}
 
-      {/* Expert-specific settings */}
       {role === "EXPERT" && (
         <section className="mb-8">
           <h2 className="text-lg font-semibold mb-2">Expert Settings</h2>

@@ -1,17 +1,32 @@
 // File: src/components/Navbar.tsx
-
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import SearchBar from "./SearchBar";
 
 export default function Navbar() {
+  const [logo, setLogo] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then((res) => res.json())
+      .then((data) => setLogo(data.logo))
+      .catch(() => setLogo(null));
+  }, []);
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 py-0 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="text-xl font-bold text-[#b84c4c] tracking-tight">
-          ExpertNear.Me
+        <Link href="/" className="flex items-center gap-0">
+          {logo ? (
+            <img src={logo} alt="Site Logo" className="h-18 w-auto" />
+          ) : (
+            <span className="text-xl font-bold text-[#b84c4c] tracking-tight">
+              ExpertNear.Me
+            </span>
+          )}
         </Link>
 
         {/* Navigation Links */}
