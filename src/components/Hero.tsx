@@ -5,7 +5,7 @@ import React from "react";
 
 export default function Hero() {
   return (
-    <section className="relative -mt-20 bg-[url('/images/hero-bg.jpg')] bg-cover bg-center text-white px-6 py-24">
+    <section className="relative -mt-0 bg-[url('/images/hero-bg.jpg')] bg-cover bg-center text-white px-6 py-24">
       {/* Dark merun glass overlay */}
       <div className="max-w-4xl mx-auto text-center rounded-2xl backdrop-blur-xl bg-[#7a1f1f]/70 border border-white/10 px-8 py-10 shadow-2xl">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-5">Find Trusted Experts Near You</h1>

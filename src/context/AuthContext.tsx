@@ -1,4 +1,4 @@
-// src/context/AuthContext.tsx
+// File: src/context/AuthContext.tsx
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
@@ -23,7 +23,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   refresh: () => Promise<void>;
-  logout: () => void;   // ✅ add logout
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -31,7 +31,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   refresh: async () => {},
-  logout: () => {},     // ✅ default no‑op
+  logout: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -70,12 +70,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     refresh();
   }, []);
 
-  // ✅ logout clears cookie and resets state
   const logout = () => {
-    // clear cookie by calling a logout API or setting expired cookie
     fetch("/api/auth/logout", { method: "POST" }).finally(() => {
       setSession(null);
       setUser(null);
+      window.location.href = "/";
     });
   };
 

@@ -1,23 +1,17 @@
-// src/components/MobileNav.tsx
+// File: src/components/MobileNav.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-/**
- * MobileNav
- * - Closes on outside click
- * - Closes on route change
- * - Uses scoped z-index so it doesn't block global modals
- */
+import { useAuth } from "@/context/AuthContext";
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
+  const { session, logout } = useAuth();
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -29,14 +23,12 @@ export default function MobileNav() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Close on route change
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
   return (
     <div ref={containerRef} className="relative z-20">
-      {/* Toggle button */}
       <button
         type="button"
         aria-expanded={open}
@@ -48,7 +40,6 @@ export default function MobileNav() {
         <span className="sr-only">Toggle mobile navigation</span>
       </button>
 
-      {/* Overlay (click to close) */}
       {open && (
         <button
           type="button"
@@ -58,14 +49,13 @@ export default function MobileNav() {
         />
       )}
 
-      {/* Panel */}
       <div
         id="mobile-nav-panel"
         className={`transition transform fixed top-16 left-0 right-0 mx-4 z-50 rounded-xl bg-white shadow-2xl border border-gray-200 ${
           open ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0 pointer-events-none"
         }`}
       >
-        <nav className="p-4 grid gap-2">
+        <nav className="p-4 grid gap-2 text-sm font-medium text-gray-700">
           <Link href="/" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
             Home
           </Link>
@@ -78,6 +68,32 @@ export default function MobileNav() {
           <Link href="/experts/manage" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
             Expert Management
           </Link>
+
+          {session?.authenticated ? (
+            <>
+              <Link href="/dashboard" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
+                Dashboard
+              </Link>
+              <button
+                onClick={() => {
+                  logout();
+                  setOpen(false);
+                }}
+                className="text-left rounded-md px-3 py-2 hover:bg-gray-100"
+              >
+                Log Out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
+                Login
+              </Link>
+              <Link href="/signup" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
+                Signup
+              </Link>
+            </>
+          )}
         </nav>
       </div>
     </div>
