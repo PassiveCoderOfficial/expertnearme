@@ -20,8 +20,8 @@ export default function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md shadow-sm">
       <div className="max-w-7xl mx-auto px-4 py-0 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
+        {/* Logo with fixed height */}
+        <Link href="/" className="flex items-center gap-2 h-16">
           {logo ? (
             <img src={logo} alt="Site Logo" className="h-16 w-auto" />
           ) : (

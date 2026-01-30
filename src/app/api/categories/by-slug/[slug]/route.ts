@@ -1,8 +1,8 @@
-// src/app/api/categories/by-slug/[slug]/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+// File: src/app/api/categories/by-slug/[slug]/route.ts
+// Public API: GET /api/categories/by-slug/[slug]
 
-const prisma = new PrismaClient();
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 type ParamsContext = { params: { slug: string } } | { params: Promise<{ slug: string }> };
 
@@ -12,30 +12,29 @@ async function resolveSlug(context: ParamsContext) {
   return slug;
 }
 
-export async function GET(_req: NextRequest, context: ParamsContext): Promise<Response> {
+export async function GET(_req: NextRequest, context: ParamsContext) {
   try {
     const slug = await resolveSlug(context);
 
     const category = await prisma.category.findUnique({
       where: { slug },
+      select: { id: true, name: true, slug: true, parentId: true, showOnHomepage: true },
     });
 
     if (!category) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
 
-    // Find join rows and include the related expert
+    // Find join rows and include the related expert (public-facing)
     const links = await prisma.expertCategory.findMany({
       where: { categoryId: category.id },
       include: { expert: true },
     });
 
-    // Map to the expert objects (remove join metadata)
     const experts = links.map((l) => l.expert);
-
     return NextResponse.json({ category, experts });
   } catch (err: any) {
-    console.error("GET /categories/by-slug/[slug] error:", err);
+    console.error("GET /api/categories/by-slug/[slug] error:", err);
     return NextResponse.json({ error: "Failed to fetch category experts" }, { status: 500 });
   }
 }
