@@ -1,5 +1,8 @@
 // File: src/app/api/categories/by-slug/[slug]/route.ts
 // Public API: GET /api/categories/by-slug/[slug]
+//
+// Returns category details and a sanitized list of experts belonging to that category.
+// Each expert includes `profileLink` so the frontend can link to `/${profileLink}`.
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -25,13 +28,42 @@ export async function GET(_req: NextRequest, context: ParamsContext) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
 
-    // Find join rows and include the related expert (public-facing)
+    // Fetch expert-category links and include only the public-facing expert fields.
+    // We explicitly select fields to avoid leaking internal or sensitive data.
     const links = await prisma.expertCategory.findMany({
       where: { categoryId: category.id },
-      include: { expert: true },
+      include: {
+        expert: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            isBusiness: true,
+            businessName: true,
+            profileLink: true,
+            shortDesc: true,
+            profilePicture: true,
+            coverPhoto: true,
+            featured: true,
+            createdAt: true,
+          },
+        },
+      },
+      orderBy: { expertId: "asc" }, // order by expertId (valid column on join table)
     });
 
-    const experts = links.map((l) => l.expert);
+    // Map to experts and dedupe by id (in case of duplicate join rows)
+    const seen = new Set<number>();
+    const experts = links
+      .map((l) => l.expert)
+      .filter((ex) => {
+        if (!ex) return false;
+        if (seen.has(ex.id)) return false;
+        seen.add(ex.id);
+        return true;
+      });
+
     return NextResponse.json({ category, experts });
   } catch (err: any) {
     console.error("GET /api/categories/by-slug/[slug] error:", err);

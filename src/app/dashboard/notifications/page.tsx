@@ -1,36 +1,36 @@
-// File: src/app/admin/notifications/page.tsx
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+// File: src/app/dashboard/notifications/page.tsx
+import { prisma } from "@/lib/prisma";
 
 export default async function NotificationsPage() {
-  const subs = await prisma.pushSubscription.findMany({
-    include: { expert: true },
-  });
+  // Fetch all push subscriptions without any relation includes
+  const subs = await prisma.pushSubscription.findMany();
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">Push Notifications</h2>
-      <table className="w-full border-collapse border border-gray-700">
-        <thead>
-          <tr className="bg-gray-800">
-            <th className="border border-gray-700 px-4 py-2">Expert</th>
-            <th className="border border-gray-700 px-4 py-2">Browser</th>
-            <th className="border border-gray-700 px-4 py-2">Device</th>
-            <th className="border border-gray-700 px-4 py-2">Endpoint</th>
-          </tr>
-        </thead>
-        <tbody>
-          {subs.map((s) => (
-            <tr key={s.id} className="hover:bg-gray-700">
-              <td className="border border-gray-700 px-4 py-2">{s.expert.name}</td>
-              <td className="border border-gray-700 px-4 py-2">{s.browser || "-"}</td>
-              <td className="border border-gray-700 px-4 py-2">{s.device || "-"}</td>
-              <td className="border border-gray-700 px-4 py-2 truncate">{s.endpoint}</td>
-            </tr>
+    <main className="max-w-4xl mx-auto py-8 px-4">
+      <h1 className="text-2xl font-bold mb-6">Notifications</h1>
+
+      {subs.length === 0 ? (
+        <p className="text-gray-600">No push subscriptions found.</p>
+      ) : (
+        <ul className="space-y-4">
+          {subs.map((sub) => (
+            <li
+              key={sub.id}
+              className="border rounded p-4 bg-white shadow-sm"
+            >
+              <div className="text-sm text-gray-700">
+                <div>
+                  <strong>ID:</strong> {sub.id}
+                </div>
+                <div>
+                  <strong>Endpoint:</strong> {sub.endpoint}
+                </div>
+                {/* Add other fields from your PushSubscription model here */}
+              </div>
+            </li>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </ul>
+      )}
+    </main>
   );
 }

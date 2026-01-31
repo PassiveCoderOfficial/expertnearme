@@ -1,12 +1,4 @@
-/**
- * src/app/categories/[slug]/page.tsx
- *
- * Purpose:
- * --------
- * Show experts for a single category by slug.
- * Fixes the "params is a Promise" error by unwrapping params properly.
- */
-
+// File: src/app/categories/[slug]/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -17,6 +9,7 @@ type Expert = {
   name: string;
   email: string;
   phone?: string | null;
+  profileLink?: string | null;
 };
 
 type CategoryDetail = {
@@ -32,7 +25,7 @@ export default function CategoryDetailPage(props: { params: Promise<{ slug: stri
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // ✅ unwrap params once component mounts
+  // unwrap params once component mounts
   useEffect(() => {
     (async () => {
       const { slug } = await props.params;
@@ -96,9 +89,20 @@ export default function CategoryDetailPage(props: { params: Promise<{ slug: stri
                   <div className="font-semibold">{e.name}</div>
                   <div className="text-sm text-gray-600">{e.email}</div>
                   {e.phone && <div className="text-sm text-gray-600">Phone: {e.phone}</div>}
-                  <Link href={`/experts/${e.id}`} className="text-blue-600 hover:underline mt-1 inline-block">
-                    View expert
-                  </Link>
+
+                  {/* Prefer profileLink at root; fallback to admin edit if missing */}
+                  {e.profileLink ? (
+                    <Link href={`/${e.profileLink}`} className="text-blue-600 hover:underline mt-1 inline-block">
+                      View profile
+                    </Link>
+                  ) : (
+                    <div className="mt-2">
+                      <span className="inline-block text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded mr-2">Missing slug</span>
+                      <Link href={`/dashboard/experts/${e.id}`} className="text-sm text-blue-600 hover:underline">
+                        Edit expert
+                      </Link>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>

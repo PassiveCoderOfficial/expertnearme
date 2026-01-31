@@ -1,6 +1,6 @@
-// src/lib/filename.ts
+// File: src/lib/filename.ts
 /**
- * Helpers for sanitizing and generating unique filenames for Supabase Storage.
+ * Helpers for sanitizing and generating unique filenames and slugs.
  */
 
 export function slugify(text: string) {
@@ -64,4 +64,31 @@ export async function getUniqueFilename(
     console.warn("getUniqueFilename error:", err);
     return candidate;
   }
+}
+
+/**
+ * Generate a unique slug based on a base string and an array of existing slugs.
+ * - Keeps only allowed characters via slugify
+ * - Appends -2, -3, ... if collisions are found
+ *
+ * Example:
+ *   const slug = getUniqueSlug("My Business", ["my-business", "my-business-2"])
+ *   // => "my-business-3"
+ */
+export function getUniqueSlug(base: string, existingSlugs: string[] = [], excludeSlug?: string | null) {
+  const baseSlug = slugify(base || "");
+  if (!baseSlug) return "";
+
+  // Build a set for O(1) lookups, optionally excluding a slug (useful when editing)
+  const set = new Set(existingSlugs.filter((s) => (excludeSlug ? s !== excludeSlug : true)));
+
+  if (!set.has(baseSlug)) return baseSlug;
+
+  let counter = 2;
+  let candidate = `${baseSlug}-${counter}`;
+  while (set.has(candidate)) {
+    counter++;
+    candidate = `${baseSlug}-${counter}`;
+  }
+  return candidate;
 }

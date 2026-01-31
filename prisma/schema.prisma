@@ -8,21 +8,22 @@ datasource db {
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  email         String         @unique
-  password      String
-  role          Role           @default(USER)
-  verified      Boolean        @default(false)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  name          String         @default("Unknown")
-  auditLogs     AuditLog[]
-  tokens        AuthToken[]
-  bookings      Booking[]
-  notifications Notification[]
-  reviews       Review[]
-  profile       UserProfile?
-  media         Media[]
+  id                Int                @id @default(autoincrement())
+  email             String             @unique
+  password          String
+  role              Role               @default(USER)
+  verified          Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  name              String             @default("Unknown")
+  auditLogs         AuditLog[]
+  tokens            AuthToken[]
+  bookings          Booking[]
+  notifications     Notification[]
+  reviews           Review[]
+  profile           UserProfile?
+  media             Media[]
+  pushSubscriptions PushSubscription[]
 }
 
 model UserProfile {
@@ -46,15 +47,15 @@ model Setting {
 
 model Media {
   id           Int      @id @default(autoincrement())
-  url          String   // path or external storage URL
+  url          String // path or external storage URL
   filename     String
   mimetype     String
   size         Int
   uploadedById Int
   uploadedBy   User     @relation(fields: [uploadedById], references: [id])
   createdAt    DateTime @default(now())
-  folder       String?  // optional folder name (e.g. userId or "admin")
-  tags         String?  // optional comma-separated tags
+  folder       String? // optional folder name (e.g. userId or "admin")
+  tags         String? // optional comma-separated tags
 
   @@index([uploadedById])
   @@index([createdAt])
@@ -72,21 +73,49 @@ model AuthToken {
 }
 
 model Expert {
-  id             Int                @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
+  profileLink    String? @unique
   name           String
-  email          String             @unique
+  email          String   @unique
   phone          String?
-  isBusiness     Boolean            @default(false)
-  featured       Boolean            @default(false)
+  whatsapp       String? // separate WhatsApp if different
+  isBusiness     Boolean  @default(false)
+  businessName   String? // for business accounts
+  contactPerson  String? // if business
+  officeAddress  String?
+  webAddress     String? // badge if verified
+  mapLocation    String? // lat/lng or Google Maps link
   profilePicture String?
   coverPhoto     String?
   shortDesc      String?
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @default(now())
-  bookings       Booking[]
-  categories     ExpertCategory[]
-  pushSubs       PushSubscription[]
-  reviews        Review[]
+  featured       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  categories ExpertCategory[]
+  services   Service[]
+  portfolio  Portfolio[]
+  reviews    Review[]
+  bookings   Booking[]
+}
+
+model Service {
+  id          Int     @id @default(autoincrement())
+  expertId    Int
+  name        String
+  image       String?
+  description String?
+  rateUnit    String? // optional toggle
+  expert      Expert  @relation(fields: [expertId], references: [id])
+}
+
+model Portfolio {
+  id        Int     @id @default(autoincrement())
+  expertId  Int
+  imageUrl  String?
+  videoUrl  String?
+  socialUrl String?
+  expert    Expert  @relation(fields: [expertId], references: [id])
 }
 
 model Category {
@@ -150,7 +179,7 @@ model PushSubscription {
   auth      String
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
-  expert    Expert   @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Notification {
