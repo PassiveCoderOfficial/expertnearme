@@ -1,11 +1,17 @@
 // File: src/components/SearchBar.tsx
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type ProviderItem = { id: number; name: string; isBusiness: boolean; featured?: boolean };
+type ProviderItem = {
+  id: number;
+  name: string;
+  isBusiness: boolean;
+  featured?: boolean;
+  profileLink: string; // add slug field
+};
+
 type CategoryItem = { id: number; name: string; slug: string };
 
 export default function SearchBar() {
@@ -46,8 +52,8 @@ export default function SearchBar() {
     return () => clearTimeout(t);
   }, [query]);
 
-  const goProvider = (id: number) => {
-    router.push(`/providers/${id}`);
+  const goProvider = (slug: string) => {
+    router.push(`/${slug}`);
     setOpen(false);
   };
 
@@ -85,7 +91,7 @@ export default function SearchBar() {
             <div>
               <div className="px-4 py-2 text-xs font-semibold text-gray-500">Sponsored</div>
               <button
-                onClick={() => goProvider(sponsored.id)}
+                onClick={() => goProvider(sponsored.profileLink)}
                 className="w-full text-left px-4 py-2 hover:bg-gray-100 flex justify-between items-center"
               >
                 <div className="flex flex-col">
@@ -105,7 +111,7 @@ export default function SearchBar() {
               {providers.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => goProvider(p.id)}
+                  onClick={() => goProvider(p.profileLink)}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100 flex justify-between items-center"
                 >
                   <div className="flex flex-col">

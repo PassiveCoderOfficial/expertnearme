@@ -1,5 +1,4 @@
 // File: src/app/api/search/route.ts
-
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
@@ -43,6 +42,7 @@ export async function GET(req: Request) {
         name: true,
         isBusiness: true,
         featured: true,
+        profileLink: true, // include slug
         categories: { include: { category: true } },
       },
       orderBy: { name: "asc" },
@@ -68,6 +68,7 @@ export async function GET(req: Request) {
         name: true,
         isBusiness: true,
         featured: true,
+        profileLink: true, // include slug
         categories: { include: { category: true } },
       },
       orderBy: [{ featured: "desc" }, { name: "asc" }],
