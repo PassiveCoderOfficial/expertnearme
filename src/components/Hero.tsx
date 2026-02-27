@@ -7,7 +7,7 @@ export default function Hero() {
   return (
     <section className="relative -mt-0 bg-[url('/images/hero-bg.jpg')] bg-cover bg-center text-white px-6 py-24">
       {/* Dark merun glass overlay */}
-      <div className="max-w-4xl mx-auto text-center rounded-2xl backdrop-blur-xl bg-[#7a1f1f]/70 border border-white/10 px-8 py-10 shadow-2xl">
+      <div className="max-w-4xl mx-auto text-center rounded-2xl backdrop-blur-xl bg-gradient-to-br from-blue-600/80 to-indigo-700/80 border border-white/20 px-8 py-10 shadow-2xl">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-5">Find Trusted Experts Near You</h1>
         <p className="text-base md:text-lg leading-relaxed text-white/90 mb-8">
           Discover verified professionals across IT, Legal, Health, MEP and more — tailored for expats in the Middle East and Southeast Asia.
@@ -28,11 +28,22 @@ export default function Hero() {
           >
             Create Exper Account
           </Link>
+
+          {/* Glass button: Get Started */}
+          <Link
+            href="/categories"
+            className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-white bg-white/10 border border-white/20 backdrop-blur-md transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+          >
+            Get Started
+          </Link>
         </div>
       </div>
 
       {/* Subtle top-to-bottom vignette to deepen the hero */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
+
+      {/* Subtle bottom-to-top gradient for better text visibility */}
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/30 to-transparent" />
     </section>
   );
 }
