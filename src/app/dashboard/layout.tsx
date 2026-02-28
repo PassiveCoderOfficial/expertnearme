@@ -14,12 +14,14 @@ import {
   MdSettings,
   MdPeople,
   MdPhotoLibrary,
+  MdPublic,
 } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
 
 const navByRole: Record<string, { name: string; href: string; icon?: React.ReactNode }[]> = {
   ADMIN: [
     { name: "Dashboard", href: "/dashboard", icon: <MdDashboard /> },
+    { name: "Countries", href: "/dashboard/countries", icon: <MdPublic /> },
     { name: "Users", href: "/dashboard/users", icon: <MdPeople /> },
     { name: "Experts", href: "/dashboard/experts", icon: <MdPerson /> },
     { name: "Categories", href: "/dashboard/categories", icon: <MdCategory /> },
