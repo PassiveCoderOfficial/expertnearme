@@ -1,4 +1,6 @@
 // src/app/dashboard/countries/page.tsx
+"use client";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
