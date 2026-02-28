@@ -1,83 +1,94 @@
-// File: src/app/api/search/route.ts
-import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 
-const prisma = new PrismaClient();
-
-export async function GET(req: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const q = searchParams.get("q")?.trim() || "";
+    const searchParams = request.nextUrl.searchParams;
+    const q = searchParams.get('q')?.toLowerCase().trim();
+    const country = searchParams.get('country')?.toLowerCase().trim();
+    const category = searchParams.get('category')?.toLowerCase().trim();
+    const serviceType = searchParams.get('serviceType')?.toLowerCase().trim();
 
-    if (!q || q.length < 2) {
-      return NextResponse.json({ sponsored: null, experts: [], categories: [] });
+    const where: any = {
+      active: true,
+      verified: true,
+    };
+
+    if (country) {
+      where.countryCode = country;
     }
 
-    // Categories: match anywhere in name
-    const categories = await prisma.category.findMany({
-      where: { name: { contains: q, mode: "insensitive" } },
-      take: 5,
-      select: { id: true, name: true, slug: true },
-    });
+    if (category) {
+      where.categories = {
+        some: {
+          id: category,
+        },
+      };
+    }
 
-    // Sponsored expert: must be featured AND match the query (name or category name)
-    const sponsored = await prisma.expert.findFirst({
-      where: {
-        featured: true,
-        OR: [
-          { name: { contains: q, mode: "insensitive" } },
-          {
-            categories: {
-              some: {
-                category: {
-                  name: { contains: q, mode: "insensitive" },
-                },
-              },
-            },
-          },
-        ],
-      },
-      select: {
-        id: true,
-        name: true,
-        isBusiness: true,
-        featured: true,
-        profileLink: true, // include slug
-        categories: { include: { category: true } },
-      },
-      orderBy: { name: "asc" },
-    });
+    if (serviceType) {
+      where.serviceTypes = {
+        some: {
+          id: serviceType,
+        },
+      };
+    }
 
-    // Regular experts: match query, exclude sponsored id if present
+    if (q) {
+      where.OR = [
+        { name: { contains: q } },
+        { bio: { contains: q } },
+        { categories: { some: { name: { contains: q } } } },
+      ];
+    }
+
     const experts = await prisma.expert.findMany({
-      where: {
-        OR: [
-          { name: { contains: q, mode: "insensitive" } },
-          {
-            categories: {
-              some: {
-                category: { name: { contains: q, mode: "insensitive" } },
-              },
-            },
+      where,
+      include: {
+        categories: true,
+        serviceTypes: true,
+        reviews: {
+          select: {
+            rating: true,
           },
-        ],
-        ...(sponsored ? { NOT: { id: sponsored.id } } : {}),
+        },
       },
-      select: {
-        id: true,
-        name: true,
-        isBusiness: true,
-        featured: true,
-        profileLink: true, // include slug
-        categories: { include: { category: true } },
+      orderBy: {
+        rating: 'desc',
       },
-      orderBy: [{ featured: "desc" }, { name: "asc" }],
-      take: 9, // 1 sponsored + up to 9 regular = max 10 rows
     });
 
-    return NextResponse.json({ sponsored, experts, categories });
-  } catch (err) {
-    console.error("Search API failed:", err);
-    return NextResponse.json({ sponsored: null, experts: [], categories: [] }, { status: 500 });
+    const results = experts.map((expert) => {
+      const ratings = expert.reviews.map((r) => r.rating);
+      const avgRating = ratings.length > 0
+        ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+        : 0;
+
+      return {
+        id: expert.id,
+        name: expert.name,
+        bio: expert.bio,
+        avatar: expert.avatar,
+        email: expert.email,
+        phone: expert.phone,
+        countryCode: expert.countryCode,
+        rating: avgRating,
+        reviewCount: expert.reviews.length,
+        categories: expert.categories.map((c) => ({ id: c.id, name: c.name })),
+        serviceTypes: expert.serviceTypes.map((st) => ({ id: st.id, name: st.name })),
+      };
+    });
+
+    return NextResponse.json({
+      success: true,
+      count: results.length,
+      data: results,
+    });
+  } catch (error) {
+    console.error('Search error:', error);
+    return NextResponse.json(
+      { error: 'Search failed', success: false },
+      { status: 500 }
+    );
   }
 }
