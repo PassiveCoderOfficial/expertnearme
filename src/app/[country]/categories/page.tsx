@@ -6,20 +6,6 @@ interface CategoriesPageProps {
   params: Promise<{ country: string }>;
 }
 
-export async function generateStaticParams() {
-  try {
-    const countries = await prisma.country.findMany({
-      where: { active: true },
-      select: { code: true },
-    });
-    return countries.map((country) => ({
-      country: country.code,
-    }));
-  } catch (e) {
-    console.error("<generateStaticParams> failed:", e);
-    return [];
-  }
-}
 
 export default async function CategoriesPage({ params }: CategoriesPageProps) {
   const { country } = await params;
