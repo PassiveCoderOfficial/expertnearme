@@ -1,9 +1,10 @@
-// src/components/CategoryGrid.tsx
+'use client';
+
 import Link from 'next/link';
 import { useState } from 'react';
 
 interface CategoryGridProps {
-  categories: Array<{ id: string; name: string; icon?: string; color?: string }>;
+  categories: Array<{ id: number | string; name: string; icon?: string; color?: string }>;
   countryCode: string;
 }
 

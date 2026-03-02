@@ -20,7 +20,7 @@ function getVisitorCountry(request: NextRequest): string | null {
 
 function isCountryRoute(pathname: string): boolean {
   const firstSegment = pathname.split('/').filter(Boolean)[0];
-  return firstSegment && SUPPORTED_COUNTRIES.includes(firstSegment);
+  return !!firstSegment && SUPPORTED_COUNTRIES.includes(firstSegment);
 }
 
 export function middleware(request: NextRequest) {

@@ -1,25 +1,16 @@
-// src/app/api/dashboard/bookings/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/db";
 
-const prisma = new PrismaClient();
-
-type ParamsContext = { params: { id: string } } | { params: Promise<{ id: string }> };
-
-async function resolveId(context: ParamsContext) {
-  const { id: idParam } = await Promise.resolve((context as any).params);
-  const id = Number(idParam);
-  if (Number.isNaN(id)) throw new Error("Invalid id");
-  return id;
-}
-
-// GET /api/dashboard/bookings/[id]
-export async function GET(_req: NextRequest, context: ParamsContext): Promise<Response> {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
   try {
-    const id = await resolveId(context);
+    const { id } = await params;
+    const numId = Number(id);
+    if (Number.isNaN(numId)) {
+      return NextResponse.json({ error: "Invalid booking id" }, { status: 400 });
+    }
 
     const booking = await prisma.booking.findUnique({
-      where: { id },
+      where: { id: numId },
       include: {
         expert: true,
         client: true,
@@ -34,21 +25,22 @@ export async function GET(_req: NextRequest, context: ParamsContext): Promise<Re
     return NextResponse.json(booking);
   } catch (err: any) {
     console.error("GET /dashboard/bookings/[id] error:", err);
-    if (err.message === "Invalid id") {
-      return NextResponse.json({ error: "Invalid booking id" }, { status: 400 });
-    }
     return NextResponse.json({ error: "Failed to fetch booking" }, { status: 500 });
   }
 }
 
-// PATCH /api/dashboard/bookings/[id]
-export async function PATCH(req: NextRequest, context: ParamsContext): Promise<Response> {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
   try {
-    const id = await resolveId(context);
+    const { id } = await params;
+    const numId = Number(id);
+    if (Number.isNaN(numId)) {
+      return NextResponse.json({ error: "Invalid booking id" }, { status: 400 });
+    }
+
     const body = await req.json();
 
     const updated = await prisma.booking.update({
-      where: { id },
+      where: { id: numId },
       data: {
         status: body.status,
         scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : undefined,
@@ -58,7 +50,7 @@ export async function PATCH(req: NextRequest, context: ParamsContext): Promise<R
     return NextResponse.json(updated);
   } catch (err: any) {
     console.error("PATCH /dashboard/bookings/[id] error:", err);
-    if (err.message === "Invalid id") {
+    if (err.message === "Invalid booking id") {
       return NextResponse.json({ error: "Invalid booking id" }, { status: 400 });
     }
     if (err?.code === "P2025") {
@@ -68,17 +60,20 @@ export async function PATCH(req: NextRequest, context: ParamsContext): Promise<R
   }
 }
 
-// DELETE /api/dashboard/bookings/[id]
-export async function DELETE(_req: NextRequest, context: ParamsContext): Promise<Response> {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
   try {
-    const id = await resolveId(context);
+    const { id } = await params;
+    const numId = Number(id);
+    if (Number.isNaN(numId)) {
+      return NextResponse.json({ error: "Invalid booking id" }, { status: 400 });
+    }
 
-    await prisma.booking.delete({ where: { id } });
+    await prisma.booking.delete({ where: { id: numId } });
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("DELETE /dashboard/bookings/[id] error:", err);
-    if (err.message === "Invalid id") {
+    if (err.message === "Invalid booking id") {
       return NextResponse.json({ error: "Invalid booking id" }, { status: 400 });
     }
     if (err?.code === "P2025") {

@@ -4,21 +4,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-type ParamsContext = { params: { id: string } } | { params: Promise<{ id: string }> };
-
-async function resolveId(context: ParamsContext) {
-  const { id: idParam } = await Promise.resolve((context as any).params);
-  const id = Number(idParam);
-  if (Number.isNaN(id)) throw new Error("Invalid id");
-  return id;
-}
-
-export async function GET(_req: NextRequest, context: ParamsContext) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = await resolveId(context);
+    const { id } = await params;
+    const numId = Number(id);
+    if (Number.isNaN(numId)) {
+      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+    }
 
     const category = await prisma.category.findUnique({
-      where: { id },
+      where: { id: numId },
       select: { id: true, name: true, slug: true, parentId: true, showOnHomepage: true },
     });
 
@@ -27,7 +22,7 @@ export async function GET(_req: NextRequest, context: ParamsContext) {
     }
 
     // Optionally compute expert link count for the response
-    const expertCount = await prisma.expertCategory.count({ where: { categoryId: id } });
+    const expertCount = await prisma.expertCategory.count({ where: { categoryId: numId } });
 
     return NextResponse.json({ ...category, expertCount });
   } catch (err: any) {

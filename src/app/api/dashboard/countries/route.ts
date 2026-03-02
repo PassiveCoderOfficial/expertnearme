@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       data: {
         code: code.toLowerCase(),
         name,
-        active: active ?? true,
+        active: active === undefined ? undefined : Boolean(active),
         landingContent,
         currency,
         timezone,

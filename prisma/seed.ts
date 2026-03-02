@@ -19,12 +19,13 @@ async function main() {
         name: cat.name,
         slug: cat.slug,
         showOnHomepage: true,
+        countryCode: "us",
       },
     });
   }
 
   // Test expert
-  await prisma.expert.upsert({
+  const expert = await prisma.expert.upsert({
     where: { email: "expert@example.com" },
     update: {},
     create: {
@@ -34,6 +35,22 @@ async function main() {
       shortDesc: "Demo expert for testing",
       isBusiness: false,
       featured: true,
+    },
+  });
+
+  // Link expert to first category
+  const firstCategory = categories[0];
+  await prisma.expertCategory.upsert({
+    where: {
+      expertId_categoryId: {
+        expertId: expert.id,
+        categoryId: await prisma.category.findUnique({ where: { slug: firstCategory.slug } }).then(c => c?.id ?? 0),
+      },
+    },
+    update: {},
+    create: {
+      expertId: expert.id,
+      categoryId: await prisma.category.findUnique({ where: { slug: firstCategory.slug } }).then(c => c?.id ?? 0),
     },
   });
 

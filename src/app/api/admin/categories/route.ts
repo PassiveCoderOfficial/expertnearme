@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { name, slug, parentId, showOnHomepage } = await req.json();
+    const { name, slug, parentId, showOnHomepage, countryCode } = await req.json();
     if (!name || !slug) {
       return NextResponse.json({ error: "Name and slug required" }, { status: 400 });
     }
@@ -62,7 +62,13 @@ export async function POST(req: NextRequest) {
     }
 
     const category = await prisma.category.create({
-      data: { name, slug, parentId: parent, showOnHomepage: Boolean(showOnHomepage) },
+      data: { 
+        name, 
+        slug, 
+        parentId: parent, 
+        showOnHomepage: Boolean(showOnHomepage),
+        countryCode: countryCode || null,
+      },
     });
 
     return NextResponse.json({ success: true, category }, { status: 201 });

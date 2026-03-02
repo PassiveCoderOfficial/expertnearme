@@ -1,17 +1,19 @@
-// src/components/ExpertList.tsx
+'use client';
+
 import Link from 'next/link';
 import { Star } from 'lucide-react';
 
 interface Expert {
-  id: string;
+  id: number;
   name: string;
   email: string;
   phone?: string;
   avatar?: string;
   rating: number;
   reviewCount: number;
-  categories?: Array<{ id: string; name: string }>;
+  categories?: Array<{ id: number; name: string }>;
   bio?: string;
+  shortDesc?: string;
 }
 
 interface ExpertListProps {

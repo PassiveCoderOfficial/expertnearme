@@ -1,4 +1,3 @@
-// src/app/[country]/page.tsx
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import CountryHero from '@/components/CountryHero';
@@ -10,14 +9,18 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const countries = await prisma.country.findMany({
-    where: { active: true },
-    select: { code: true },
-  });
-  
-  return countries.map((country) => ({
-    country: country.code,
-  }));
+  try {
+    const countries = await prisma.country.findMany({
+      where: { active: true },
+      select: { code: true },
+    });
+    return countries.map((country) => ({
+      country: country.code,
+    }));
+  } catch (e) {
+    console.error("<generateStaticParams> failed:", e);
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: PageProps) {
@@ -54,28 +57,72 @@ export default async function CountryPage({ params }: PageProps) {
       active: true 
     },
     orderBy: { name: 'asc' },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+    },
   });
 
   const experts = await prisma.expert.findMany({
-    where: { 
-      countryCode,
-      active: true,
-      verified: true,
+    where: {
+      categories: {
+        some: {
+          category: {
+            countryCode,
+            active: true,
+          },
+        },
+      },
     },
     include: {
-      categories: true,
+      categories: {
+        include: {
+          category: true,
+        },
+      },
       reviews: {
         take: 10,
         orderBy: { createdAt: 'desc' },
       },
     },
-    orderBy: { rating: 'desc' },
+    orderBy: { featured: 'desc' },
     take: 12,
+  });
+
+  // Transform experts for ExpertList
+  const transformedExperts = experts.map(expert => {
+    const categories = expert.categories.map(ec => ec.category).filter(Boolean);
+    const reviewCount = expert.reviews.length;
+    const rating = reviewCount > 0 
+      ? expert.reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount
+      : 0;
+    
+    return {
+      id: expert.id,
+      name: expert.name,
+      email: expert.email,
+      phone: expert.phone || undefined,
+      avatar: expert.profilePicture || undefined,
+      rating,
+      reviewCount,
+      categories: categories.map(cat => ({
+        id: cat.id,
+        name: cat.name,
+      })),
+      bio: expert.shortDesc || undefined,
+    };
   });
 
   return (
     <div className="min-h-screen bg-white">
-      <CountryHero country={countryData} />
+      <CountryHero country={{ 
+        name: countryData.name,
+        code: countryData.code,
+        landingContent: countryData.landingContent ?? undefined,
+        currency: countryData.currency,
+        flagEmoji: countryData.flagEmoji ?? undefined,
+      }} />
       
       <main className="max-w-7xl mx-auto px-4 py-12">
         {/* Categories Section */}
@@ -95,9 +142,11 @@ export default async function CountryPage({ params }: PageProps) {
               View All →
             </a>
           </div>
-          <ExpertList experts={experts} countryCode={countryCode} />
+          <ExpertList experts={transformedExperts} countryCode={countryCode} />
         </section>
       </main>
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

@@ -1,19 +1,24 @@
 import Link from 'next/link';
 import Breadcrumb from '@/components/Breadcrumb';
+import { prisma } from '@/lib/db';
 
 interface ExpertsPageProps {
   params: Promise<{ country: string }>;
 }
 
 export async function generateStaticParams() {
-  const countries = await prisma.country.findMany({
-    where: { active: true },
-    select: { code: true },
-  });
-  
-  return countries.map((country) => ({
-    country: country.code,
-  }));
+  try {
+    const countries = await prisma.country.findMany({
+      where: { active: true },
+      select: { code: true },
+    });
+    return countries.map((country) => ({
+      country: country.code,
+    }));
+  } catch (e) {
+    console.error("<generateStaticParams> failed:", e);
+    return [];
+  }
 }
 
 export default async function ExpertsPage({ params }: ExpertsPageProps) {
@@ -28,20 +33,42 @@ export default async function ExpertsPage({ params }: ExpertsPageProps) {
     return null;
   }
 
-  const experts = await prisma.expert.findMany({
+  const categories = await prisma.category.findMany({
     where: {
       countryCode,
       active: true,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  const categoryIds = categories.map(c => c.id);
+
+  const experts = await prisma.expert.findMany({
+    where: {
+      categories: {
+        some: {
+          category: {
+            countryCode: countryCode,
+            active: true,
+          },
+        },
+      },
       verified: true,
     },
     include: {
-      categories: true,
+      categories: {
+        include: {
+          category: true,
+        },
+      },
       reviews: {
         take: 5,
         orderBy: { createdAt: 'desc' },
       },
     },
-    orderBy: { rating: 'desc' },
+    orderBy: { name: 'asc' },
   });
 
   const avgRating = experts.length > 0
@@ -82,6 +109,8 @@ export default async function ExpertsPage({ params }: ExpertsPageProps) {
                 ? expert.reviews.reduce((sum, r) => sum + r.rating, 0) / expert.reviews.length
                 : 0;
 
+              const categoryNames = expert.categories.map((ec) => ec.category.name);
+
               return (
                 <div key={expert.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-start gap-4 mb-4">
@@ -91,21 +120,21 @@ export default async function ExpertsPage({ params }: ExpertsPageProps) {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">{expert.name}</h3>
                       <div className="flex items-center">
-                        <span className="text-yellow-500">★</span>
+                        <span className="text-yellow-500">⭐</span>
                         <span className="text-sm text-gray-600 ml-1">{rating.toFixed(1)} ({expert.reviews.length})</span>
                       </div>
                     </div>
                   </div>
 
-                  {expert.bio && (
-                    <p className="text-gray-600 mb-4 line-clamp-2">{expert.bio}</p>
+                  {expert.shortDesc && (
+                    <p className="text-gray-600 mb-4 line-clamp-2">{expert.shortDesc}</p>
                   )}
 
-                  {expert.categories.length > 0 && (
+                  {categoryNames.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {expert.categories.map((cat) => (
-                        <span key={cat.id} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">
-                          {cat.name}
+                      {categoryNames.map((catName) => (
+                        <span key={catName} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">
+                          {catName}
                         </span>
                       ))}
                     </div>

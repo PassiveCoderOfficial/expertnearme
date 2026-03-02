@@ -1,19 +1,24 @@
 import Link from 'next/link';
 import Breadcrumb from '@/components/Breadcrumb';
+import { prisma } from '@/lib/db';
 
 interface CategoriesPageProps {
   params: Promise<{ country: string }>;
 }
 
 export async function generateStaticParams() {
-  const countries = await prisma.country.findMany({
-    where: { active: true },
-    select: { code: true },
-  });
-  
-  return countries.map((country) => ({
-    country: country.code,
-  }));
+  try {
+    const countries = await prisma.country.findMany({
+      where: { active: true },
+      select: { code: true },
+    });
+    return countries.map((country) => ({
+      country: country.code,
+    }));
+  } catch (e) {
+    console.error("<generateStaticParams> failed:", e);
+    return [];
+  }
 }
 
 export default async function CategoriesPage({ params }: CategoriesPageProps) {
@@ -34,16 +39,12 @@ export default async function CategoriesPage({ params }: CategoriesPageProps) {
       active: true,
     },
     include: {
-      subcategories: {
+      children: {
         where: { active: true },
         include: {
-          serviceTypes: {
-            where: { active: true },
+          services: {
             include: {
-              experts: {
-                where: { active: true, verified: true },
-                take: 1,
-              },
+              expert: true,
             },
           },
         },
@@ -74,45 +75,56 @@ export default async function CategoriesPage({ params }: CategoriesPageProps) {
               </p>
             </div>
 
-            {category.subcategories.length > 0 && (
+            {category.children.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {category.subcategories.map((subcat) => (
-                  <div
-                    key={subcat.id}
-                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all"
-                  >
-                    <h3 className="text-xl font-semibold mb-4">{subcat.name}</h3>
-                    <div className="space-y-2 mb-4">
-                      {subcat.description && (
-                        <p className="text-gray-600 line-clamp-2">{subcat.description}</p>
+                {category.children.map((subcat) => {
+                  // Only keep services with a verified expert
+                  const verifiedServices = subcat.services.filter(
+                    (s) => s.expert && s.expert.verified
+                  );
+                  
+                  return (
+                    <div
+                      key={subcat.id}
+                      className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all"
+                    >
+                      <h3 className="text-xl font-semibold mb-4">{subcat.name}</h3>
+                      <div className="space-y-2 mb-4">
+                        {subcat.description && (
+                          <p className="text-gray-600 line-clamp-2">{subcat.description}</p>
+                        )}
+                      </div>
+
+                      {verifiedServices.length > 0 && (
+                        <>
+                          <div className="grid grid-cols-2 gap-3 mb-4">
+                            {verifiedServices.slice(0, 4).map((st) => (
+                              <Link
+                                key={st.id}
+                                href={`/${countryCode}/categories/${category.id}/subcategories/${subcat.id}/services/${st.id}`}
+                                className="px-3 py-1 bg-[#b84c4c] text-white text-xs rounded hover:bg-[#a33a3a] transition-colors"
+                              >
+                                {st.name}
+                              </Link>
+                            ))}
+                          </div>
+
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-500">
+                              {verifiedServices.length} services
+                            </span>
+                            <Link
+                              href={`/${countryCode}/categories/${category.id}/subcategories/${subcat.id}`}
+                              className="text-sm text-[#b84c4c] hover:text-[#a33a3a]"
+                            >
+                              View All →
+                            </Link>
+                          </div>
+                        </>
                       )}
                     </div>
-
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      {subcat.serviceTypes.slice(0, 4).map((st) => (
-                        <Link
-                          key={st.id}
-                          href={`/${countryCode}/categories/${category.id}/subcategories/${subcat.id}/service-types/${st.id}`}
-                          className="px-3 py-1 bg-[#b84c4c] text-white text-xs rounded hover:bg-[#a33a3a] transition-colors"
-                        >
-                          {st.name}
-                        </Link>
-                      ))}
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">
-                        {subcat.serviceTypes.length} services
-                      </span>
-                      <Link
-                        href={`/${countryCode}/categories/${category.id}/subcategories/${subcat.id}`}
-                        className="text-sm text-[#b84c4c] hover:text-[#a33a3a]"
-                      >
-                        View All →
-                      </Link>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>

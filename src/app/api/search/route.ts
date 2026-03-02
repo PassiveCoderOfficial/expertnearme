@@ -7,29 +7,29 @@ export async function GET(request: NextRequest) {
     const q = searchParams.get('q')?.toLowerCase().trim();
     const country = searchParams.get('country')?.toLowerCase().trim();
     const category = searchParams.get('category')?.toLowerCase().trim();
-    const serviceType = searchParams.get('serviceType')?.toLowerCase().trim();
+    // serviceType parameter is ignored for now (not in schema)
 
     const where: any = {
-      active: true,
       verified: true,
     };
 
     if (country) {
-      where.countryCode = country;
-    }
-
-    if (category) {
+      // Filter experts that belong to categories with the given countryCode
       where.categories = {
         some: {
-          id: category,
+          category: {
+            countryCode: country,
+          },
         },
       };
     }
 
-    if (serviceType) {
-      where.serviceTypes = {
+    if (category) {
+      where.categories = {
+        ...where.categories,
         some: {
-          id: serviceType,
+          ...where.categories?.some,
+          categoryId: category,
         },
       };
     }
@@ -38,15 +38,31 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { name: { contains: q } },
         { bio: { contains: q } },
-        { categories: { some: { name: { contains: q } } } },
+        {
+          categories: {
+            some: {
+              category: {
+                name: { contains: q },
+              },
+            },
+          },
+        },
       ];
     }
 
     const experts = await prisma.expert.findMany({
       where,
       include: {
-        categories: true,
-        serviceTypes: true,
+        categories: {
+          include: {
+            category: true,
+          },
+        },
+        services: {
+          include: {
+            category: true,
+          },
+        },
         reviews: {
           select: {
             rating: true,
@@ -54,7 +70,7 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: {
-        rating: 'desc',
+        featured: 'desc',
       },
     });
 
@@ -68,14 +84,20 @@ export async function GET(request: NextRequest) {
         id: expert.id,
         name: expert.name,
         bio: expert.bio,
-        avatar: expert.avatar,
+        avatar: expert.profilePicture || undefined,
         email: expert.email,
-        phone: expert.phone,
-        countryCode: expert.countryCode,
+        phone: expert.phone || undefined,
         rating: avgRating,
         reviewCount: expert.reviews.length,
-        categories: expert.categories.map((c) => ({ id: c.id, name: c.name })),
-        serviceTypes: expert.serviceTypes.map((st) => ({ id: st.id, name: st.name })),
+        categories: expert.categories.map((ec) => ({
+          id: ec.category.id,
+          name: ec.category.name,
+        })),
+        services: expert.services.map((svc) => ({
+          id: svc.id,
+          name: svc.name,
+          description: svc.description,
+        })),
       };
     });
 

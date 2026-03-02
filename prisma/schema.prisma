@@ -87,7 +87,9 @@ model Expert {
   mapLocation    String? // lat/lng or Google Maps link
   profilePicture String?
   coverPhoto     String?
+  bio            String? // long biography
   shortDesc      String?
+  verified       Boolean  @default(false) // verification status
   featured       Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -102,11 +104,13 @@ model Expert {
 model Service {
   id          Int     @id @default(autoincrement())
   expertId    Int
+  categoryId  Int?
   name        String
   image       String?
   description String?
   rateUnit    String? // optional toggle
   expert      Expert  @relation(fields: [expertId], references: [id])
+  category    Category? @relation(fields: [categoryId], references: [id])
 }
 
 model Portfolio {
@@ -122,16 +126,21 @@ model Category {
   id             Int              @id @default(autoincrement())
   name           String           @db.VarChar(100)
   slug           String           @unique @db.VarChar(100)
+  countryCode    String   @db.VarChar(100) // ISO country code
+  active         Boolean          @default(true)
   updatedAt      DateTime         @updatedAt
   parentId       Int?
   createdAt      DateTime         @default(now())
   showOnHomepage Boolean          @default(false)
+  description    String?          // optional description
   parent         Category?        @relation("CategoryParent", fields: [parentId], references: [id])
   children       Category[]       @relation("CategoryParent")
   experts        ExpertCategory[]
+  services       Service[]
 
   @@index([parentId])
   @@index([slug])
+  @@index([countryCode])
 }
 
 model ExpertCategory {
@@ -190,6 +199,23 @@ model Notification {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+}
+
+model Country {
+  code           String   @id // ISO country code (e.g., "us", "gb", "bd")
+  name           String
+  active         Boolean  @default(true)
+  currency       String   @default("USD")
+  timezone       String   @default("UTC")
+  phoneCode      String?
+  flagEmoji      String?
+  landingContent String?    // landing page content/configuration (HTML or text)
+  metaTitle      String?
+  metaDesc       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  // categories     Category[]
+  // experts        Expert[]
 }
 
 model AuditLog {

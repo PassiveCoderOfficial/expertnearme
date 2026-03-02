@@ -1,22 +1,30 @@
 import Link from 'next/link';
 import Breadcrumb from '@/components/Breadcrumb';
+import { prisma } from '@/lib/db';
 
 interface ExpertProfilePageProps {
   params: Promise<{ country: string; expertId: string }>;
 }
 
 export async function generateMetadata({ params }: ExpertProfilePageProps) {
-  const { country, expertId } = await params;
+  const { expertId } = await params;
   const expert = await prisma.expert.findUnique({
-    where: { id: expertId },
-    include: { categories: true },
+    where: { id: Number(expertId) },
+    include: {
+      categories: {
+        include: {
+          category: true,
+        },
+      },
+    },
   });
 
   if (!expert) return {};
 
+  const categoryNames = expert.categories.map(ec => ec.category?.name).filter(Boolean).join(', ');
   return {
     title: `${expert.name} - Expert Profile | ExpertNear.Me`,
-    description: expert.bio?.slice(0, 160) || `Meet ${expert.name}, a verified expert in ${expert.categories.map(c => c.name).join(', ')}.`,
+    description: expert.shortDesc?.slice(0, 160) || `Meet ${expert.name}, a verified expert${categoryNames ? ` in ${categoryNames}` : ''}.`,
   };
 }
 
@@ -25,12 +33,27 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
   const countryCode = country.toLowerCase();
 
   const expert = await prisma.expert.findUnique({
-    where: { id: expertId },
+    where: { id: Number(expertId) },
     include: {
-      categories: true,
-      serviceTypes: true,
+      categories: {
+        include: {
+          category: true,
+        },
+      },
+      services: {
+        include: {
+          category: true,
+        },
+      },
       reviews: {
         orderBy: { createdAt: 'desc' },
+        include: {
+          client: {
+            select: {
+              name: true,
+            },
+          },
+        },
       },
     },
   });
@@ -51,6 +74,11 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
   const avgRating = expert.reviews.length > 0
     ? expert.reviews.reduce((sum, r) => sum + r.rating, 0) / expert.reviews.length
     : 0;
+
+  // Extract unique categories from join
+  const uniqueCategories = Array.from(
+    new Map(expert.categories.map(ec => [ec.categoryId, ec.category])).values()
+  );
 
   return (
     <div className="min-h-screen bg-white">
@@ -80,16 +108,22 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                 </p>
               )}
 
-              <div className="mb-4">
-                <h3 className="font-semibold mb-2">Categories</h3>
-                <div className="flex flex-wrap gap-2">
-                  {expert.categories.map((cat) => (
-                    <span key={cat.id} className="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full">
-                      {cat.name}
-                    </span>
-                  ))}
+              {expert.shortDesc && (
+                <p className="text-gray-700 mb-4">{expert.shortDesc}</p>
+              )}
+
+              {uniqueCategories.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="font-semibold mb-2">Categories</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {uniqueCategories.map((cat) => (
+                      <span key={cat.id} className="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full">
+                        {cat.name}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -98,31 +132,42 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
               <h2 className="text-xl font-bold mb-4">About</h2>
               <p className="text-gray-700 mb-8 leading-relaxed">
-                {expert.bio || "No bio provided yet."}
+                {expert.shortDesc || "No bio provided yet."}
               </p>
 
               <h2 className="text-xl font-bold mb-4">Services Offered</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
-                {expert.serviceTypes.map((st) => (
-                  <div
-                    key={st.id}
-                    className="p-4 border border-gray-200 rounded-lg hover:border-[#b84c4c] transition-colors"
-                  >
-                    <h3 className="font-semibold">{st.name}</h3>
-                    <p className="text-sm text-gray-600">{st.description}</p>
-                    <div className="mt-2 text-sm font-medium text-[#b84c4c]">
-                      {st.price ? `$${st.price}` : 'Contact for price'}
+              {expert.services.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
+                  {expert.services.map((svc) => (
+                    <div
+                      key={svc.id}
+                      className="p-4 border border-gray-200 rounded-lg hover:border-[#b84c4c] transition-colors"
+                    >
+                      <h3 className="font-semibold">{svc.name}</h3>
+                      {svc.description && (
+                        <p className="text-sm text-gray-600">{svc.description}</p>
+                      )}
+                      {svc.rateUnit && (
+                        <div className="mt-2 text-sm font-medium text-[#b84c4c]">
+                          {svc.rateUnit}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-600 mb-8">No services listed yet.</p>
+              )}
 
-              <Link
-                href={`/${countryCode}/book?expert=${expert.id}`}
-                className="block w-full text-center px-6 py-3 bg-[#b84c4c] text-white rounded-lg font-semibold hover:bg-[#a33a3a] transition-colors"
-              >
-                Book Now
-              </Link>
+              {expert.phone && (
+                <Link
+                  href={`https://wa.me/${expert.phone}`}
+                  target="_blank"
+                  className="block w-full text-center px-6 py-3 bg-[#25D366] text-white rounded-lg font-semibold hover:bg-[#20BD5A] transition-colors"
+                >
+                  Contact via WhatsApp
+                </Link>
+              )}
             </div>
 
             {/* Reviews Section */}
@@ -135,7 +180,7 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                   {expert.reviews.map((review) => (
                     <div key={review.id} className="border-b border-gray-200 pb-6 last:border-0">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="font-semibold">{review.customerName}</span>
+                        <span className="font-semibold">{review.client?.name || 'Client'}</span>
                         <span className="text-yellow-500">
                           {'★'.repeat(review.rating)}
                         </span>

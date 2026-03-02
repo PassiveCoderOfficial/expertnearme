@@ -7,7 +7,7 @@ interface CountryHeroProps {
     code: string;
     landingContent?: string;
     currency: string;
-    flagEmoji?: string;
+    flagEmoji?: string | null;
   };
 }
 
