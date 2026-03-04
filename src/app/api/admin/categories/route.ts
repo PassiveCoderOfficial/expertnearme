@@ -6,11 +6,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 
+interface CategoryNode {
+  id: number;
+  name: string;
+  slug: string;
+  parentId: number | null;
+  showOnHomepage: boolean;
+  children: CategoryNode[];
+}
+
 // Build tree helper
-function buildTree(items: any[]) {
-  const byId: Record<number, any> = {};
+function buildTree(items: Array<{ id: number; name: string; slug: string; parentId: number | null; showOnHomepage: boolean }>): CategoryNode[] {
+  const byId: Record<number, CategoryNode> = {};
   items.forEach((c) => (byId[c.id] = { ...c, children: [] }));
-  const roots: any[] = [];
+  const roots: CategoryNode[] = [];
   items.forEach((c) => {
     if (c.parentId) {
       byId[c.parentId]?.children.push(byId[c.id]);
@@ -29,7 +38,7 @@ export async function GET() {
     });
     const tree = buildTree(rows);
     return NextResponse.json(tree);
-  } catch (err: any) {
+  } catch (err) {
     console.error("GET /api/admin/categories error:", err);
     return NextResponse.json({ error: "Failed to fetch categories" }, { status: 500 });
   }
@@ -72,7 +81,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, category }, { status: 201 });
-  } catch (err: any) {
+  } catch (err) {
     console.error("POST /api/admin/categories error:", err);
     return NextResponse.json({ error: "Failed to create category" }, { status: 500 });
   }

@@ -1,6 +1,7 @@
 // File: scripts/backfill-profile-links.js
 // Run: node scripts/backfill-profile-links.js
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 

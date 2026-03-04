@@ -29,8 +29,6 @@ export default async function ExpertsPage({ params }: ExpertsPageProps) {
     },
   });
 
-  const categoryIds = categories.map(c => c.id);
-
   const experts = await prisma.expert.findMany({
     where: {
       categories: {
