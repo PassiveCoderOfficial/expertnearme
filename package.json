@@ -37,6 +37,7 @@
     "typescript": "^5"
   },
   "prisma": {
+    "schema": "prisma/schema.prisma",
     "seed": "ts-node prisma/seed.ts && node scripts/create-admin.js"
   },
   "vercel": {
