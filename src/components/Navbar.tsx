@@ -18,25 +18,25 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-transparent/80 backdrop-blur-md shadow-sm border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 py-0 flex items-center justify-between">
         {/* Logo with fixed height */}
         <Link href="/" className="flex items-center gap-2 h-16">
           {logo ? (
             <img src={logo} alt="Site Logo" className="h-16 w-auto" />
           ) : (
-            <span className="text-xl font-bold text-[#b84c4c] tracking-tight">
+            <span className="text-xl font-bold text-white tracking-tight">
               ExpertNear.Me
             </span>
           )}
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700">
-          <Link href="/">Home</Link>
-          <Link href="/categories">Categories</Link>
-          <Link href="/create-expert-account">Create Expert Account</Link>
-          <Link href="/manage-category">Manage Categories</Link>
+        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-white/90">
+          <Link href="/" className="hover:text-white transition-colors">Home</Link>
+          <Link href="/categories" className="hover:text-white transition-colors">Categories</Link>
+          <Link href="/create-expert-account" className="hover:text-white transition-colors">Create Expert Account</Link>
+          <Link href="/manage-category" className="hover:text-white transition-colors">Manage Categories</Link>
         </nav>
 
         {/* Desktop Search + Auth */}
@@ -46,22 +46,22 @@ export default function Navbar() {
           </div>
           {session?.authenticated ? (
             <>
-              <Link href="/dashboard" className="text-sm font-medium text-gray-700">
+              <Link href="/dashboard" className="text-sm font-medium text-white/90 hover:text-white transition-colors">
                 Dashboard
               </Link>
               <button
                 onClick={logout}
-                className="text-sm font-medium text-gray-700 hover:text-[#b84c4c]"
+                className="text-sm font-medium text-white/90 hover:text-white transition-colors"
               >
                 Log Out
               </button>
             </>
           ) : (
             <>
-              <Link href="/login" className="text-sm font-medium text-gray-700">
+              <Link href="/login" className="text-sm font-medium text-white/90 hover:text-white transition-colors">
                 Login
               </Link>
-              <Link href="/signup" className="text-sm font-medium text-gray-700">
+              <Link href="/signup" className="text-sm font-medium text-white/90 hover:text-white transition-colors">
                 Signup
               </Link>
             </>

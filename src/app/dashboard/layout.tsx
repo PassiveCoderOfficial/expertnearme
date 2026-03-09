@@ -15,6 +15,7 @@ import {
   MdPeople,
   MdPhotoLibrary,
   MdPublic,
+  MdCurrencyExchange,
 } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
 
@@ -25,6 +26,7 @@ const navByRole: Record<string, { name: string; href: string; icon?: React.React
     { name: "Users", href: "/dashboard/users", icon: <MdPeople /> },
     { name: "Experts", href: "/dashboard/experts", icon: <MdPerson /> },
     { name: "Categories", href: "/dashboard/categories", icon: <MdCategory /> },
+    { name: "Pricing", href: "/dashboard/pricing", icon: <MdCurrencyExchange /> },
     { name: "Bookings", href: "/dashboard/bookings", icon: <MdCalendarToday /> },
     { name: "Reviews", href: "/dashboard/reviews", icon: <MdRateReview /> },
     { name: "Notifications", href: "/dashboard/notifications", icon: <MdNotifications /> },

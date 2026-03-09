@@ -10,7 +10,7 @@ interface ExpertProfilePageProps {
 }
 
 export default async function ExpertProfilePage({ params }: ExpertProfilePageProps) {
-  const { slug, countryCode } = params;
+  const { slug, countryCode } = await params;
   
   // Fetch expert data from database
   const expert = await prisma.expert.findUnique({
