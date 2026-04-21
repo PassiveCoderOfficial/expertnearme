@@ -1,16 +1,21 @@
 // File: src/components/MobileNav.tsx
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+
+const COUNTRY_CODES = new Set(["bd", "ae", "sa", "qa", "om", "sg", "my", "th", "iq"]);
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
   const { session, logout } = useAuth();
+  const pathSegments = useMemo(() => (pathname || "/").split("/").filter(Boolean), [pathname]);
+  const currentCountry = COUNTRY_CODES.has(pathSegments[0] || "") ? pathSegments[0] : "bd";
+  const withCountry = (target: string) => `/${currentCountry}${target}`;
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -23,12 +28,8 @@ export default function MobileNav() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
   return (
-    <div ref={containerRef} className="relative z-20">
+    <div key={pathname || "/"} ref={containerRef} className="relative z-20">
       <button
         type="button"
         aria-expanded={open}
@@ -56,16 +57,16 @@ export default function MobileNav() {
         }`}
       >
         <nav className="p-4 grid gap-2 text-sm font-medium text-gray-700">
-          <Link href="/" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
+          <Link href={`/${currentCountry}`} onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
             Home
           </Link>
-          <Link href="/categories" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
+          <Link href={withCountry("/categories")} onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
             Categories
           </Link>
           <Link href="/create-expert-account" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
             Create Expert Account
           </Link>
-          <Link href="/experts/manage" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
+          <Link href="/dashboard/experts" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 hover:bg-gray-100">
             Expert Management
           </Link>
 

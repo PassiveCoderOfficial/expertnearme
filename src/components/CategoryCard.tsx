@@ -14,10 +14,15 @@ export type Category = {
   slug: string;
 };
 
-export default function CategoryCard({ cat }: { cat: Category }) {
+type CategoryCardProps = {
+  cat: Category;
+  href?: string;
+};
+
+export default function CategoryCard({ cat, href }: CategoryCardProps) {
   return (
     <Link
-      href={`/categories/${cat.slug}`}
+      href={href || `/categories/${cat.slug}`}
       className="relative block rounded-xl overflow-hidden border border-gray-200 hover:border-blue-400 transition"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-gray-100 via-white to-gray-200" />

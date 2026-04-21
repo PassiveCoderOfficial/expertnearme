@@ -1,450 +1,225 @@
-// File: src/app/dashboard/categories/page.tsx
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/ToastProvider";
+import { MdCategory, MdEdit, MdDelete, MdCheck, MdClose, MdAdd } from "react-icons/md";
 
-type Cat = {
-  id: number;
-  name: string;
-  slug: string;
-  parentId: number | null;
-  children?: Cat[];
-  showOnHomepage?: boolean;
-};
+type Cat = { id: number; name: string; slug: string; parentId: number | null; children?: Cat[]; showOnHomepage?: boolean };
+
+const inputCls = "w-full bg-slate-900/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30 transition-colors";
+const toSlug = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
 
 export default function DashboardCategoriesPage() {
   const { session } = useAuth();
   const { toast } = useToast();
-
   const [tree, setTree] = useState<Cat[]>([]);
   const [flat, setFlat] = useState<Cat[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Add form state
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newSlug, setNewSlug] = useState("");
   const [newParentId, setNewParentId] = useState<number | "">("");
   const [newShowOnHomepage, setNewShowOnHomepage] = useState(false);
-
-  // Edit state
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [editSlug, setEditSlug] = useState("");
   const [editParentId, setEditParentId] = useState<number | "">("");
   const [editShowOnHomepage, setEditShowOnHomepage] = useState(false);
-
-  // UI feedback
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // slug helper
-  const toSlug = (s: string) =>
-    s
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-");
-
-  // Fetch categories (admin endpoint)
   const fetchCategories = async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     try {
       const res = await fetch("/api/admin/categories", { credentials: "include" });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || "Failed to fetch categories");
-      }
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Failed");
       const data: Cat[] = await res.json();
       setTree(data);
-
-      // Flatten for parent dropdown (preserve hierarchy with prefix)
       const flatten = (nodes: Cat[], acc: Cat[] = [], depth = 0) => {
-        nodes.forEach((n) => {
-          acc.push({ ...n, name: `${"- ".repeat(depth)}${n.name}` });
-          if (n.children && n.children.length) flatten(n.children, acc, depth + 1);
-        });
+        nodes.forEach((n) => { acc.push({ ...n, name: `${"- ".repeat(depth)}${n.name}` }); if (n.children?.length) flatten(n.children, acc, depth + 1); });
         return acc;
       };
       setFlat(flatten(data));
-    } catch (err: any) {
-      console.error("Failed to fetch categories:", err);
-      setError(err?.message || "Failed to load categories");
-    } finally {
-      setLoading(false);
-    }
+    } catch (e: any) { setError(e?.message || "Failed to load"); }
+    finally { setLoading(false); }
   };
 
-  useEffect(() => {
-    if (session?.role === "ADMIN") {
-      fetchCategories();
-    } else {
-      setLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.role]);
+  useEffect(() => { if (session?.role === "ADMIN") fetchCategories(); else setLoading(false); }, [session?.role]);
 
-  // Add category
   const handleAdd = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    setError(null);
-    setSuccess(null);
-    setAdding(true);
+    e?.preventDefault(); setError(null); setSuccess(null); setAdding(true);
     try {
-      const payload = {
-        name: newName.trim(),
-        slug: newSlug.trim() || toSlug(newName),
-        parentId: newParentId === "" ? null : Number(newParentId),
-        showOnHomepage: Boolean(newShowOnHomepage),
-      };
-      const res = await fetch("/api/admin/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to add category");
-      setSuccess(`Category "${data.category.name}" added`);
-      setNewName("");
-      setNewSlug("");
-      setNewParentId("");
-      setNewShowOnHomepage(false);
-      await fetchCategories();
-      toast("Category added", { type: "success" });
-    } catch (err: any) {
-      console.error("Add category error:", err);
-      setError(err?.message || "Network error");
-      toast("Failed to add category", { type: "error" });
-    } finally {
-      setAdding(false);
-    }
+      const res = await fetch("/api/admin/categories", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ name: newName.trim(), slug: newSlug.trim() || toSlug(newName), parentId: newParentId === "" ? null : Number(newParentId), showOnHomepage: Boolean(newShowOnHomepage) }) });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d?.error || "Failed");
+      setSuccess(`"${d.category.name}" added`);
+      setNewName(""); setNewSlug(""); setNewParentId(""); setNewShowOnHomepage(false);
+      await fetchCategories(); toast("Category added", { type: "success" });
+    } catch (e: any) { setError(e?.message || "Error"); toast("Failed", { type: "error" }); }
+    finally { setAdding(false); }
   };
 
-  // Start editing
-  const startEdit = (cat: Cat) => {
-    setEditingId(cat.id);
-    setEditName(cat.name);
-    setEditSlug(cat.slug);
-    setEditParentId(cat.parentId ?? "");
-    setEditShowOnHomepage(Boolean(cat.showOnHomepage));
-    setError(null);
-    setSuccess(null);
-  };
+  const startEdit = (cat: Cat) => { setEditingId(cat.id); setEditName(cat.name); setEditSlug(cat.slug); setEditParentId(cat.parentId ?? ""); setEditShowOnHomepage(Boolean(cat.showOnHomepage)); };
+  const cancelEdit = () => { setEditingId(null); setEditName(""); setEditSlug(""); setEditParentId(""); setEditShowOnHomepage(false); };
 
-  // Update category
   const handleUpdate = async () => {
-    if (!editingId) return;
-    setError(null);
-    setSuccess(null);
+    if (!editingId) return; setError(null); setSuccess(null);
     try {
-      const payload = {
-        name: editName.trim(),
-        slug: editSlug.trim() || toSlug(editName),
-        parentId: editParentId === "" ? null : Number(editParentId),
-        showOnHomepage: Boolean(editShowOnHomepage),
-      };
-      const res = await fetch(`/api/admin/categories/${editingId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to update category");
-      setSuccess(`Category "${data.name}" updated`);
-      setEditingId(null);
-      setEditName("");
-      setEditSlug("");
-      setEditParentId("");
-      setEditShowOnHomepage(false);
-      await fetchCategories();
-      toast("Category updated", { type: "success" });
-    } catch (err: any) {
-      console.error("Update category error:", err);
-      setError(err?.message || "Network error");
-      toast("Failed to update category", { type: "error" });
-    }
+      const res = await fetch(`/api/admin/categories/${editingId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ name: editName.trim(), slug: editSlug.trim() || toSlug(editName), parentId: editParentId === "" ? null : Number(editParentId), showOnHomepage: Boolean(editShowOnHomepage) }) });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d?.error || "Failed");
+      setSuccess(`"${d.name}" updated`); cancelEdit(); await fetchCategories(); toast("Updated", { type: "success" });
+    } catch (e: any) { setError(e?.message || "Error"); toast("Failed", { type: "error" }); }
   };
 
-  // Delete category
   const handleDelete = async (id: number) => {
-    if (!confirm("Delete this category?")) return;
-    setError(null);
-    setSuccess(null);
+    if (!confirm("Delete this category?")) return; setError(null);
     try {
-      const res = await fetch(`/api/admin/categories/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to delete category");
-      setSuccess("Category deleted");
-      await fetchCategories();
-      toast("Category deleted", { type: "success" });
-    } catch (err: any) {
-      console.error("Delete category error:", err);
-      setError(err?.message || "Network error");
-      toast("Failed to delete category", { type: "error" });
-    }
+      const res = await fetch(`/api/admin/categories/${id}`, { method: "DELETE", credentials: "include" });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d?.error || "Failed");
+      setSuccess("Deleted"); await fetchCategories(); toast("Deleted", { type: "success" });
+    } catch (e: any) { setError(e?.message || "Error"); toast("Failed", { type: "error" }); }
   };
 
-  // Toggle showOnHomepage
-  const handleToggleShowOnHomepage = async (cat: Cat) => {
-    setError(null);
-    setSuccess(null);
+  const handleToggleHomepage = async (cat: Cat) => {
     try {
-      const payload = {
-        name: cat.name,
-        slug: cat.slug,
-        parentId: cat.parentId,
-        showOnHomepage: !Boolean(cat.showOnHomepage),
-      };
-      const res = await fetch(`/api/admin/categories/${cat.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to update category");
-      setSuccess(`Category "${data.name}" updated`);
-      await fetchCategories();
-      toast("Category updated", { type: "success" });
-    } catch (err: any) {
-      console.error("Toggle showOnHomepage error:", err);
-      setError(err?.message || "Network error");
-      toast("Failed to update category", { type: "error" });
-    }
+      const res = await fetch(`/api/admin/categories/${cat.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ name: cat.name, slug: cat.slug, parentId: cat.parentId, showOnHomepage: !cat.showOnHomepage }) });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d?.error || "Failed");
+      await fetchCategories(); toast("Updated", { type: "success" });
+    } catch (e: any) { setError(e?.message || "Error"); }
   };
 
-  // Build table rows (flattened tree traversal)
   const rows = useMemo(() => {
     const r: React.ReactNode[] = [];
     const walk = (nodes: Cat[], depth = 0) => {
       nodes.forEach((cat) => {
         r.push(
-          <tr key={cat.id}>
-            <td className="border p-2 text-sm">{cat.id}</td>
-
-            <td className="border p-2 text-sm">
+          <tr key={cat.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+            <td className="px-4 py-2.5 text-slate-500 text-xs font-mono">{cat.id}</td>
+            <td className="px-4 py-2.5">
               {editingId === cat.id ? (
-                <input
-                  value={editName}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setEditName(val);
-                    setEditSlug(toSlug(val));
-                  }}
-                  className="border p-1 w-full"
-                />
+                <input value={editName} onChange={(e) => { setEditName(e.target.value); setEditSlug(toSlug(e.target.value)); }} className={`${inputCls} py-1 text-xs`} />
               ) : (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">
-                    {"\u00A0".repeat(depth * 2)}
-                    {depth > 0 && <span className="text-gray-400">&lt;</span>}
-                    {cat.name}
-                  </span>
-                </div>
-              )}
-            </td>
-
-            <td className="border p-2 text-sm">
-              {editingId === cat.id ? (
-                <input
-                  value={editSlug}
-                  onChange={(e) => setEditSlug(toSlug(e.target.value))}
-                  className="border p-1 w-full"
-                />
-              ) : (
-                <span className="text-sm">{cat.slug}</span>
-              )}
-            </td>
-
-            <td className="border p-2 text-sm">
-              {editingId === cat.id ? (
-                <select
-                  value={editParentId ?? ""}
-                  onChange={(e) =>
-                    setEditParentId(e.target.value === "" ? "" : Number(e.target.value))
-                  }
-                  className="border p-1 w-full"
-                >
-                  <option value="">No parent (top-level)</option>
-                  {flat
-                    .filter((p) => p.id !== cat.id)
-                    .map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                </select>
-              ) : (
-                <span className="text-sm">
-                  {cat.parentId ? flat.find((p) => p.id === cat.parentId)?.name?.replace(/^-+\s*/, "") : "-"}
+                <span className="text-white text-sm" style={{ paddingLeft: depth * 12 }}>
+                  {depth > 0 && <span className="text-slate-600 mr-1">└</span>}{cat.name}
                 </span>
               )}
             </td>
-
-            <td className="border p-2 text-sm">
+            <td className="px-4 py-2.5">
+              {editingId === cat.id ? (
+                <input value={editSlug} onChange={(e) => setEditSlug(toSlug(e.target.value))} className={`${inputCls} py-1 text-xs`} />
+              ) : (
+                <span className="text-slate-400 text-xs font-mono">{cat.slug}</span>
+              )}
+            </td>
+            <td className="px-4 py-2.5">
+              {editingId === cat.id ? (
+                <select value={editParentId ?? ""} onChange={(e) => setEditParentId(e.target.value === "" ? "" : Number(e.target.value))} className={`${inputCls} py-1 text-xs`}>
+                  <option value="">No parent</option>
+                  {flat.filter((p) => p.id !== cat.id).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              ) : (
+                <span className="text-slate-400 text-xs">{cat.parentId ? flat.find((p) => p.id === cat.parentId)?.name?.replace(/^-+\s*/, "") : "—"}</span>
+              )}
+            </td>
+            <td className="px-4 py-2.5">
+              <button onClick={() => handleToggleHomepage(cat)} className={`text-xs px-2 py-0.5 rounded-full border font-semibold transition-colors ${cat.showOnHomepage ? "bg-green-500/15 text-green-400 border-green-500/20" : "bg-slate-700 text-slate-500 border-white/10"}`}>
+                {cat.showOnHomepage ? "Yes" : "No"}
+              </button>
+            </td>
+            <td className="px-4 py-2.5">
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleToggleShowOnHomepage(cat)}
-                  className={`px-2 py-1 rounded text-sm ${
-                    cat.showOnHomepage ? "bg-green-600 text-white" : "bg-gray-200 text-gray-800"
-                  }`}
-                  title={cat.showOnHomepage ? "Shown on homepage" : "Hidden from homepage"}
-                >
-                  {cat.showOnHomepage ? "Yes" : "No"}
-                </button>
-
                 {editingId === cat.id ? (
                   <>
-                    <button onClick={handleUpdate} className="bg-green-600 text-white px-2 py-1 rounded text-sm">
-                      Save
-                    </button>
-                    <button
-                      onClick={() => {
-                        setEditingId(null);
-                        setEditName("");
-                        setEditSlug("");
-                        setEditParentId("");
-                        setEditShowOnHomepage(false);
-                      }}
-                      className="bg-gray-400 text-white px-2 py-1 rounded text-sm"
-                    >
-                      Cancel
-                    </button>
+                    <button onClick={handleUpdate} className="text-green-400 hover:text-green-300 transition-colors"><MdCheck /></button>
+                    <button onClick={cancelEdit} className="text-slate-500 hover:text-white transition-colors"><MdClose /></button>
                   </>
                 ) : (
                   <>
-                    <button onClick={() => startEdit(cat)} className="bg-blue-600 text-white px-2 py-1 rounded text-sm">
-                      Edit
-                    </button>
-                    <button onClick={() => handleDelete(cat.id)} className="bg-red-600 text-white px-2 py-1 rounded text-sm">
-                      Delete
-                    </button>
+                    <button onClick={() => startEdit(cat)} className="text-slate-500 hover:text-orange-400 transition-colors"><MdEdit /></button>
+                    <button onClick={() => handleDelete(cat.id)} className="text-slate-500 hover:text-red-400 transition-colors"><MdDelete /></button>
                   </>
                 )}
               </div>
             </td>
           </tr>
         );
-        if (cat.children && cat.children.length) walk(cat.children, depth + 1);
+        if (cat.children?.length) walk(cat.children, depth + 1);
       });
     };
-
     walk(tree);
     return r;
   }, [tree, flat, editingId, editName, editSlug, editParentId, editShowOnHomepage]);
 
-  // If not admin, show unauthorized
   if (session?.role !== "ADMIN") {
-    return (
-      <main className="p-8 max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold mb-4">Manage Categories</h1>
-        <div className="p-6 bg-yellow-50 border border-yellow-200 rounded">
-          <p className="text-sm text-yellow-800">You are not authorized to view this page.</p>
-        </div>
-      </main>
-    );
+    return <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-6 text-yellow-300 text-sm">Unauthorized.</div>;
   }
 
   return (
-    <main className="p-8 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Manage Categories</h1>
-
-      {/* Add Category Form */}
-      <form onSubmit={handleAdd} className="space-y-4 mb-8">
+    <div className="max-w-5xl space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400 text-xl"><MdCategory /></div>
         <div>
-          <label className="block text-sm font-medium mb-1">Category Name</label>
-          <input
-            type="text"
-            value={newName}
-            onChange={(e) => {
-              const val = e.target.value;
-              setNewName(val);
-              setNewSlug(toSlug(val));
-            }}
-            placeholder="e.g. Health, Legal, IT"
-            className="border p-2 w-full"
-            required
-          />
+          <h1 className="text-xl font-bold text-white">Categories</h1>
+          <p className="text-xs text-slate-400">{flat.length} total</p>
         </div>
+      </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Slug</label>
-          <input
-            type="text"
-            value={newSlug}
-            onChange={(e) => setNewSlug(toSlug(e.target.value))}
-            placeholder="health / legal / it"
-            className="border p-2 w-full"
-            required
-          />
+      {(error || success) && (
+        <div className={`text-sm rounded-xl px-4 py-3 border ${error ? "bg-red-500/15 border-red-500/25 text-red-300" : "bg-green-500/15 border-green-500/25 text-green-300"}`}>
+          {error || success}
         </div>
+      )}
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Parent Category</label>
-          <select
-            value={newParentId}
-            onChange={(e) => setNewParentId(e.target.value === "" ? "" : Number(e.target.value))}
-            className="border p-2 w-full"
-          >
-            <option value="">No parent (top-level)</option>
-            {flat.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
+      {/* Add form */}
+      <form onSubmit={handleAdd} className="rounded-2xl border border-white/8 bg-slate-800/50 p-5">
+        <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2"><MdAdd /> Add Category</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          <input type="text" value={newName} onChange={(e) => { setNewName(e.target.value); setNewSlug(toSlug(e.target.value)); }} placeholder="Name *" className={inputCls} required />
+          <input type="text" value={newSlug} onChange={(e) => setNewSlug(toSlug(e.target.value))} placeholder="Slug (auto)" className={inputCls} />
+          <select value={newParentId} onChange={(e) => setNewParentId(e.target.value === "" ? "" : Number(e.target.value))} className={inputCls}>
+            <option value="">No parent</option>
+            {flat.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-medium">Show on Homepage</label>
-          <input
-            type="checkbox"
-            checked={newShowOnHomepage}
-            onChange={(e) => setNewShowOnHomepage(e.target.checked)}
-            className="h-5 w-5 text-[#b84c4c] border-gray-300 rounded"
-          />
-        </div>
-
-        <div>
-          <button type="submit" disabled={adding} className="bg-[#b84c4c] text-white px-4 py-2 rounded disabled:opacity-50">
-            {adding ? "Adding..." : "Add Category"}
-          </button>
-          {error && <p className="text-red-600 mt-2">{error}</p>}
-          {success && <p className="text-green-700 mt-2">{success}</p>}
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+              <input type="checkbox" checked={newShowOnHomepage} onChange={(e) => setNewShowOnHomepage(e.target.checked)} className="rounded accent-orange-500" />
+              Homepage
+            </label>
+            <button type="submit" disabled={adding} className="ml-auto bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold px-4 py-2 rounded-xl text-sm transition-colors disabled:opacity-50 whitespace-nowrap">
+              {adding ? "Adding…" : "Add"}
+            </button>
+          </div>
         </div>
       </form>
 
-      {/* Category Tree Table */}
-      {loading ? (
-        <div className="text-gray-500 italic">Loading categories...</div>
-      ) : tree.length === 0 ? (
-        <div className="border border-gray-300 rounded p-4 text-center text-gray-600">
-          <p className="mb-2">No categories found.</p>
-          <p>Use the form above to add your first parent category.</p>
-        </div>
-      ) : (
-        <table className="w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2 text-left">ID</th>
-              <th className="border p-2 text-left">Name</th>
-              <th className="border p-2 text-left">Slug</th>
-              <th className="border p-2 text-left">Parent</th>
-              <th className="border p-2 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody>{rows}</tbody>
-        </table>
-      )}
-    </main>
+      {/* Table */}
+      <div className="rounded-2xl border border-white/8 bg-slate-800/40 overflow-hidden">
+        {loading ? (
+          <div className="flex items-center justify-center h-32">
+            <div className="w-7 h-7 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
+          </div>
+        ) : tree.length === 0 ? (
+          <div className="text-center py-14 text-slate-500 text-sm">No categories yet.</div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/8 text-slate-500 text-xs uppercase tracking-wider">
+                <th className="text-left px-4 py-3 w-12">ID</th>
+                <th className="text-left px-4 py-3">Name</th>
+                <th className="text-left px-4 py-3 hidden sm:table-cell">Slug</th>
+                <th className="text-left px-4 py-3 hidden md:table-cell">Parent</th>
+                <th className="text-left px-4 py-3">Homepage</th>
+                <th className="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody>{rows}</tbody>
+          </table>
+        )}
+      </div>
+    </div>
   );
 }

@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -74,7 +74,7 @@ model AuthToken {
 
 model Expert {
   id             Int      @id @default(autoincrement())
-  profileLink    String? @unique
+  profileLink    String?
   name           String
   email          String   @unique
   phone          String?
@@ -85,28 +85,42 @@ model Expert {
   officeAddress  String?
   webAddress     String? // badge if verified
   mapLocation    String? // lat/lng or Google Maps link
+  latitude       Float?  // for precise location searches
+  longitude      Float?  // for precise location searches
+  countryCode    String? // ISO country code
   profilePicture String?
   coverPhoto     String?
+  bio            String? // long biography
   shortDesc      String?
-  featured       Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  verified            Boolean   @default(false)
+  featured            Boolean   @default(false)
+  homeFeatured        Boolean   @default(false)
+  mapFeatured         Boolean   @default(false)
+  foundingExpert      Boolean   @default(false)
+  foundingExpertSince DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   categories ExpertCategory[]
   services   Service[]
   portfolio  Portfolio[]
   reviews    Review[]
   bookings   Booking[]
+
+  @@unique([countryCode, profileLink])
+  @@index([countryCode])
 }
 
 model Service {
   id          Int     @id @default(autoincrement())
   expertId    Int
+  categoryId  Int?
   name        String
   image       String?
   description String?
   rateUnit    String? // optional toggle
   expert      Expert  @relation(fields: [expertId], references: [id])
+  category    Category? @relation(fields: [categoryId], references: [id])
 }
 
 model Portfolio {
@@ -120,18 +134,27 @@ model Portfolio {
 
 model Category {
   id             Int              @id @default(autoincrement())
-  name           String           @db.VarChar(100)
-  slug           String           @unique @db.VarChar(100)
+  name           String
+  slug           String           @unique
+  countryCode    String           // ISO country code
+  active         Boolean          @default(true)
   updatedAt      DateTime         @updatedAt
   parentId       Int?
   createdAt      DateTime         @default(now())
   showOnHomepage Boolean          @default(false)
+  description    String?          // optional description
+  thumbnail      String?          // URL to thumbnail image
+  icon           String?          // URL or icon name/class
+  color          String?          // Hex color code for UI theming
   parent         Category?        @relation("CategoryParent", fields: [parentId], references: [id])
   children       Category[]       @relation("CategoryParent")
   experts        ExpertCategory[]
+  services       Service[]
 
   @@index([parentId])
   @@index([slug])
+  @@index([countryCode])
+  @@index([active])
 }
 
 model ExpertCategory {
@@ -192,6 +215,23 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id])
 }
 
+model Country {
+  code           String   @id // ISO country code (e.g., "us", "gb", "bd")
+  name           String
+  active         Boolean  @default(true)
+  currency       String   @default("USD")
+  timezone       String   @default("UTC")
+  phoneCode      String?
+  flagEmoji      String?
+  landingContent String?    // landing page content/configuration (HTML or text)
+  metaTitle      String?
+  metaDesc       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  // categories     Category[]
+  // experts        Expert[]
+}
+
 model AuditLog {
   id        Int      @id @default(autoincrement())
   userId    Int?
@@ -200,6 +240,27 @@ model AuditLog {
   entityId  Int?
   createdAt DateTime @default(now())
   user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Pricing {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  currency    String   @default("USD")
+  duration    Int      // duration in days
+  features    String   // JSON string of features
+  active      Boolean  @default(true)
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Waitlist {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  source    String   @default("pricing")
+  createdAt DateTime @default(now())
 }
 
 enum Role {

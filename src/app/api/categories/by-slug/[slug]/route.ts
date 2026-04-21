@@ -5,19 +5,14 @@
 // Each expert includes `profileLink` so the frontend can link to `/${profileLink}`.
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
 
-type ParamsContext = { params: { slug: string } } | { params: Promise<{ slug: string }> };
-
-async function resolveSlug(context: ParamsContext) {
-  const { slug } = await Promise.resolve((context as any).params);
-  if (!slug || typeof slug !== "string") throw new Error("Invalid slug");
-  return slug;
-}
-
-export async function GET(_req: NextRequest, context: ParamsContext) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
-    const slug = await resolveSlug(context);
+    const { slug } = await params;
+    if (!slug || typeof slug !== "string") {
+      throw new Error("Invalid slug");
+    }
 
     const category = await prisma.category.findUnique({
       where: { slug },

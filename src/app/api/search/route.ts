@@ -1,83 +1,72 @@
-// File: src/app/api/search/route.ts
-import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
 
-const prisma = new PrismaClient();
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const q = searchParams.get("q")?.trim() || "";
+  const country = searchParams.get("country")?.toLowerCase() || "";
 
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const q = searchParams.get("q")?.trim() || "";
-
-    if (!q || q.length < 2) {
-      return NextResponse.json({ sponsored: null, experts: [], categories: [] });
-    }
-
-    // Categories: match anywhere in name
-    const categories = await prisma.category.findMany({
-      where: { name: { contains: q, mode: "insensitive" } },
-      take: 5,
-      select: { id: true, name: true, slug: true },
-    });
-
-    // Sponsored expert: must be featured AND match the query (name or category name)
-    const sponsored = await prisma.expert.findFirst({
-      where: {
-        featured: true,
-        OR: [
-          { name: { contains: q, mode: "insensitive" } },
-          {
-            categories: {
-              some: {
-                category: {
-                  name: { contains: q, mode: "insensitive" },
-                },
-              },
-            },
-          },
-        ],
-      },
-      select: {
-        id: true,
-        name: true,
-        isBusiness: true,
-        featured: true,
-        profileLink: true, // include slug
-        categories: { include: { category: true } },
-      },
-      orderBy: { name: "asc" },
-    });
-
-    // Regular experts: match query, exclude sponsored id if present
-    const experts = await prisma.expert.findMany({
-      where: {
-        OR: [
-          { name: { contains: q, mode: "insensitive" } },
-          {
-            categories: {
-              some: {
-                category: { name: { contains: q, mode: "insensitive" } },
-              },
-            },
-          },
-        ],
-        ...(sponsored ? { NOT: { id: sponsored.id } } : {}),
-      },
-      select: {
-        id: true,
-        name: true,
-        isBusiness: true,
-        featured: true,
-        profileLink: true, // include slug
-        categories: { include: { category: true } },
-      },
-      orderBy: [{ featured: "desc" }, { name: "asc" }],
-      take: 9, // 1 sponsored + up to 9 regular = max 10 rows
-    });
-
-    return NextResponse.json({ sponsored, experts, categories });
-  } catch (err) {
-    console.error("Search API failed:", err);
-    return NextResponse.json({ sponsored: null, experts: [], categories: [] }, { status: 500 });
+  if (q.length < 2) {
+    return NextResponse.json({ sponsored: null, providers: [], categories: [] });
   }
+
+  const [expertResults, categoryResults] = await Promise.all([
+    prisma.expert.findMany({
+      where: {
+        verified: true,
+        ...(country ? { countryCode: country } : {}),
+        OR: [
+          { name: { contains: q } },
+          { businessName: { contains: q } },
+          { shortDesc: { contains: q } },
+          { categories: { some: { category: { name: { contains: q } } } } },
+        ],
+      },
+      include: {
+        categories: { include: { category: true } },
+        reviews: { select: { rating: true } },
+      },
+      orderBy: [{ featured: "desc" }, { foundingExpert: "desc" }],
+      take: 10,
+    }),
+    prisma.category.findMany({
+      where: {
+        active: true,
+        ...(country ? { countryCode: country } : {}),
+        name: { contains: q },
+      },
+      take: 5,
+    }),
+  ]);
+
+  const toItem = (e: (typeof expertResults)[0]) => ({
+    id: e.id,
+    name: e.businessName || e.name,
+    isBusiness: e.isBusiness,
+    featured: e.featured,
+    foundingExpert: e.foundingExpert,
+    profileLink: e.profileLink || String(e.id),
+    categories: e.categories.map((c) => c.category.name),
+    avgRating:
+      e.reviews.length > 0
+        ? e.reviews.reduce((s, r) => s + r.rating, 0) / e.reviews.length
+        : null,
+  });
+
+  const sponsored = expertResults.find((e) => e.featured) ?? null;
+  const providers = expertResults
+    .filter((e) => !e.featured)
+    .slice(0, 6)
+    .map(toItem);
+
+  return NextResponse.json({
+    sponsored: sponsored ? toItem(sponsored) : null,
+    providers,
+    categories: categoryResults.map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      icon: c.icon,
+    })),
+  });
 }

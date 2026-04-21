@@ -20,10 +20,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ToastProvider>
           <AuthProvider>
-            {/* Navbar is expected to be fixed at top (see your Navbar component) */}
+            {/* Navbar - transparent to work with hero section */}
             <Navbar />
-            {/* Reserve space for the fixed navbar so page content doesn't sit under it */}
-            <div className="pt-16">{children}</div>
+            {/* Remove pt-16 since hero section is full screen and navigation is transparent */}
+            {children}
           </AuthProvider>
         </ToastProvider>
       </body>

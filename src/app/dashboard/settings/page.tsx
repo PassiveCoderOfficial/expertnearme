@@ -1,195 +1,75 @@
-"use client";
+import { prisma } from "@/lib/db";
+import { MdSettings } from "react-icons/md";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
-import MediaBrowser from "@/components/media/MediaBrowser";
-import { useToast } from "@/components/ui/ToastProvider";
+export const dynamic = "force-dynamic";
 
-export default function SettingsPage() {
-  const { session } = useAuth();
-  const role = session?.role || "USER";
-  const { toast } = useToast();
+export default async function SettingsPage() {
+  let logoUrl: string | null = null;
+  let faviconUrl: string | null = null;
+  let err = "";
 
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  const [openLogoPicker, setOpenLogoPicker] = useState(false);
-  const [openFaviconPicker, setOpenFaviconPicker] = useState(false);
-
-  // Load current settings
-  useEffect(() => {
-    async function fetchSettings() {
-      try {
-        const res = await fetch("/api/admin/settings", { credentials: "include" });
-        if (!res.ok) {
-          const text = await res.text();
-          console.error("Failed to load settings:", text);
-          toast("Failed to load settings", { type: "error" });
-          return;
-        }
-        const data = await res.json();
-        setLogoUrl(data.logo || null);
-        setFaviconUrl(data.favicon || null);
-      } catch (err) {
-        console.error("Failed to load settings", err);
-        toast("Failed to load settings", { type: "error" });
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (role === "ADMIN") {
-      fetchSettings();
-    } else {
-      setLoading(false);
-    }
-  }, [role, toast]);
-
-  // Save settings via PATCH
-  async function saveSettings(): Promise<{ success: boolean; message?: string }> {
-    setSaving(true);
-    try {
-      const res = await fetch("/api/admin/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ logo: logoUrl, favicon: faviconUrl }),
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Save settings failed:", text);
-        return { success: false, message: text || "Save failed" };
-      }
-
-      const data = await res.json();
-      if (data.error) {
-        return { success: false, message: data.error };
-      }
-      return { success: true, message: "Settings saved" };
-    } catch (err) {
-      console.error("Failed to save settings", err);
-      return { success: false, message: "Failed to save settings" };
-    } finally {
-      setSaving(false);
-    }
+  try {
+    const settings = await prisma.setting.findMany({
+      where: { key: { in: ["logo", "favicon"] } },
+      select: { key: true, value: true },
+    });
+    logoUrl = settings.find((s) => s.key === "logo")?.value || null;
+    faviconUrl = settings.find((s) => s.key === "favicon")?.value || null;
+  } catch (e) {
+    err = String(e);
   }
-
-  async function handleSaveClick(e: React.MouseEvent<HTMLButtonElement>) {
-    const target = e.currentTarget as HTMLElement;
-    const rect = target.getBoundingClientRect();
-    const result = await saveSettings();
-
-    const anchorRect = {
-      top: rect.top,
-      left: rect.left,
-      width: rect.width,
-      height: rect.height,
-    };
-
-    if (result.success) {
-      toast("Settings saved", { type: "success", anchorRect });
-    } else {
-      toast(`Error: ${result.message}`, { type: "error", anchorRect });
-    }
-  }
-
-  if (loading) return <p className="p-8">Loading settings...</p>;
 
   return (
-    <main className="p-8 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Settings</h1>
+    <div className="max-w-3xl space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400 text-xl">
+          <MdSettings />
+        </div>
+        <h1 className="text-xl font-bold text-white">Settings</h1>
+      </div>
 
-      {/* Common settings */}
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold mb-2">Profile Settings</h2>
-        <p className="text-sm text-gray-600 mb-3">
-          Update your name, avatar, and notification preferences.
-        </p>
-      </section>
+      {err && (
+        <div className="bg-red-500/15 border border-red-500/25 text-red-300 text-sm rounded-xl px-4 py-3">{err}</div>
+      )}
 
-      {/* Admin-only site settings */}
-      {role === "ADMIN" && (
-        <section className="mb-8">
-          <h2 className="text-lg font-semibold mb-2">Site Settings (Admin Only)</h2>
-          <p className="text-sm text-gray-600 mb-3">
-            Configure site logo, favicon, and global branding.
-          </p>
+      {/* Site Branding */}
+      <div className="rounded-2xl border border-white/8 bg-slate-800/50 p-6 space-y-6">
+        <h2 className="text-base font-semibold text-white">Site Branding</h2>
 
-          {/* Logo */}
-          <div className="mb-6">
-            <h3 className="text-md font-medium mb-2">Logo</h3>
+        <div className="space-y-4">
+          <div>
+            <p className="text-xs font-medium text-slate-400 mb-2">Logo</p>
             {logoUrl ? (
-              <img src={logoUrl} alt="Logo" className="h-12 mb-3" />
+              <img src={logoUrl} alt="Logo" className="h-12 mb-3 rounded" />
             ) : (
-              <p className="text-sm text-gray-600 mb-3">No logo selected.</p>
+              <p className="text-sm text-slate-500 mb-3">No logo uploaded — using default SVG logo.</p>
             )}
-            <button
-              onClick={() => setOpenLogoPicker(true)}
-              className="px-4 py-2 bg-[#b84c4c] text-white rounded-md"
-            >
-              Upload / Select Logo
+            <button disabled className="text-sm bg-slate-700/60 text-slate-400 border border-white/8 px-4 py-2 rounded-xl cursor-not-allowed">
+              Upload Logo (coming soon)
             </button>
-            <MediaBrowser
-              open={openLogoPicker}
-              onClose={() => setOpenLogoPicker(false)}
-              onSelect={(media) => {
-                setLogoUrl(media.url);
-                setOpenLogoPicker(false);
-                toast("Logo selected", { type: "success" });
-              }}
-              allowAllMedia={role === "ADMIN"}
-              mode="modal"
-            />
           </div>
 
-          {/* Favicon */}
-          <div className="mb-6">
-            <h3 className="text-md font-medium mb-2">Favicon</h3>
+          <div>
+            <p className="text-xs font-medium text-slate-400 mb-2">Favicon</p>
             {faviconUrl ? (
-              <img src={faviconUrl} alt="Favicon" className="h-10 mb-3" />
+              <img src={faviconUrl} alt="Favicon" className="h-10 mb-3 rounded" />
             ) : (
-              <p className="text-sm text-gray-600 mb-3">No favicon selected.</p>
+              <p className="text-sm text-slate-500 mb-3">No favicon uploaded.</p>
             )}
-            <button
-              onClick={() => setOpenFaviconPicker(true)}
-              className="px-4 py-2 bg-[#b84c4c] text-white rounded-md"
-            >
-              Upload / Select Favicon
+            <button disabled className="text-sm bg-slate-700/60 text-slate-400 border border-white/8 px-4 py-2 rounded-xl cursor-not-allowed">
+              Upload Favicon (coming soon)
             </button>
-            <MediaBrowser
-              open={openFaviconPicker}
-              onClose={() => setOpenFaviconPicker(false)}
-              onSelect={(media) => {
-                setFaviconUrl(media.url);
-                setOpenFaviconPicker(false);
-                toast("Favicon selected", { type: "success" });
-              }}
-              allowAllMedia={role === "ADMIN"}
-              mode="modal"
-            />
           </div>
+        </div>
+      </div>
 
-          <button
-            onClick={handleSaveClick}
-            disabled={saving}
-            className="px-4 py-2 rounded-md bg-[#b84c4c] text-white hover:bg-[#a43f3f]"
-          >
-            {saving ? "Saving..." : "Save site settings"}
-          </button>
-        </section>
-      )}
-
-      {role === "EXPERT" && (
-        <section className="mb-8">
-          <h2 className="text-lg font-semibold mb-2">Expert Settings</h2>
-          <p className="text-sm text-gray-600 mb-3">
-            Manage your categories, availability, and business profile.
-          </p>
-        </section>
-      )}
-    </main>
+      {/* Expert Settings */}
+      <div className="rounded-2xl border border-white/8 bg-slate-800/50 p-6">
+        <h2 className="text-base font-semibold text-white mb-2">Platform Settings</h2>
+        <p className="text-sm text-slate-400">
+          Advanced configuration options will be available here after launch.
+        </p>
+      </div>
+    </div>
   );
 }

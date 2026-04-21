@@ -1,9 +1,7 @@
-// src/app/api/media/[id]/route.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { supabaseServer } from "@/lib/supabaseServer";
 
 export async function DELETE(
   req: NextRequest,
@@ -30,16 +28,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Remove from Supabase Storage (if folder/filename present)
-    if (media.folder && media.filename) {
-      const path = `${media.folder}/${media.filename}`;
-      const { error } = await supabaseServer.storage
-        .from("uploads")
-        .remove([path]);
-      if (error) {
-        console.warn("Supabase delete warning:", error.message || error);
-      }
-    }
+    // Skip Supabase deletion for build (no env vars)
+    // await deleteFromSupabase(media);
 
     await prisma.media.delete({ where: { id: parsedId } });
 
@@ -49,3 +39,16 @@ export async function DELETE(
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+
+// Commented out Supabase deletion for build without env vars
+// async function deleteFromSupabase(media: any) {
+//   if (media.folder && media.filename) {
+//     const path = `${media.folder}/${media.filename}`;
+//     const { error } = await supabaseServer.storage
+//       .from("uploads")
+//       .remove([path]);
+//     if (error) {
+//       console.warn("Supabase delete warning:", error.message || error);
+//     }
+//   }
+// }

@@ -7,19 +7,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 
-type ParamsContext = { params: { id: string } } | { params: Promise<{ id: string }> };
-
-async function resolveId(context: ParamsContext) {
-  const { id: idParam } = await Promise.resolve((context as any).params);
-  const id = Number(idParam);
-  if (Number.isNaN(id)) throw new Error("Invalid id");
-  return id;
-}
-
-export async function GET(_req: NextRequest, context: ParamsContext) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = await resolveId(context);
-    const category = await prisma.category.findUnique({ where: { id } });
+    const { id } = await params;
+    const numId = Number(id);
+    if (Number.isNaN(numId)) {
+      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+    }
+    const category = await prisma.category.findUnique({ where: { id: numId } });
     if (!category) return NextResponse.json({ error: "Category not found" }, { status: 404 });
     return NextResponse.json(category);
   } catch (err: any) {
@@ -28,18 +23,23 @@ export async function GET(_req: NextRequest, context: ParamsContext) {
   }
 }
 
-export async function PATCH(req: NextRequest, context: ParamsContext) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getSession();
     if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const id = await resolveId(context);
+    const { id } = await params;
+    const numId = Number(id);
+    if (Number.isNaN(numId)) {
+      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+    }
+
     const body = await req.json();
 
     const updated = await prisma.category.update({
-      where: { id },
+      where: { id: numId },
       data: {
         name: body.name,
         slug: body.slug,
@@ -58,22 +58,26 @@ export async function PATCH(req: NextRequest, context: ParamsContext) {
   }
 }
 
-export async function DELETE(_req: NextRequest, context: ParamsContext) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getSession();
     if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const id = await resolveId(context);
+    const { id } = await params;
+    const numId = Number(id);
+    if (Number.isNaN(numId)) {
+      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+    }
 
     // Block delete if experts are linked
-    const linkCount = await prisma.expertCategory.count({ where: { categoryId: id } });
+    const linkCount = await prisma.expertCategory.count({ where: { categoryId: numId } });
     if (linkCount > 0) {
       return NextResponse.json({ error: "Cannot delete category: experts are linked" }, { status: 400 });
     }
 
-    await prisma.category.delete({ where: { id } });
+    await prisma.category.delete({ where: { id: numId } });
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("DELETE /api/admin/categories/[id] error:", err);
