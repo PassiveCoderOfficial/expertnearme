@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Star, MapPin, Phone, Mail, Clock, CheckCircle, Eye, Heart, MessageCircle, User } from 'lucide-react';
 
 interface Expert {
@@ -13,7 +13,7 @@ interface Expert {
   avatar?: string;
   rating: number;
   reviewCount: number;
-  categories?: Array<{ id: number; name: string; color?: string }>;
+  categories?: Array<{ id: number; name: string; color?: string; icon?: string }>;
   bio?: string;
   shortDesc?: string;
   verified: boolean;

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, type ReactElement } from 'react';
 import { Heart, MapPin, StarIcon, CheckCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
 
@@ -82,7 +82,7 @@ export default function MobileFirstExpertCard({
     return expert.responseTime || 'N/A';
   };
 
-  const iconMap: Record<string, JSX.Element> = {
+  const iconMap: Record<string, ReactElement> = {
     'Technology': <StarIcon className="w-4 h-4" />,
     'Health': <StarIcon className="w-4 h-4" />,
     'Transport': <StarIcon className="w-4 h-4" />,
