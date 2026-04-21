@@ -295,10 +295,8 @@ async function main() {
           },
           update: {},
           create: {
-            data: {
-              expertId: createdExpert.id,
-              categoryId: category.id,
-            },
+            expertId: createdExpert.id,
+            categoryId: category.id,
           },
         });
       }
