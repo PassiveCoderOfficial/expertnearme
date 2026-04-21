@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { MapPin, Star, Users, Shield, Crown, ChevronRight, ArrowRight } from "lucide-react";
 import SearchBar from "@/components/SearchBar";
+import ExpertMap, { MapExpert } from "@/components/ExpertMap";
 
 interface Expert {
   id: string;
@@ -15,7 +16,10 @@ interface Expert {
   shortDesc?: string;
   verified: boolean;
   featured?: boolean;
+  mapFeatured?: boolean;
   foundingExpert?: boolean;
+  latitude?: number;
+  longitude?: number;
   reviews: { rating: number }[];
   categories: Array<{ category: { id: string; name: string } }>;
 }
@@ -149,6 +153,39 @@ export default function CountryPage() {
           </div>
         </div>
       </section>
+
+      {/* ─── Expert Map ───────────────────────────────────────────── */}
+      {experts.length > 0 && (
+        <section className="max-w-6xl mx-auto px-6 pb-14">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-orange-400 mb-1">Explore</p>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-orange-400" />
+                Experts on the Map
+              </h2>
+            </div>
+            <span className="text-xs text-slate-500">Click a pin to view profile</span>
+          </div>
+          <ExpertMap
+            experts={experts.map((e) => ({
+              id: Number(e.id),
+              name: (e as any).businessName || e.name,
+              profileLink: e.profileLink || String(e.id),
+              latitude: (e as any).latitude || 0,
+              longitude: (e as any).longitude || 0,
+              verified: e.verified,
+              featured: e.featured ?? false,
+              mapFeatured: (e as any).mapFeatured ?? false,
+              profilePicture: (e as any).profilePicture,
+              shortDesc: (e as any).shortDesc,
+              categories: e.categories?.map((c: any) => c.category.name),
+            } as MapExpert))}
+            countryCode={countryCode}
+            className="h-[420px]"
+          />
+        </section>
+      )}
 
       {/* ─── Featured / Sponsored Experts ─────────────────────────── */}
       {featured.length > 0 && (

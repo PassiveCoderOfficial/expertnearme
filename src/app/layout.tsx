@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import CountryPickerModal from "@/components/CountryPickerModal";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 
@@ -22,7 +23,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <AuthProvider>
             {/* Navbar - transparent to work with hero section */}
             <Navbar />
-            {/* Remove pt-16 since hero section is full screen and navigation is transparent */}
+            <CountryPickerModal />
             {children}
           </AuthProvider>
         </ToastProvider>
