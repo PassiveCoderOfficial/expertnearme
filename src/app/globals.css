@@ -117,13 +117,6 @@
   --radius-full: 9999px;
 }
 
-@theme inline {
-  --color-background: var(--gray-50);
-  --color-foreground: var(--primary-900);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
-}
-
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   :root {
