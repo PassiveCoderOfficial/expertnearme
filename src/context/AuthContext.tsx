@@ -8,7 +8,6 @@ interface Session {
   authenticated: boolean;
   role?: string;
   userId?: number;
-  email?: string;
 }
 
 interface User {

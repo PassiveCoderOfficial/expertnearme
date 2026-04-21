@@ -219,7 +219,7 @@ export default function EnhancedSearch({
       priceRange,
       minRating,
       radius,
-      userLocation: userLocation ?? undefined,
+      userLocation,
       sortBy,
       viewMode
     };

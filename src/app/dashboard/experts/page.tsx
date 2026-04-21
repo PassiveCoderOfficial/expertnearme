@@ -394,62 +394,66 @@ export default function ExpertsPage() {
   const profilePreview = `${origin}/${form.profileLink || ""}`;
 
   return (
-    <div className="space-y-6 max-w-6xl">
-      <div className="flex items-center justify-between">
+    <div className="p-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+        <h2 className="text-2xl font-bold">Manage Experts</h2>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400 text-xl">👤</div>
-          <div>
-            <h2 className="text-xl font-bold text-white">Manage Experts</h2>
-            <p className="text-xs text-slate-400">{experts.length} total</p>
-          </div>
+          <button onClick={openCreateWizard} className="bg-[#b84c4c] text-white px-4 py-2 rounded">
+            Add Expert
+          </button>
         </div>
-        <button onClick={openCreateWizard} className="bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold px-4 py-2 rounded-xl text-sm transition-colors">
-          + Add Expert
-        </button>
       </div>
 
-      {error && <div className="bg-red-500/15 border border-red-500/25 text-red-300 text-sm rounded-xl px-4 py-3">{error}</div>}
-      {success && <div className="bg-green-500/15 border border-green-500/25 text-green-300 text-sm rounded-xl px-4 py-3">{success}</div>}
+      {error && <div className="mb-4 text-red-500">{error}</div>}
+      {success && <div className="mb-4 text-green-600">{success}</div>}
 
-      <div className="rounded-2xl border border-white/8 bg-slate-800/40 overflow-x-auto">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse border border-gray-200 text-sm">
           <thead>
-            <tr className="border-b border-white/8 text-slate-500 text-xs uppercase tracking-wider">
-              <th className="text-left px-4 py-3">Name</th>
-              <th className="text-left px-4 py-3 hidden sm:table-cell">Email</th>
-              <th className="text-left px-4 py-3 hidden md:table-cell">Profile Link</th>
-              <th className="text-left px-4 py-3 hidden lg:table-cell">Categories</th>
-              <th className="text-left px-4 py-3 hidden md:table-cell">Created</th>
-              <th className="px-4 py-3">Actions</th>
+            <tr className="bg-gray-100">
+              <th className="border px-3 py-2 text-left">Name</th>
+              <th className="border px-3 py-2 text-left">Email</th>
+              <th className="border px-3 py-2 text-left">Profile Link</th>
+              <th className="border px-3 py-2 text-left">Categories</th>
+              <th className="border px-3 py-2 text-left">Business?</th>
+              <th className="border px-3 py-2 text-left">Created</th>
+              <th className="border px-3 py-2 text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={6} className="text-center py-10"><div className="w-7 h-7 rounded-full border-2 border-orange-500 border-t-transparent animate-spin mx-auto" /></td></tr>
+              <tr>
+                <td colSpan={7} className="text-center py-6">
+                  Loading...
+                </td>
+              </tr>
             )}
 
             {!loading && experts.length === 0 && (
-              <tr><td colSpan={6} className="text-center py-10 text-slate-500 text-sm">No experts yet.</td></tr>
+              <tr>
+                <td colSpan={7} className="text-center py-6 text-sm text-gray-500">
+                  No experts yet.
+                </td>
+              </tr>
             )}
 
             {experts.map((expert) => (
-              <tr key={expert.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
-                <td className="px-4 py-3 text-white font-medium">{expert.businessName || expert.serviceTitle || "—"}</td>
-                <td className="px-4 py-3 text-slate-400 text-xs hidden sm:table-cell">{expert.email || "—"}</td>
-                <td className="px-4 py-3 text-slate-400 font-mono text-xs hidden md:table-cell">{expert.profileLink || "—"}</td>
-                <td className="px-4 py-3 text-slate-400 text-xs hidden lg:table-cell">
-                  {(expert.categories || []).map((c) => c.category?.name).filter(Boolean).join(", ") || "—"}
+              <tr key={expert.id} className="hover:bg-gray-50">
+                <td className="border px-3 py-2">{expert.businessName || expert.serviceTitle || "-"}</td>
+                <td className="border px-3 py-2">{expert.email || "-"}</td>
+                <td className="border px-3 py-2">{expert.profileLink || "-"}</td>
+                <td className="border px-3 py-2">
+                  {(expert.categories || []).map((c) => c.category?.name).filter(Boolean).join(", ") || "-"}
                 </td>
-                <td className="px-4 py-3 text-slate-500 text-xs hidden md:table-cell">{expert.createdAt ? new Date(expert.createdAt).toLocaleDateString() : "—"}</td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-2">
-                    <button onClick={() => openEditWizard(expert.id)} className="text-xs bg-orange-500/15 hover:bg-orange-500/25 text-orange-400 border border-orange-500/20 px-3 py-1 rounded-lg transition-colors">
-                      Edit
-                    </button>
-                    <button onClick={() => handleDelete(expert.id)} className="text-xs bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/20 px-3 py-1 rounded-lg transition-colors">
-                      Delete
-                    </button>
-                  </div>
+                <td className="border px-3 py-2">{expert.isBusiness ? "Yes" : "No"}</td>
+                <td className="border px-3 py-2">{expert.createdAt ? new Date(expert.createdAt).toLocaleString() : "-"}</td>
+                <td className="border px-3 py-2 flex gap-2">
+                  <button onClick={() => openEditWizard(expert.id)} className="bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                    Edit
+                  </button>
+                  <button onClick={() => handleDelete(expert.id)} className="bg-red-600 text-white px-3 py-1 rounded text-sm">
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
@@ -459,14 +463,16 @@ export default function ExpertsPage() {
 
       {/* Wizard Modal */}
       {isWizardOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-8 px-4">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setWizardOpen(false)} />
-          <div className="relative w-full max-w-4xl bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-auto max-h-[90vh]">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
-              <h3 className="text-base font-semibold text-white">{isEditing ? "Edit Expert" : "Add Expert"}</h3>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-slate-500">Step {step} / 4</span>
-                <button onClick={() => setWizardOpen(false)} className="text-slate-500 hover:text-white transition-colors text-sm">Close</button>
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setWizardOpen(false)} />
+          <div className="relative w-full max-w-4xl bg-white rounded shadow-lg overflow-auto max-h-[90vh]">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold">{isEditing ? "Edit Expert" : "Add Expert"}</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">Step {step} / 4</span>
+                <button onClick={() => setWizardOpen(false)} className="text-gray-600 hover:text-gray-900">
+                  Close
+                </button>
               </div>
             </div>
 
@@ -759,16 +765,18 @@ export default function ExpertsPage() {
               )}
 
               {/* Footer */}
-              <div className="flex flex-col sm:flex-row items-center justify-between mt-6 border-t border-white/8 pt-4 gap-3">
+              <div className="flex flex-col sm:flex-row items-center justify-between mt-6 border-t pt-4 gap-3">
                 <div className="flex gap-2">
-                  {step > 1 && <button onClick={() => setStep((s) => Math.max(1, s - 1))} className="px-4 py-2 border border-white/10 text-slate-300 hover:text-white rounded-xl text-sm transition-colors">Back</button>}
+                  {step > 1 && <button onClick={() => setStep((s) => Math.max(1, s - 1))} className="px-3 py-2 border rounded">Back</button>}
+                  {step < 4 && <button onClick={() => setStep((s) => Math.min(4, s + 1))} className="px-3 py-2 bg-gray-200 rounded">Next</button>}
                 </div>
+
                 <div className="flex items-center gap-3">
-                  <button onClick={() => setWizardOpen(false)} className="px-4 py-2 border border-white/10 text-slate-400 hover:text-white rounded-xl text-sm transition-colors">Cancel</button>
+                  <button onClick={() => setWizardOpen(false)} className="px-3 py-2 border rounded">Cancel</button>
                   {step === 4 ? (
-                    <button onClick={submitWizard} className="px-5 py-2 bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold rounded-xl text-sm transition-colors">{isEditing ? "Save Changes" : "Create Expert"}</button>
+                    <button onClick={submitWizard} className="px-4 py-2 bg-[#b84c4c] text-white rounded">{isEditing ? "Save Changes" : "Create Expert"}</button>
                   ) : (
-                    <button onClick={() => setStep((s) => Math.min(4, s + 1))} className="px-5 py-2 bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold rounded-xl text-sm transition-colors">Continue →</button>
+                    <button onClick={() => setStep((s) => Math.min(4, s + 1))} className="px-4 py-2 bg-[#b84c4c] text-white rounded">Continue</button>
                   )}
                 </div>
               </div>

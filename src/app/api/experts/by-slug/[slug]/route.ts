@@ -8,7 +8,7 @@ export async function GET(_req: NextRequest, context: ParamsContext) {
   try {
     const { slug } = await context.params;
     
-    const expert = await prisma.expert.findFirst({
+    const expert = await prisma.expert.findUnique({
       where: { profileLink: slug },
       include: {
         categories: {

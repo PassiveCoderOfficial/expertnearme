@@ -141,12 +141,3 @@ vite.config.ts.timestamp-*
 .vite/
 .env
 .env
-
-# Local agent and workspace files
-.agents/
-.claude/
-skills/
-skills-lock.json
-
-# Local SQLite database
-prisma/dev.db

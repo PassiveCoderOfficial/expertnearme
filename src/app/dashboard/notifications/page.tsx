@@ -1,50 +1,47 @@
 import { prisma } from "@/lib/db";
-import { MdNotifications } from "react-icons/md";
-
-export const dynamic = "force-dynamic";
 
 export default async function NotificationsPage() {
-  let subs: any[] = [];
-  let err = "";
-
   try {
-    subs = await prisma.pushSubscription.findMany();
+    // Fetch all push subscriptions without any relation includes
+    const subs = await prisma.pushSubscription.findMany();
+
+    return (
+      <main className="max-w-4xl mx-auto py-8 px-4">
+        <h1 className="text-2xl font-bold mb-6">Notifications</h1>
+
+        {subs.length === 0 ? (
+          <p className="text-gray-600">No push subscriptions found.</p>
+        ) : (
+          <ul className="space-y-4">
+            {subs.map((sub) => (
+              <li
+                key={sub.id}
+                className="border rounded p-4 bg-white shadow-sm"
+              >
+                <div className="text-sm text-gray-700">
+                  <div>
+                    <strong>ID:</strong> {sub.id}
+                  </div>
+                  <div>
+                    <strong>Endpoint:</strong> {sub.endpoint}
+                  </div>
+                  {/* Add other fields from your PushSubscription model here */}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
+    );
   } catch (e) {
-    err = String(e);
+    console.error("NotificationsPage error:", e);
+    return (
+      <main className="max-w-4xl mx-auto py-8 px-4">
+        <h1 className="text-2xl font-bold mb-6">Notifications</h1>
+        <p className="text-red-500">Failed to load notifications: {String(e)}</p>
+      </main>
+    );
   }
-
-  return (
-    <div className="max-w-3xl space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400 text-xl">
-          <MdNotifications />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold text-white">Notifications</h1>
-          <p className="text-xs text-slate-400">Push subscriptions: {subs.length}</p>
-        </div>
-      </div>
-
-      {err && (
-        <div className="bg-red-500/15 border border-red-500/25 text-red-300 text-sm rounded-xl px-4 py-3">
-          Failed to load: {err}
-        </div>
-      )}
-
-      {subs.length === 0 ? (
-        <div className="rounded-2xl border border-white/8 bg-slate-800/40 p-10 text-center text-slate-500 text-sm">
-          No push subscriptions registered yet.
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {subs.map((sub) => (
-            <div key={sub.id} className="rounded-xl border border-white/8 bg-slate-800/40 p-4 text-sm">
-              <p className="text-xs text-slate-500 font-mono mb-1">ID: {sub.id}</p>
-              <p className="text-slate-400 text-xs truncate">{sub.endpoint}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
 }
+
+export const dynamic = 'force-dynamic';

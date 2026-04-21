@@ -272,9 +272,11 @@ async function main() {
       where: { email: expert.email },
       update: {},
       create: {
-        ...expert,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        data: {
+          ...expert,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
       },
     });
 
@@ -295,8 +297,10 @@ async function main() {
           },
           update: {},
           create: {
-            expertId: createdExpert.id,
-            categoryId: category.id,
+            data: {
+              expertId: createdExpert.id,
+              categoryId: category.id,
+            },
           },
         });
       }

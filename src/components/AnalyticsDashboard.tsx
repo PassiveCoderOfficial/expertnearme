@@ -48,7 +48,7 @@ interface Provider {
   name: string;
   email: string;
   verified: boolean;
-  status: 'active' | 'inactive' | 'pending' | 'suspended';
+  status: 'active' | 'inactive' | 'suspended';
   rating: number;
   reviewCount: number;
   earnings: number;
@@ -145,12 +145,7 @@ export default function AnalyticsDashboard({
       totalRevenue: mockData.revenueData.reduce((sum, data) => sum + data.revenue, 0),
       pendingApprovals: mockData.providers.filter(p => p.status === 'pending').length,
       todayBookings: mockData.bookings.filter(b => b.date === new Date().toISOString().split('T')[0]).length,
-      avgRating: Number(
-        (
-          mockData.providers.reduce((sum, p) => sum + p.rating, 0) /
-          mockData.providers.filter(p => p.rating > 0).length
-        ).toFixed(1)
-      ),
+      avgRating: (mockData.providers.reduce((sum, p) => sum + p.rating, 0) / mockData.providers.filter(p => p.rating > 0).length).toFixed(1),
       activeUsers: mockData.users.filter(u => u.status === 'active').length
     });
 
@@ -526,7 +521,7 @@ export default function AnalyticsDashboard({
             <option>Pending</option>
             <option>Confirmed</option>
             <option>Completed</option>
-            <option>Cancelled</option>
+            <label>Cancelled</option>
           </select>
           <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
             <option>This Week</option>

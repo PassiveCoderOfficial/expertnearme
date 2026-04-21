@@ -8,7 +8,7 @@ export async function GET(req: Request) {
     const slug = url.searchParams.get("slug")?.trim();
     if (!slug) return NextResponse.json({ ok: false, error: "missing slug" }, { status: 400 });
 
-    const found = await prisma.expert.findFirst({ where: { profileLink: slug } });
+    const found = await prisma.expert.findUnique({ where: { profileLink: slug } });
     return NextResponse.json({ ok: true, taken: !!found });
   } catch (err: any) {
     console.error("GET /api/slug/check error:", err);

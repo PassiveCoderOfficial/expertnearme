@@ -191,7 +191,7 @@ export default function ProviderRegistration({
         if (!profile.phone.trim()) newErrors.phone = 'Phone is required';
         break;
       case 2:
-        if (!(profile.businessName ?? '').trim()) {
+        if (!profile.businessName.trim() && !profile.isIndividual) {
           newErrors.businessName = 'Business name is required';
         }
         break;
@@ -200,7 +200,7 @@ export default function ProviderRegistration({
         if (profile.services.length === 0) newErrors.services = 'Add at least one service';
         break;
       case 4:
-        if (!(profile.address ?? '').trim()) newErrors.address = 'Address is required';
+        if (!profile.address.trim()) newErrors.address = 'Address is required';
         if (!profile.city) newErrors.city = 'City is required';
         break;
     }

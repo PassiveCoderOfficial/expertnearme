@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* ========================================
    ExpertNear.Me Premium Design System
@@ -119,9 +117,11 @@
   --radius-full: 9999px;
 }
 
-:root {
+@theme inline {
   --color-background: var(--gray-50);
   --color-foreground: var(--primary-900);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
 /* Dark mode support */

@@ -74,7 +74,7 @@ model AuthToken {
 
 model Expert {
   id             Int      @id @default(autoincrement())
-  profileLink    String?
+  profileLink    String? @unique
   name           String
   email          String   @unique
   phone          String?
@@ -92,23 +92,16 @@ model Expert {
   coverPhoto     String?
   bio            String? // long biography
   shortDesc      String?
-  verified            Boolean   @default(false)
-  featured            Boolean   @default(false)
-  homeFeatured        Boolean   @default(false)
-  mapFeatured         Boolean   @default(false)
-  foundingExpert      Boolean   @default(false)
-  foundingExpertSince DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  verified       Boolean  @default(false) // verification status
+  featured       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   categories ExpertCategory[]
   services   Service[]
   portfolio  Portfolio[]
   reviews    Review[]
   bookings   Booking[]
-
-  @@unique([countryCode, profileLink])
-  @@index([countryCode])
 }
 
 model Service {
@@ -254,13 +247,6 @@ model Pricing {
   featured    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-}
-
-model Waitlist {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  source    String   @default("pricing")
-  createdAt DateTime @default(now())
 }
 
 enum Role {

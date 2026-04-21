@@ -127,10 +127,11 @@ export async function POST(req: Request) {
 
     // Link categories via join table (skip duplicates)
     if (categoryIds.length > 0) {
-      const payload = [...new Set<number>(categoryIds)].map((cid) => ({ expertId: created.id, categoryId: cid }));
+      const payload = categoryIds.map((cid) => ({ expertId: created.id, categoryId: cid }));
       if (payload.length > 0) {
         await prisma.expertCategory.createMany({
           data: payload,
+          skipDuplicates: true,
         });
       }
     }

@@ -1,75 +1,97 @@
 import { prisma } from "@/lib/db";
-import { MdSettings } from "react-icons/md";
-
-export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  let logoUrl: string | null = null;
-  let faviconUrl: string | null = null;
-  let err = "";
-
   try {
     const settings = await prisma.setting.findMany({
       where: { key: { in: ["logo", "favicon"] } },
       select: { key: true, value: true },
     });
-    logoUrl = settings.find((s) => s.key === "logo")?.value || null;
-    faviconUrl = settings.find((s) => s.key === "favicon")?.value || null;
-  } catch (e) {
-    err = String(e);
-  }
 
-  return (
-    <div className="max-w-3xl space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400 text-xl">
-          <MdSettings />
-        </div>
-        <h1 className="text-xl font-bold text-white">Settings</h1>
-      </div>
+    const logoUrl = settings.find(s => s.key === "logo")?.value || null;
+    const faviconUrl = settings.find(s => s.key === "favicon")?.value || null;
 
-      {err && (
-        <div className="bg-red-500/15 border border-red-500/25 text-red-300 text-sm rounded-xl px-4 py-3">{err}</div>
-      )}
+    return (
+      <main className="p-8 max-w-6xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6">Settings</h1>
 
-      {/* Site Branding */}
-      <div className="rounded-2xl border border-white/8 bg-slate-800/50 p-6 space-y-6">
-        <h2 className="text-base font-semibold text-white">Site Branding</h2>
+        {/* Common settings */}
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-2">Profile Settings</h2>
+          <p className="text-sm text-gray-600 mb-3">
+            Update your name, avatar, and notification preferences.
+          </p>
+        </section>
 
-        <div className="space-y-4">
-          <div>
-            <p className="text-xs font-medium text-slate-400 mb-2">Logo</p>
+        {/* Admin-only site settings */}
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-2">Site Settings (Admin Only)</h2>
+          <p className="text-sm text-gray-600 mb-3">
+            Configure site logo, favicon, and global branding.
+          </p>
+
+          {/* Logo */}
+          <div className="mb-6">
+            <h3 className="text-md font-medium mb-2">Logo</h3>
             {logoUrl ? (
-              <img src={logoUrl} alt="Logo" className="h-12 mb-3 rounded" />
+              <img src={logoUrl} alt="Logo" className="h-12 mb-3" />
             ) : (
-              <p className="text-sm text-slate-500 mb-3">No logo uploaded — using default SVG logo.</p>
+              <p className="text-sm text-gray-600 mb-3">No logo selected.</p>
             )}
-            <button disabled className="text-sm bg-slate-700/60 text-slate-400 border border-white/8 px-4 py-2 rounded-xl cursor-not-allowed">
-              Upload Logo (coming soon)
+            <button
+              onClick={() => {}}
+              disabled
+              className="px-4 py-2 bg-gray-400 text-gray-600 rounded-md"
+            >
+              Upload / Select Logo
             </button>
+            <p className="text-sm text-gray-500 mt-2">Media upload disabled in static mode.</p>
           </div>
 
-          <div>
-            <p className="text-xs font-medium text-slate-400 mb-2">Favicon</p>
+          {/* Favicon */}
+          <div className="mb-6">
+            <h3 className="text-md font-medium mb-2">Favicon</h3>
             {faviconUrl ? (
-              <img src={faviconUrl} alt="Favicon" className="h-10 mb-3 rounded" />
+              <img src={faviconUrl} alt="Favicon" className="h-10 mb-3" />
             ) : (
-              <p className="text-sm text-slate-500 mb-3">No favicon uploaded.</p>
+              <p className="text-sm text-gray-600 mb-3">No favicon selected.</p>
             )}
-            <button disabled className="text-sm bg-slate-700/60 text-slate-400 border border-white/8 px-4 py-2 rounded-xl cursor-not-allowed">
-              Upload Favicon (coming soon)
+            <button
+              onClick={() => {}}
+              disabled
+              className="px-4 py-2 bg-gray-400 text-gray-600 rounded-md"
+            >
+              Upload / Select Favicon
             </button>
+            <p className="text-sm text-gray-500 mt-2">Media upload disabled in static mode.</p>
           </div>
-        </div>
-      </div>
 
-      {/* Expert Settings */}
-      <div className="rounded-2xl border border-white/8 bg-slate-800/50 p-6">
-        <h2 className="text-base font-semibold text-white mb-2">Platform Settings</h2>
-        <p className="text-sm text-slate-400">
-          Advanced configuration options will be available here after launch.
-        </p>
-      </div>
-    </div>
-  );
+          <button
+            onClick={() => {}}
+            disabled
+            className="px-4 py-2 rounded-md bg-gray-400 text-gray-600"
+          >
+            Save site settings
+          </button>
+        </section>
+
+        {/* Expert settings */}
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-2">Expert Settings</h2>
+          <p className="text-sm text-gray-600 mb-3">
+            Manage your categories, availability, and business profile.
+          </p>
+        </section>
+      </main>
+    );
+  } catch (e) {
+    console.error("SettingsPage error:", e);
+    return (
+      <main className="p-8 max-w-6xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6">Settings</h1>
+        <p className="text-red-500">Failed to load settings: {String(e)}</p>
+      </main>
+    );
+  }
 }
+
+export const dynamic = 'force-dynamic';

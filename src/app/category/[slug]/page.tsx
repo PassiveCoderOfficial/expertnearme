@@ -40,7 +40,7 @@ export default async function ExpertProfilePage(props: Props) {
   if (!slug) return notFound();
 
   // Select only fields that exist on your Expert model
-  const expert = await prisma.expert.findFirst({
+  const expert = await prisma.expert.findUnique({
     where: { profileLink: slug },
     select: {
       id: true,

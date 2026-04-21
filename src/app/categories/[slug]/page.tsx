@@ -11,8 +11,6 @@ interface Expert {
   id: number;
   name: string;
   description: string;
-  profileLink?: string;
-  profilePicture?: string;
   phone?: string;
   email?: string;
   address?: string;
@@ -226,24 +224,10 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                 onClick={() => handleExpertClick(expert)}
               >
                 <MobileFirstExpertCard
-                  expert={{
-                    id: String(expert.id),
-                    name: expert.name,
-                    profileLink: expert.profileLink,
-                    avatar: expert.profilePicture,
-                    rating: expert.rating ?? 0,
-                    reviewCount: expert.reviewCount ?? 0,
-                    categories: expert.categories.map(({ category }) => ({
-                      id: String(category.id),
-                      name: category.name,
-                      icon: category.icon,
-                      color: category.color,
-                    })),
-                    shortDesc: expert.description,
-                    phone: expert.phone,
-                  }}
+                  expert={expert}
                   countryCode="bd"
                   compact={true}
+                  index={index}
                 />
               </motion.div>
             ))}
