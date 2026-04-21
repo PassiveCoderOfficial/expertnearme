@@ -3,13 +3,15 @@ import { prisma } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const { slug } = await params;
+
     const category = await prisma.category.findFirst({
-      where: { 
-        slug: params.slug,
-        active: true 
+      where: {
+        slug,
+        active: true
       }
     });
 
@@ -21,7 +23,7 @@ export async function GET(
     }
 
     const experts = await prisma.expert.findMany({
-      where: { 
+      where: {
         verified: true,
         categories: {
           some: {
@@ -47,18 +49,18 @@ export async function GET(
       orderBy: { createdAt: 'desc' }
     });
 
-    // Format the response
     const formattedExperts = experts.map(expert => ({
       id: expert.id,
       name: expert.name,
-      description: expert.description,
+      shortDesc: expert.shortDesc,
       phone: expert.phone,
       email: expert.email,
-      address: expert.address,
+      officeAddress: expert.officeAddress,
       latitude: expert.latitude,
       longitude: expert.longitude,
-      rating: expert.rating,
-      reviewCount: expert.reviewCount,
+      profilePicture: expert.profilePicture,
+      verified: expert.verified,
+      featured: expert.featured,
       createdAt: expert.createdAt,
       categories: expert.categories.map(c => ({
         category: c.category
