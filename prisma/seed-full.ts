@@ -272,11 +272,9 @@ async function main() {
       where: { email: expert.email },
       update: {},
       create: {
-        data: {
-          ...expert,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
+        ...expert,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 
