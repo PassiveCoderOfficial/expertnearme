@@ -18,11 +18,12 @@ export async function GET(
       return NextResponse.json({ error: 'Country not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ 
-      ok: true, 
+    return NextResponse.json({
+      ok: true,
       country: {
         code: country.code,
-        name: country.name
+        name: country.name,
+        flagEmoji: country.flagEmoji,
       }
     });
   } catch (error) {

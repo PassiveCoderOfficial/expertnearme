@@ -36,7 +36,7 @@ export function middleware(request: NextRequest) {
     const alreadyRedirected = request.cookies.get('enm_country_redirected');
     if (!alreadyRedirected) {
       const geoCountry =
-        request.geo?.country ||
+        (request as any).geo?.country ||
         request.headers.get('cf-ipcountry') ||
         request.headers.get('x-vercel-ip-country');
 

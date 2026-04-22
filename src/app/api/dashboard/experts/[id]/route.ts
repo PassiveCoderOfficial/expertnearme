@@ -61,6 +61,9 @@ export async function PATCH(req: NextRequest, context: ParamsContext) {
       "coverPhoto",
       "shortDesc",
       "featured",
+      "countryCode",
+      "latitude",
+      "longitude",
     ];
     for (const k of allowed) {
       if (Object.prototype.hasOwnProperty.call(body, k)) payload[k] = body[k];

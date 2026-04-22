@@ -17,6 +17,7 @@ type Expert = {
   shortDesc?: string | null;
   profilePicture?: string | null;
   coverPhoto?: string | null;
+  countryCode?: string | null;
   categories?: { category: { id: number; name: string } }[];
   createdAt?: string;
 };
@@ -27,6 +28,7 @@ const emptyPortfolio = () => ({ imageUrl: "", videoUrl: "", socialUrl: "" });
 export default function ExpertsPage() {
   const [experts, setExperts] = useState<Expert[]>([]);
   const [categories, setCategories] = useState<CategoryNode[]>([]);
+  const [countries, setCountries] = useState<{ code: string; name: string; flagEmoji?: string }[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [isWizardOpen, setWizardOpen] = useState(false);
@@ -45,6 +47,7 @@ export default function ExpertsPage() {
     businessName: "",
     serviceTitle: "",
     contactPerson: "",
+    countryCode: "",
     profileLink: "",
     email: "",
     phone: "",
@@ -65,7 +68,7 @@ export default function ExpertsPage() {
 
   useEffect(() => {
     loadExperts();
-    loadCategories();
+    loadCountries();
   }, []);
 
   async function loadExperts() {
@@ -82,11 +85,25 @@ export default function ExpertsPage() {
     }
   }
 
-  async function loadCategories() {
+  async function loadCountries() {
     try {
-      const res = await fetch("/api/categories");
+      const res = await fetch("/api/countries");
       const data = await res.json();
-      setCategories(data || []);
+      setCountries(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function loadCategories(countryCode?: string) {
+    try {
+      const url = countryCode
+        ? `/api/country/${countryCode}/categories`
+        : `/api/categories`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const list = countryCode ? (data.categories || []) : (data || []);
+      setCategories(list);
     } catch (err) {
       console.error(err);
       setCategories([]);
@@ -97,6 +114,14 @@ export default function ExpertsPage() {
     () => experts.map((e) => (e.profileLink || "").toString().toLowerCase()).filter(Boolean),
     [experts]
   );
+
+  // Reload categories whenever the country changes inside the wizard
+  useEffect(() => {
+    if (isWizardOpen) {
+      loadCategories(form.countryCode || undefined);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.countryCode, isWizardOpen]);
 
   // Auto-generate slug in real time unless user manually edited it
   useEffect(() => {
@@ -132,6 +157,7 @@ export default function ExpertsPage() {
       businessName: "",
       serviceTitle: "",
       contactPerson: "",
+      countryCode: "",
       profileLink: "",
       email: "",
       phone: "",
@@ -174,6 +200,7 @@ export default function ExpertsPage() {
         businessName: data.businessName ?? "",
         serviceTitle: data.serviceTitle ?? "",
         contactPerson: data.contactPerson ?? "",
+        countryCode: data.countryCode ?? "",
         profileLink: data.profileLink ?? (data.businessName ? slugify(data.businessName) : ""),
         email: data.email ?? "",
         phone: data.phone ?? "",
@@ -181,8 +208,8 @@ export default function ExpertsPage() {
         officeAddress: data.officeAddress ?? "",
         webAddress: data.webAddress ?? "",
         mapLocation: data.mapLocation ?? "",
-        mapLat: data.mapLat ?? "",
-        mapLng: data.mapLng ?? "",
+        mapLat: data.latitude ? String(data.latitude) : "",
+        mapLng: data.longitude ? String(data.longitude) : "",
         profilePicture: data.profilePicture ?? "",
         coverPhoto: data.coverPhoto ?? "",
         shortDesc: data.shortDesc ?? "",
@@ -218,6 +245,11 @@ export default function ExpertsPage() {
       }
     }
 
+    if (!form.countryCode?.trim()) {
+      setError("Country of Operations is required.");
+      return;
+    }
+
     if (!form.profileLink?.trim()) {
       setError("Profile Link (slug) is required.");
       return;
@@ -239,6 +271,7 @@ export default function ExpertsPage() {
         businessName: form.businessName || null,
         serviceTitle: form.serviceTitle || null,
         contactPerson: form.contactPerson || null,
+        countryCode: form.countryCode || null,
         profileLink: form.profileLink,
         email: form.email,
         phone: form.phone || null,
@@ -246,6 +279,8 @@ export default function ExpertsPage() {
         officeAddress: form.officeAddress || null,
         webAddress: form.webAddress || null,
         mapLocation: form.mapLocation || (form.mapLat && form.mapLng ? `${form.mapLat},${form.mapLng}` : null),
+        latitude: form.mapLat ? parseFloat(form.mapLat) : null,
+        longitude: form.mapLng ? parseFloat(form.mapLng) : null,
         profilePicture: form.profilePicture || null,
         coverPhoto: form.coverPhoto || null,
         shortDesc: form.shortDesc || null,
@@ -392,7 +427,11 @@ export default function ExpertsPage() {
   }, [categories]);
 
   const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
-  const profilePreview = `${origin}/${form.profileLink || ""}`;
+  const profilePreview = form.countryCode && form.profileLink
+    ? `${origin}/${form.countryCode}/expert/${form.profileLink}`
+    : form.profileLink
+    ? `${origin}/[country]/expert/${form.profileLink}`
+    : `${origin}/[country]/expert/...`;
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -437,7 +476,10 @@ export default function ExpertsPage() {
               <tr key={expert.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
                 <td className="px-4 py-3 text-white font-medium">{expert.businessName || expert.serviceTitle || "—"}</td>
                 <td className="px-4 py-3 text-slate-400 text-xs hidden sm:table-cell">{expert.email || "—"}</td>
-                <td className="px-4 py-3 text-slate-400 font-mono text-xs hidden md:table-cell">{expert.profileLink || "—"}</td>
+                <td className="px-4 py-3 text-slate-400 font-mono text-xs hidden md:table-cell">
+                  {expert.countryCode ? <span className="text-orange-400 mr-1">{expert.countryCode.toUpperCase()}</span> : null}
+                  {expert.profileLink || "—"}
+                </td>
                 <td className="px-4 py-3 text-slate-400 text-xs hidden lg:table-cell">
                   {(expert.categories || []).map((c) => c.category?.name).filter(Boolean).join(", ") || "—"}
                 </td>
@@ -517,6 +559,24 @@ export default function ExpertsPage() {
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Country of Operations */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Country of Operations <span className="text-red-400">*</span></label>
+                    <select
+                      value={form.countryCode}
+                      onChange={(e) => setForm((s: any) => ({ ...s, countryCode: e.target.value, categoryIds: [] }))}
+                      className="w-full sm:w-64 bg-slate-800 border border-white/10 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
+                    >
+                      <option value="">— Select country —</option>
+                      {countries.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.flagEmoji ? `${c.flagEmoji} ` : ""}{c.name} ({c.code.toUpperCase()})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-slate-500 mt-1">Determines the profile URL prefix and available categories.</p>
                   </div>
 
                   {/* Name/Title + Slug side-by-side on desktop */}
