@@ -9,31 +9,48 @@ interface ExpertProfilePageProps {
 }
 
 export async function generateMetadata({ params }: ExpertProfilePageProps): Promise<Metadata> {
-  const { slug, countryCode } = await params;
-  const expert = await prisma.expert.findFirst({ where: { profileLink: slug, countryCode } });
-  if (!expert) return { title: "Expert Not Found — ExpertNear.Me" };
-  return {
-    title: `${expert.businessName || expert.name} — ExpertNear.Me`,
-    description: expert.shortDesc ?? undefined,
-  };
+  try {
+    const { slug, countryCode } = await params;
+    const expert = await prisma.expert.findFirst({ where: { profileLink: slug, countryCode } });
+    if (!expert) return { title: "Expert Not Found — ExpertNear.Me" };
+    return {
+      title: `${expert.businessName || expert.name} — ExpertNear.Me`,
+      description: expert.shortDesc ?? undefined,
+    };
+  } catch {
+    return { title: "ExpertNear.Me" };
+  }
 }
 
 export default async function ExpertProfilePage({ params }: ExpertProfilePageProps) {
   const { slug, countryCode } = await params;
 
-  const expert = await prisma.expert.findFirst({
-    where: { profileLink: slug, countryCode },
-    include: {
-      categories: { include: { category: true } },
-      services: { include: { category: true } },
-      portfolio: true,
-      reviews: {
-        include: { client: true },
-        orderBy: { createdAt: "desc" },
-        take: 6,
+  let expert: Awaited<ReturnType<typeof prisma.expert.findFirst>> | null = null;
+  try {
+    expert = await prisma.expert.findFirst({
+      where: { profileLink: slug, countryCode },
+      include: {
+        categories: { include: { category: true } },
+        services: { include: { category: true } },
+        portfolio: true,
+        reviews: {
+          include: { client: true },
+          orderBy: { createdAt: "desc" },
+          take: 6,
+        },
       },
-    },
-  });
+    });
+  } catch (err) {
+    console.error("[ExpertPage] DB error:", err);
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-center px-4">
+        <div>
+          <p className="text-red-400 mb-4">Unable to load this profile right now. Please try again.</p>
+          <Link href={`/${countryCode}`} className="text-orange-400 hover:text-orange-300">← Back</Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!expert) {
     return (
@@ -65,21 +82,28 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
 
   // Nearby experts: same country + same categories, with coordinates
   const categoryIds = expert.categories.map(c => c.categoryId);
-  const nearbyRaw = categoryIds.length > 0 ? await prisma.expert.findMany({
-    where: {
-      countryCode,
-      verified: true,
-      id: { not: expert.id },
-      latitude: { not: null },
-      longitude: { not: null },
-      categories: { some: { categoryId: { in: categoryIds } } },
-    },
-    include: {
-      categories: { include: { category: { select: { name: true, icon: true, color: true } } } },
-    },
-    orderBy: [{ mapFeatured: 'desc' }, { featured: 'desc' }],
-    take: 20,
-  }) : [];
+  let nearbyRaw: Awaited<ReturnType<typeof prisma.expert.findMany>> = [];
+  try {
+    if (categoryIds.length > 0) {
+      nearbyRaw = await prisma.expert.findMany({
+        where: {
+          countryCode,
+          verified: true,
+          id: { not: expert.id },
+          latitude: { not: null },
+          longitude: { not: null },
+          categories: { some: { categoryId: { in: categoryIds } } },
+        },
+        include: {
+          categories: { include: { category: { select: { name: true, icon: true, color: true } } } },
+        },
+        orderBy: [{ mapFeatured: 'desc' }, { featured: 'desc' }],
+        take: 20,
+      });
+    }
+  } catch (err) {
+    console.error("[ExpertPage] nearby query error:", err);
+  }
 
   // Build nearby list, always prepend the current expert so their pin is visible on the map
   const currentExpertPin: MapExpert | null = (expert.latitude && expert.longitude) ? {

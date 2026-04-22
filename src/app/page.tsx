@@ -8,31 +8,46 @@ import FlagIcon from "@/components/FlagIcon";
 export const dynamic = "force-dynamic";
 
 export default async function GlobalHomePage() {
-  const [countries, expertCount, categoryCount, expertsByCountry] = await Promise.all([
-    prisma.country.findMany({
-      where: { active: true },
-      orderBy: { name: "asc" },
-      select: { code: true, name: true, flagEmoji: true, metaDesc: true },
-    }),
-    prisma.expert.count({ where: { verified: true } }),
-    prisma.category.count({ where: { active: true } }),
-    prisma.expert.groupBy({ by: ["countryCode"], _count: { id: true }, where: { verified: true } }),
-  ]);
+  let countries: { code: string; name: string; flagEmoji: string | null; metaDesc: string | null }[] = [];
+  let expertCount = 0;
+  let categoryCount = 0;
+  let countryPins: CountryPin[] = [];
 
-  const expertCountByCode = Object.fromEntries(
-    expertsByCountry.map(r => [r.countryCode, r._count.id])
-  );
+  try {
+    const [countriesResult, expertCountResult, categoryCountResult, expertsByCountry] = await Promise.all([
+      prisma.country.findMany({
+        where: { active: true },
+        orderBy: { name: "asc" },
+        select: { code: true, name: true, flagEmoji: true, metaDesc: true },
+      }),
+      prisma.expert.count({ where: { verified: true } }),
+      prisma.category.count({ where: { active: true } }),
+      prisma.expert.groupBy({ by: ["countryCode"], _count: { id: true }, where: { verified: true } }),
+    ]);
 
-  const countryPins: CountryPin[] = countries
-    .filter(c => COUNTRY_CENTROIDS[c.code])
-    .map(c => ({
-      code:        c.code,
-      name:        c.name,
-      flagEmoji:   c.flagEmoji || undefined,
-      lat:         COUNTRY_CENTROIDS[c.code].lat,
-      lng:         COUNTRY_CENTROIDS[c.code].lng,
-      expertCount: expertCountByCode[c.code] || 0,
-    }));
+    countries = countriesResult;
+    expertCount = expertCountResult;
+    categoryCount = categoryCountResult;
+
+    const expertCountByCode = Object.fromEntries(
+      expertsByCountry
+        .filter(r => r.countryCode != null)
+        .map(r => [r.countryCode as string, r._count.id])
+    );
+
+    countryPins = countries
+      .filter(c => COUNTRY_CENTROIDS[c.code])
+      .map(c => ({
+        code:        c.code,
+        name:        c.name,
+        flagEmoji:   c.flagEmoji || undefined,
+        lat:         COUNTRY_CENTROIDS[c.code].lat,
+        lng:         COUNTRY_CENTROIDS[c.code].lng,
+        expertCount: expertCountByCode[c.code] || 0,
+      }));
+  } catch (err) {
+    console.error("[Homepage] DB error:", err);
+  }
 
   const stats = [
     { value: expertCount.toString(), label: "Verified Experts" },

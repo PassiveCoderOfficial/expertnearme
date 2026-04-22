@@ -14,25 +14,43 @@ export default async function CountryCategoryPage({ params }: Props) {
   const { countryCode: raw, slug } = await params;
   const countryCode = raw.toLowerCase();
 
-  const category = await prisma.category.findFirst({
-    where: { slug, countryCode, active: true },
-    include: { _count: { select: { experts: true } } },
-  });
+  let category: Awaited<ReturnType<typeof prisma.category.findFirst>> | null = null;
+  try {
+    category = await prisma.category.findFirst({
+      where: { slug, countryCode, active: true },
+      include: { _count: { select: { experts: true } } },
+    });
+  } catch (err) {
+    console.error("[CategoryPage] DB error:", err);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center text-center px-4">
+        <div>
+          <p className="text-red-400 mb-4">Unable to load this category right now.</p>
+          <Link href={`/${countryCode}`} className="text-orange-400 hover:text-orange-300">← Back</Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!category) notFound();
 
-  const expertCategories = await prisma.expertCategory.findMany({
-    where: { categoryId: category.id, expert: { countryCode, verified: true } },
-    include: {
-      expert: {
-        include: {
-          categories: { include: { category: { select: { name: true, icon: true, color: true } } } },
-          reviews: { select: { rating: true } },
+  let expertCategories: Awaited<ReturnType<typeof prisma.expertCategory.findMany>> = [];
+  try {
+    expertCategories = await prisma.expertCategory.findMany({
+      where: { categoryId: category.id, expert: { countryCode, verified: true } },
+      include: {
+        expert: {
+          include: {
+            categories: { include: { category: { select: { name: true, icon: true, color: true } } } },
+            reviews: { select: { rating: true } },
+          },
         },
       },
-    },
-    orderBy: { expert: { featured: "desc" } },
-  });
+      orderBy: { expert: { featured: "desc" } },
+    });
+  } catch (err) {
+    console.error("[CategoryPage] experts DB error:", err);
+  }
 
   const experts = expertCategories.map(({ expert }) => {
     const ratings = expert.reviews.map((r) => r.rating);
