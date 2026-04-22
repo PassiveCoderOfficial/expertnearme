@@ -7,37 +7,125 @@ import {
   MdDashboard, MdPerson, MdCategory, MdCalendarToday, MdRateReview,
   MdNotifications, MdSettings, MdPeople, MdPhotoLibrary, MdPublic,
   MdCurrencyExchange, MdEdit, MdMenu, MdClose, MdLogout,
+  MdStar, MdMap, MdPayment, MdAdminPanelSettings, MdBarChart,
+  MdFavorite, MdSearch, MdCampaign, MdSupportAgent,
 } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
 import { LogoMark } from "@/components/Logo";
 
-const navByRole: Record<string, { name: string; href: string; icon: React.ReactNode }[]> = {
-  ADMIN: [
-    { name: "Dashboard",      href: "/dashboard",                icon: <MdDashboard /> },
-    { name: "Countries",      href: "/dashboard/countries",      icon: <MdPublic /> },
-    { name: "Users",          href: "/dashboard/users",          icon: <MdPeople /> },
-    { name: "Experts",        href: "/dashboard/experts",        icon: <MdPerson /> },
-    { name: "Categories",     href: "/dashboard/categories",     icon: <MdCategory /> },
-    { name: "Pricing",        href: "/dashboard/pricing",        icon: <MdCurrencyExchange /> },
-    { name: "Bookings",       href: "/dashboard/bookings",       icon: <MdCalendarToday /> },
-    { name: "Reviews",        href: "/dashboard/reviews",        icon: <MdRateReview /> },
-    { name: "Notifications",  href: "/dashboard/notifications",  icon: <MdNotifications /> },
-    { name: "Media",          href: "/dashboard/media",          icon: <MdPhotoLibrary /> },
-    { name: "Settings",       href: "/dashboard/settings",       icon: <MdSettings /> },
-  ],
-  EXPERT: [
-    { name: "Dashboard",      href: "/dashboard",                icon: <MdDashboard /> },
-    { name: "My Profile",     href: "/dashboard/profile",        icon: <MdEdit /> },
-    { name: "Bookings",       href: "/dashboard/bookings",       icon: <MdCalendarToday /> },
-    { name: "Reviews",        href: "/dashboard/reviews",        icon: <MdRateReview /> },
-    { name: "Notifications",  href: "/dashboard/notifications",  icon: <MdNotifications /> },
-  ],
-  USER: [
-    { name: "Dashboard",      href: "/dashboard",                icon: <MdDashboard /> },
-    { name: "Bookings",       href: "/dashboard/bookings",       icon: <MdCalendarToday /> },
-    { name: "Reviews",        href: "/dashboard/reviews",        icon: <MdRateReview /> },
-    { name: "Notifications",  href: "/dashboard/notifications",  icon: <MdNotifications /> },
-  ],
+type NavItem = { name: string; href: string; icon: React.ReactNode };
+
+const ADMIN_NAV: NavItem[] = [
+  { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
+  { name: "Countries",      href: "/dashboard/countries",           icon: <MdPublic /> },
+  { name: "Users",          href: "/dashboard/users",               icon: <MdPeople /> },
+  { name: "Staff & Roles",  href: "/dashboard/staff",               icon: <MdAdminPanelSettings /> },
+  { name: "Experts",        href: "/dashboard/experts",             icon: <MdPerson /> },
+  { name: "Featured",       href: "/dashboard/featured",            icon: <MdStar /> },
+  { name: "Categories",     href: "/dashboard/categories",          icon: <MdCategory /> },
+  { name: "Subscriptions",  href: "/dashboard/subscriptions",       icon: <MdCurrencyExchange /> },
+  { name: "Pricing",        href: "/dashboard/pricing",             icon: <MdBarChart /> },
+  { name: "Payment Config", href: "/dashboard/payment-config",      icon: <MdPayment /> },
+  { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
+  { name: "Reviews",        href: "/dashboard/reviews",             icon: <MdRateReview /> },
+  { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
+  { name: "Media",          href: "/dashboard/media",               icon: <MdPhotoLibrary /> },
+  { name: "Settings",       href: "/dashboard/settings",            icon: <MdSettings /> },
+];
+
+const MANAGER_NAV: NavItem[] = [
+  { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
+  { name: "Experts",        href: "/dashboard/experts",             icon: <MdPerson /> },
+  { name: "Featured",       href: "/dashboard/featured",            icon: <MdStar /> },
+  { name: "Categories",     href: "/dashboard/categories",          icon: <MdCategory /> },
+  { name: "Subscriptions",  href: "/dashboard/subscriptions",       icon: <MdCurrencyExchange /> },
+  { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
+  { name: "Reviews",        href: "/dashboard/reviews",             icon: <MdRateReview /> },
+  { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
+];
+
+const MARKETER_NAV: NavItem[] = [
+  { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
+  { name: "Featured",       href: "/dashboard/featured",            icon: <MdStar /> },
+  { name: "Categories",     href: "/dashboard/categories",          icon: <MdCategory /> },
+  { name: "Pricing",        href: "/dashboard/pricing",             icon: <MdBarChart /> },
+  { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdCampaign /> },
+  { name: "Media",          href: "/dashboard/media",               icon: <MdPhotoLibrary /> },
+];
+
+const SEO_NAV: NavItem[] = [
+  { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
+  { name: "Experts",        href: "/dashboard/experts",             icon: <MdPerson /> },
+  { name: "Categories",     href: "/dashboard/categories",          icon: <MdCategory /> },
+  { name: "Settings",       href: "/dashboard/settings",            icon: <MdSettings /> },
+];
+
+const SALES_NAV: NavItem[] = [
+  { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
+  { name: "Experts",        href: "/dashboard/experts",             icon: <MdPerson /> },
+  { name: "Subscriptions",  href: "/dashboard/subscriptions",       icon: <MdCurrencyExchange /> },
+  { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
+  { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdSupportAgent /> },
+];
+
+const EXPERT_NAV: NavItem[] = [
+  { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
+  { name: "My Profile",     href: "/dashboard/profile",             icon: <MdEdit /> },
+  { name: "My Plan",        href: "/dashboard/my-subscription",     icon: <MdCurrencyExchange /> },
+  { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
+  { name: "Reviews",        href: "/dashboard/reviews",             icon: <MdRateReview /> },
+  { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
+];
+
+const BUYER_NAV: NavItem[] = [
+  { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
+  { name: "Saved Experts",  href: "/dashboard/saved",               icon: <MdFavorite /> },
+  { name: "My Bookings",    href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
+  { name: "My Reviews",     href: "/dashboard/reviews",             icon: <MdRateReview /> },
+  { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
+];
+
+const USER_NAV: NavItem[] = [
+  { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
+  { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
+  { name: "Reviews",        href: "/dashboard/reviews",             icon: <MdRateReview /> },
+  { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
+];
+
+const NAV_BY_ROLE: Record<string, NavItem[]> = {
+  SUPER_ADMIN:  ADMIN_NAV,
+  ADMIN:        ADMIN_NAV,
+  MANAGER:      MANAGER_NAV,
+  MARKETER:     MARKETER_NAV,
+  SEO_EXPERT:   SEO_NAV,
+  SALES_AGENT:  SALES_NAV,
+  EXPERT:       EXPERT_NAV,
+  BUYER:        BUYER_NAV,
+  USER:         USER_NAV,
+};
+
+const ROLE_COLOR: Record<string, string> = {
+  SUPER_ADMIN: "bg-red-500/20 text-red-300 border-red-500/25",
+  ADMIN:       "bg-purple-500/20 text-purple-300 border-purple-500/25",
+  MANAGER:     "bg-blue-500/20 text-blue-300 border-blue-500/25",
+  MARKETER:    "bg-pink-500/20 text-pink-300 border-pink-500/25",
+  SEO_EXPERT:  "bg-teal-500/20 text-teal-300 border-teal-500/25",
+  SALES_AGENT: "bg-green-500/20 text-green-300 border-green-500/25",
+  EXPERT:      "bg-orange-500/20 text-orange-300 border-orange-500/25",
+  BUYER:       "bg-cyan-500/20 text-cyan-300 border-cyan-500/25",
+  USER:        "bg-slate-700 text-slate-300 border-slate-600",
+};
+
+const ROLE_LABEL: Record<string, string> = {
+  SUPER_ADMIN: "Super Admin",
+  ADMIN:       "Admin",
+  MANAGER:     "Manager",
+  MARKETER:    "Marketer",
+  SEO_EXPERT:  "SEO Expert",
+  SALES_AGENT: "Sales Agent",
+  EXPERT:      "Expert",
+  BUYER:       "Buyer",
+  USER:        "User",
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -61,7 +149,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!session?.authenticated) return null;
 
   const role = session.role || "USER";
-  const navItems = navByRole[role] || navByRole["USER"];
+  const navItems = NAV_BY_ROLE[role] || USER_NAV;
+  const roleColor = ROLE_COLOR[role] || ROLE_COLOR.USER;
+  const roleLabel = ROLE_LABEL[role] || role;
 
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
     <aside className={`${mobile ? "w-full" : "w-64 hidden md:flex"} flex-col bg-slate-950 border-r border-white/8 min-h-screen`}>
@@ -70,7 +160,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Link href="/" className="flex items-center gap-2.5">
           <LogoMark size={28} />
           <span className="text-sm font-bold text-white tracking-tight">
-            ExpertNear<span className="text-orange-400">.Me</span>
+            <span className="text-orange-400">Expert</span>Near.Me
           </span>
         </Link>
         {mobile && (
@@ -82,12 +172,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Role badge */}
       <div className="px-5 py-3 border-b border-white/5">
-        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-          role === "ADMIN" ? "bg-purple-500/20 text-purple-300 border border-purple-500/25" :
-          role === "EXPERT" ? "bg-orange-500/20 text-orange-300 border border-orange-500/25" :
-          "bg-slate-700 text-slate-300"
-        }`}>
-          {role}
+        <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${roleColor}`}>
+          {roleLabel}
         </span>
         <p className="text-xs text-slate-500 mt-1 truncate">{session.email}</p>
       </div>
@@ -95,7 +181,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
-          const active = pathname === item.href;
+          const active = pathname === item.href || (item.href !== "/dashboard" && pathname?.startsWith(item.href));
           return (
             <Link
               key={item.href}
@@ -129,10 +215,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen bg-slate-900 text-white">
-      {/* Desktop sidebar */}
       <Sidebar />
 
-      {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
@@ -142,16 +226,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       )}
 
-      {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile topbar */}
         <div className="md:hidden flex items-center justify-between px-4 h-14 bg-slate-950 border-b border-white/8">
           <button onClick={() => setSidebarOpen(true)} className="text-slate-400 hover:text-white">
             <MdMenu size={24} />
           </button>
           <Link href="/" className="flex items-center gap-2">
             <LogoMark size={24} />
-            <span className="text-sm font-bold text-white">ExpertNear<span className="text-orange-400">.Me</span></span>
+            <span className="text-sm font-bold text-white">
+              <span className="text-orange-400">Expert</span>Near.Me
+            </span>
           </Link>
           <div className="w-6" />
         </div>

@@ -24,6 +24,8 @@ model User {
   profile           UserProfile?
   media             Media[]
   pushSubscriptions PushSubscription[]
+  subscriptions     Subscription[]
+  savedExperts      SavedExpert[]
 }
 
 model UserProfile {
@@ -101,11 +103,12 @@ model Expert {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  categories ExpertCategory[]
-  services   Service[]
-  portfolio  Portfolio[]
-  reviews    Review[]
-  bookings   Booking[]
+  categories  ExpertCategory[]
+  services    Service[]
+  portfolio   Portfolio[]
+  reviews     Review[]
+  bookings    Booking[]
+  savedBy     SavedExpert[]
 
   @@unique([countryCode, profileLink])
   @@index([countryCode])
@@ -243,17 +246,30 @@ model AuditLog {
 }
 
 model Pricing {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  price       Float
-  currency    String   @default("USD")
-  duration    Int      // duration in days
-  features    String   // JSON string of features
-  active      Boolean  @default(true)
-  featured    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            Int            @id @default(autoincrement())
+  name          String
+  description   String?
+  price         Float
+  currency      String         @default("USD")
+  duration      Int            // duration in days; -1 = lifetime
+  features      String         // JSON string of features
+  active        Boolean        @default(true)
+  featured      Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subscriptions Subscription[]
+}
+
+model SavedExpert {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  expertId  Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  expert    Expert   @relation(fields: [expertId], references: [id])
+
+  @@unique([userId, expertId])
+  @@index([userId])
 }
 
 model Waitlist {
@@ -263,10 +279,42 @@ model Waitlist {
   createdAt DateTime @default(now())
 }
 
+model Subscription {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  planId     Int
+  status     SubStatus @default(ACTIVE)
+  isLifetime Boolean   @default(false)
+  startsAt   DateTime  @default(now())
+  endsAt     DateTime?
+  paymentRef String?
+  gateway    String?   // 'paddle' | 'lemonsqueezy' | 'surjopay'
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       User      @relation(fields: [userId], references: [id])
+  plan       Pricing   @relation(fields: [planId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+enum SubStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PAUSED
+}
+
 enum Role {
   USER
+  BUYER
   EXPERT
+  SALES_AGENT
+  MARKETER
+  SEO_EXPERT
+  MANAGER
   ADMIN
+  SUPER_ADMIN
 }
 
 enum TokenType {

@@ -1,277 +1,299 @@
-// src/app/dashboard/pricing/page.tsx
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, Users, CheckCircle, XCircle } from 'lucide-react';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { MdBarChart, MdAdd, MdEdit, MdDelete, MdClose, MdCheck } from "react-icons/md";
 
-interface PricingAnalytics {
-  totalRevenue: number;
-  activeSubscriptions: number;
-  conversionRate: number;
-  averageRevenuePerUser: number;
-  popularTiers: Array<{
-    name: string;
-    subscriptions: number;
-    revenue: number;
-  }>;
-  monthlyData: Array<{
-    month: string;
-    revenue: number;
-    subscriptions: number;
-  }>;
+interface Plan {
+  id: number;
+  name: string;
+  description: string | null;
+  price: number;
+  currency: string;
+  duration: number;
+  features: string;
+  active: boolean;
+  featured: boolean;
+  activeCount: number;
+  totalCount: number;
+  revenue: number;
 }
 
-export default function PricingDashboard() {
-  const [analytics, setAnalytics] = useState<PricingAnalytics | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+interface Stats {
+  totalActive: number;
+  totalLifetime: number;
+  totalRevenue: number;
+}
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, []);
+const inputCls = "w-full bg-slate-900/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30 transition-colors";
 
-  const fetchAnalytics = async () => {
-    // Mock data for demonstration
-    const mockAnalytics: PricingAnalytics = {
-      totalRevenue: 45720,
-      activeSubscriptions: 124,
-      conversionRate: 3.2,
-      averageRevenuePerUser: 368.75,
-      popularTiers: [
-        { name: 'Professional', subscriptions: 78, revenue: 61620 },
-        { name: 'Basic', subscriptions: 41, revenue: 11890 },
-        { name: 'Enterprise', subscriptions: 5, revenue: 9950 },
-      ],
-      monthlyData: [
-        { month: 'Jan', revenue: 34500, subscriptions: 98 },
-        { month: 'Feb', revenue: 41200, subscriptions: 115 },
-        { month: 'Mar', revenue: 45720, subscriptions: 124 },
-      ]
-    };
-    
-    setAnalytics(mockAnalytics);
-    setIsLoading(false);
-  };
+function durationLabel(d: number) {
+  if (d === -1) return "Lifetime";
+  if (d === 30) return "Monthly";
+  if (d === 365) return "Yearly";
+  return `${d} days`;
+}
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
+function parseFeatures(raw: string): string[] {
+  try { return JSON.parse(raw); } catch { return raw ? [raw] : []; }
+}
 
-  const formatNumber = (number: number) => {
-    return new Intl.NumberFormat('en-US').format(number);
-  };
+export default function PricingPage() {
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editPlan, setEditPlan] = useState<Plan | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
+  const [form, setForm] = useState({ name: "", description: "", price: "", currency: "USD", duration: "30", features: "", active: true, featured: false });
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-white rounded-lg p-6">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-                </div>
-              ))}
-            </div>
-            <div className="bg-white rounded-lg p-6">
-              <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-16 bg-gray-200 rounded"></div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  const flash = (text: string, ok = true) => { setMessage({ text, ok }); setTimeout(() => setMessage(null), 3000); };
+
+  async function load() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/plans");
+      const d = await res.json();
+      if (d.plans) { setPlans(d.plans); setStats(d.stats); }
+    } catch { /* ignore */ }
+    finally { setLoading(false); }
   }
 
+  useEffect(() => { load(); }, []);
+
+  function openCreate() {
+    setEditPlan(null);
+    setForm({ name: "", description: "", price: "", currency: "USD", duration: "30", features: "", active: true, featured: false });
+    setShowForm(true);
+  }
+
+  function openEdit(p: Plan) {
+    setEditPlan(p);
+    setForm({
+      name: p.name,
+      description: p.description || "",
+      price: String(p.price),
+      currency: p.currency,
+      duration: String(p.duration),
+      features: parseFeatures(p.features).join("\n"),
+      active: p.active,
+      featured: p.featured,
+    });
+    setShowForm(true);
+  }
+
+  async function handleSave() {
+    if (!form.name || !form.price) { flash("Name and price are required", false); return; }
+    setSaving(true);
+    const body = {
+      name: form.name,
+      description: form.description || null,
+      price: Number(form.price),
+      currency: form.currency,
+      duration: Number(form.duration),
+      features: JSON.stringify(form.features.split("\n").map((s) => s.trim()).filter(Boolean)),
+      active: form.active,
+      featured: form.featured,
+    };
+    try {
+      const url = editPlan ? `/api/admin/plans/${editPlan.id}` : "/api/admin/plans";
+      const method = editPlan ? "PATCH" : "POST";
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const d = await res.json();
+      if (res.ok) { flash(editPlan ? "Plan updated" : "Plan created"); setShowForm(false); load(); }
+      else flash(d.error || "Failed", false);
+    } catch { flash("Failed", false); }
+    finally { setSaving(false); }
+  }
+
+  async function handleDelete(id: number) {
+    if (!confirm("Delete this pricing plan?")) return;
+    try {
+      const res = await fetch(`/api/admin/plans/${id}`, { method: "DELETE" });
+      const d = await res.json();
+      if (res.ok) { flash("Plan deleted"); load(); }
+      else flash(d.error || "Delete failed", false);
+    } catch { flash("Delete failed", false); }
+  }
+
+  async function toggleActive(p: Plan) {
+    try {
+      await fetch(`/api/admin/plans/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ active: !p.active }) });
+      load();
+    } catch { /* ignore */ }
+  }
+
+  const totalRevenue = stats?.totalRevenue ?? 0;
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Pricing Dashboard</h1>
-          <p className="text-gray-600 mt-1">Monitor pricing performance and manage subscription tiers</p>
-        </div>
-
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
-                  {formatCurrency(analytics?.totalRevenue || 0)}
-                </p>
-                <div className="flex items-center text-green-600 text-sm mt-2">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  +12.5% from last month
-                </div>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <DollarSign className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
+    <div className="max-w-5xl space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400 text-xl">
+            <MdBarChart />
           </div>
-
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Subscriptions</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
-                  {formatNumber(analytics?.activeSubscriptions || 0)}
-                </p>
-                <div className="flex items-center text-green-600 text-sm mt-2">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  +8.2% from last month
-                </div>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
-                  {analytics?.conversionRate.toFixed(1)}%
-                </p>
-                <div className="flex items-center text-green-600 text-sm mt-2">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  +2.1% from last month
-                </div>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Avg Revenue/User</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">
-                  {formatCurrency(analytics?.averageRevenuePerUser || 0)}
-                </p>
-                <div className="flex items-center text-green-600 text-sm mt-2">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  +5.3% from last month
-                </div>
-              </div>
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <DollarSign className="h-6 w-6 text-orange-600" />
-              </div>
-            </div>
+          <div>
+            <h1 className="text-xl font-bold text-white">Pricing Plans</h1>
+            <p className="text-xs text-slate-400">{plans.length} plans configured</p>
           </div>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Popular Tiers */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold text-gray-900">Popular Pricing Tiers</h2>
-              <Link 
-                href="/dashboard/pricing"
-                className="text-blue-500 hover:text-blue-600 text-sm"
-              >
-                Manage All →
-              </Link>
-            </div>
-            
-            <div className="space-y-4">
-              {analytics?.popularTiers.map((tier, index) => (
-                <div key={tier.name} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
-                      index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-orange-500'
-                    }`}>
-                      {index + 1}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{tier.name}</p>
-                      <p className="text-sm text-gray-600">{formatNumber(tier.subscriptions)} subscriptions</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-900">{formatCurrency(tier.revenue)}</p>
-                    <p className="text-sm text-gray-600">revenue</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Monthly Performance */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Monthly Performance</h2>
-            
-            <div className="space-y-4">
-              {analytics?.monthlyData.map((month, index) => (
-                <div key={month.month} className="p-4 bg-gray-50 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <p className="font-medium text-gray-900">{month.month}</p>
-                    <p className="text-sm text-gray-600">{formatNumber(month.subscriptions)} subscriptions</p>
-                  </div>
-                  <div className="mb-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Revenue</span>
-                      <span className="font-medium text-gray-900">{formatCurrency(month.revenue)}</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                      <div 
-                        className="bg-blue-500 h-2 rounded-full" 
-                        style={{ width: `${(month.revenue / 50000) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mt-8 bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                <span className="font-medium">Create New Tier</span>
-              </div>
-              <p className="text-sm text-gray-600">Add a new pricing tier to your subscription plans</p>
-            </button>
-            
-            <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="h-5 w-5 text-blue-500" />
-                <span className="font-medium">Adjust Pricing</span>
-              </div>
-              <p className="text-sm text-gray-600">Update pricing for existing subscription tiers</p>
-            </button>
-            
-            <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left">
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="h-5 w-5 text-purple-500" />
-                <span className="font-medium">Manage Discounts</span>
-              </div>
-              <p className="text-sm text-gray-600">Configure promotional codes and discounts</p>
-            </button>
-          </div>
-        </div>
+        <button onClick={openCreate} className="flex items-center gap-1.5 px-3 py-2 bg-orange-500 hover:bg-orange-400 rounded-xl text-slate-900 font-semibold text-sm transition-colors">
+          <MdAdd /> New Plan
+        </button>
       </div>
+
+      {message && (
+        <div className={`text-sm rounded-xl px-4 py-3 ${message.ok ? "bg-green-500/15 border border-green-500/25 text-green-300" : "bg-red-500/15 border border-red-500/25 text-red-300"}`}>
+          {message.text}
+        </div>
+      )}
+
+      {/* Stats */}
+      {stats && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: "Active Subscriptions", value: stats.totalActive },
+            { label: "Lifetime Members", value: stats.totalLifetime },
+            { label: "Recurring", value: stats.totalActive - stats.totalLifetime },
+            { label: "Plans", value: plans.length },
+          ].map((s) => (
+            <div key={s.label} className="rounded-2xl border border-white/8 bg-slate-800/50 p-4">
+              <p className="text-2xl font-bold text-white">{s.value}</p>
+              <p className="text-xs text-slate-400 mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Plans table */}
+      <div className="rounded-2xl border border-white/8 bg-slate-800/40 overflow-hidden">
+        {loading ? (
+          <div className="flex items-center justify-center h-32">
+            <div className="w-7 h-7 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
+          </div>
+        ) : plans.length === 0 ? (
+          <div className="text-center py-14 space-y-3">
+            <p className="text-slate-400 text-sm">No pricing plans yet.</p>
+            <button onClick={openCreate} className="text-orange-400 text-sm hover:underline">Create your first plan</button>
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/8 text-slate-500 text-xs uppercase tracking-wider">
+                <th className="text-left px-5 py-3">Plan</th>
+                <th className="text-left px-5 py-3">Price</th>
+                <th className="text-left px-5 py-3 hidden sm:table-cell">Duration</th>
+                <th className="text-left px-5 py-3 hidden md:table-cell">Subscribers</th>
+                <th className="text-left px-5 py-3 hidden lg:table-cell">Est. Revenue</th>
+                <th className="text-left px-5 py-3">Status</th>
+                <th className="px-5 py-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {plans.map((p) => (
+                <tr key={p.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-white">{p.name}</span>
+                      {p.featured && <span className="text-xs bg-amber-500/15 text-amber-300 border border-amber-500/25 px-1.5 py-0.5 rounded-full">Featured</span>}
+                    </div>
+                    {p.description && <p className="text-xs text-slate-500 mt-0.5 max-w-xs truncate">{p.description}</p>}
+                  </td>
+                  <td className="px-5 py-3 text-white font-semibold">
+                    {p.price === 0 ? "Free" : `$${p.price}`}
+                    <span className="text-slate-500 font-normal text-xs ml-1">{p.currency}</span>
+                  </td>
+                  <td className="px-5 py-3 text-slate-400 hidden sm:table-cell">{durationLabel(p.duration)}</td>
+                  <td className="px-5 py-3 hidden md:table-cell">
+                    <span className="text-white">{p.activeCount}</span>
+                    <span className="text-slate-500 text-xs ml-1">/ {p.totalCount} total</span>
+                  </td>
+                  <td className="px-5 py-3 text-slate-300 hidden lg:table-cell">${p.revenue.toLocaleString()}</td>
+                  <td className="px-5 py-3">
+                    <button onClick={() => toggleActive(p)} className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${p.active ? "bg-green-500/15 text-green-300 border-green-500/25 hover:bg-green-500/25" : "bg-slate-700/60 text-slate-400 border-slate-600/40 hover:bg-slate-700"}`}>
+                      {p.active ? "Active" : "Inactive"}
+                    </button>
+                  </td>
+                  <td className="px-5 py-3">
+                    <div className="flex gap-1 justify-end">
+                      <button onClick={() => openEdit(p)} className="p-1.5 text-slate-500 hover:text-orange-400 hover:bg-white/5 rounded-lg transition-colors"><MdEdit /></button>
+                      <button onClick={() => handleDelete(p.id)} className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"><MdDelete /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Create/Edit modal */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h2 className="text-white font-bold text-lg">{editPlan ? "Edit Plan" : "New Pricing Plan"}</h2>
+              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-white"><MdClose size={20} /></button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Plan Name</label>
+                <input value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} placeholder="e.g. Pro Monthly" className={inputCls} />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Description</label>
+                <input value={form.description} onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))} placeholder="Short description" className={inputCls} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Price</label>
+                  <input type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm((s) => ({ ...s, price: e.target.value }))} placeholder="99" className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Currency</label>
+                  <select value={form.currency} onChange={(e) => setForm((s) => ({ ...s, currency: e.target.value }))} className={inputCls}>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="BDT">BDT</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Duration</label>
+                <select value={form.duration} onChange={(e) => setForm((s) => ({ ...s, duration: e.target.value }))} className={inputCls}>
+                  <option value="30">Monthly (30 days)</option>
+                  <option value="365">Yearly (365 days)</option>
+                  <option value="-1">Lifetime</option>
+                  <option value="7">Weekly (7 days)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Features (one per line)</label>
+                <textarea value={form.features} onChange={(e) => setForm((s) => ({ ...s, features: e.target.value }))} placeholder={"Unlimited listings\nPriority support\nAll future features"} rows={4} className={inputCls + " resize-none"} />
+              </div>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.active} onChange={(e) => setForm((s) => ({ ...s, active: e.target.checked }))} className="accent-orange-500" />
+                  <span className="text-sm text-slate-300">Active</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.featured} onChange={(e) => setForm((s) => ({ ...s, featured: e.target.checked }))} className="accent-orange-500" />
+                  <span className="text-sm text-slate-300">Featured</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setShowForm(false)} className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-xl text-sm text-slate-300">Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="flex-1 px-4 py-2.5 bg-orange-500 hover:bg-orange-400 disabled:opacity-60 rounded-xl text-sm text-slate-900 font-semibold">
+                {saving ? "Saving…" : editPlan ? "Save Changes" : "Create Plan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,11 +2,13 @@ import Link from "next/link";
 import { ArrowRight, Shield, MapPin, Star, Users, CheckCircle, ChevronRight } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { LogoMark } from "@/components/Logo";
+import WorldMap, { COUNTRY_CENTROIDS, CountryPin } from "@/components/WorldMap";
+import FlagIcon from "@/components/FlagIcon";
 
 export const dynamic = "force-dynamic";
 
 export default async function GlobalHomePage() {
-  const [countries, expertCount, categoryCount] = await Promise.all([
+  const [countries, expertCount, categoryCount, expertsByCountry] = await Promise.all([
     prisma.country.findMany({
       where: { active: true },
       orderBy: { name: "asc" },
@@ -14,7 +16,23 @@ export default async function GlobalHomePage() {
     }),
     prisma.expert.count({ where: { verified: true } }),
     prisma.category.count({ where: { active: true } }),
+    prisma.expert.groupBy({ by: ["countryCode"], _count: { id: true }, where: { verified: true } }),
   ]);
+
+  const expertCountByCode = Object.fromEntries(
+    expertsByCountry.map(r => [r.countryCode, r._count.id])
+  );
+
+  const countryPins: CountryPin[] = countries
+    .filter(c => COUNTRY_CENTROIDS[c.code])
+    .map(c => ({
+      code:        c.code,
+      name:        c.name,
+      flagEmoji:   c.flagEmoji || undefined,
+      lat:         COUNTRY_CENTROIDS[c.code].lat,
+      lng:         COUNTRY_CENTROIDS[c.code].lng,
+      expertCount: expertCountByCode[c.code] || 0,
+    }));
 
   const stats = [
     { value: expertCount.toString(), label: "Verified Experts" },
@@ -118,6 +136,16 @@ export default async function GlobalHomePage() {
         </div>
       </section>
 
+      {/* ─── World Map ────────────────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-6 pb-6">
+        <div className="text-center mb-6">
+          <p className="text-xs uppercase tracking-widest text-orange-400 mb-1">We&apos;re Live In</p>
+          <h2 className="text-2xl font-bold text-white">Find Experts on the Map</h2>
+          <p className="text-slate-400 text-sm mt-1">Click any pin to browse experts in that country</p>
+        </div>
+        <WorldMap countries={countryPins} className="h-[420px] sm:h-[520px]" />
+      </section>
+
       {/* ─── Countries ────────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-6 py-16">
         <div className="flex items-center justify-between mb-8">
@@ -139,7 +167,7 @@ export default async function GlobalHomePage() {
                 href={`/${country.code}`}
                 className="group rounded-2xl border border-white/8 bg-slate-800/40 hover:bg-slate-800/70 hover:border-orange-500/30 p-6 transition-colors flex items-center gap-4"
               >
-                <span className="text-4xl shrink-0">{country.flagEmoji || "🌍"}</span>
+                <span className="shrink-0"><FlagIcon countryCode={country.code} width={36} height={27} /></span>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-white group-hover:text-orange-300 transition-colors mb-0.5">
                     {country.name}

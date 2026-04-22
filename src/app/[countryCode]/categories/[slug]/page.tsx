@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { Star, Shield, Crown } from "lucide-react";
+import ExpertMap, { MapExpert } from "@/components/ExpertMap";
 
 type Props = { params: Promise<{ countryCode: string; slug: string }> };
 
@@ -25,7 +26,7 @@ export default async function CountryCategoryPage({ params }: Props) {
     include: {
       expert: {
         include: {
-          categories: { include: { category: true } },
+          categories: { include: { category: { select: { name: true, icon: true, color: true } } } },
           reviews: { select: { rating: true } },
         },
       },
@@ -45,10 +46,32 @@ export default async function CountryCategoryPage({ params }: Props) {
       shortDesc: expert.shortDesc || null,
       verified: expert.verified,
       foundingExpert: expert.foundingExpert,
+      featured: expert.featured,
+      mapFeatured: expert.mapFeatured,
+      latitude: expert.latitude || null,
+      longitude: expert.longitude || null,
       profileLink: expert.profileLink || String(expert.id),
-      categories: expert.categories.map((c) => c.category.name),
+      categories: expert.categories.map((c) => ({ name: c.category.name, icon: c.category.icon, color: c.category.color })),
     };
   });
+
+  // Prepare MapExpert list: up to 20 map-featured first, then fill with others
+  const mapExperts: MapExpert[] = experts
+    .filter(e => e.latitude && e.longitude)
+    .map(e => ({
+      id:             e.id,
+      name:           e.name,
+      profileLink:    e.profileLink,
+      latitude:       e.latitude!,
+      longitude:      e.longitude!,
+      verified:       e.verified,
+      featured:       e.featured,
+      mapFeatured:    e.mapFeatured,
+      shortDesc:      e.shortDesc,
+      categories:     e.categories,
+    }))
+    .sort((a, b) => (b.mapFeatured ? 1 : 0) - (a.mapFeatured ? 1 : 0))
+    .slice(0, 20);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white pt-16">
@@ -67,6 +90,17 @@ export default async function CountryCategoryPage({ params }: Props) {
           {category.description || `Browse verified ${category.name.toLowerCase()} experts in ${countryCode.toUpperCase()}.`}
         </p>
         <p className="text-slate-500 text-xs mb-10">{experts.length} verified expert{experts.length !== 1 ? "s" : ""} found</p>
+
+        {/* Map section */}
+        {mapExperts.length > 0 && (
+          <div className="mb-10">
+            <ExpertMap
+              experts={mapExperts}
+              countryCode={countryCode}
+              className="h-80 sm:h-96"
+            />
+          </div>
+        )}
 
         {experts.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 p-14 text-center">

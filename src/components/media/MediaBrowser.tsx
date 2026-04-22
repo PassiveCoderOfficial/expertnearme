@@ -1,8 +1,8 @@
-// src/components/MediaBrowser.tsx
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/components/ui/ToastProvider";
+import { MdClose, MdUpload, MdRefresh, MdSearch, MdDelete, MdContentCopy, MdOpenInNew, MdPhotoLibrary } from "react-icons/md";
 
 type MediaItem = {
   id: number;
@@ -22,68 +22,41 @@ interface MediaBrowserProps {
   mode?: "modal" | "page";
 }
 
-export default function MediaBrowser({
-  open,
-  onClose,
-  onSelect,
-  allowAllMedia = false,
-  mode = "modal",
-}: MediaBrowserProps) {
+export default function MediaBrowser({ open, onClose, onSelect, allowAllMedia = false, mode = "modal" }: MediaBrowserProps) {
   const [tab, setTab] = useState<"upload" | "my" | "all">("upload");
   const [items, setItems] = useState<MediaItem[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState<number>(0);
+  const [progress, setProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [folderFilter, setFolderFilter] = useState<"all" | "admin" | "mine">("all");
-  const [tagFilter, setTagFilter] = useState<string>("");
+  const [search, setSearch] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [dragging, setDragging] = useState(false);
   const { toast, confirm } = useToast();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (file) {
-      uploadFile();
-    }
+    if (file) uploadFile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file]);
 
   useEffect(() => {
     async function fetchMedia(scope: "self" | "all") {
       try {
-        const res = await fetch(`/api/media?scope=${scope}&sort=latest`, {
-          credentials: "include",
-        });
-        if (res.ok) {
-          const data: MediaItem[] = await res.json();
-          setItems(data);
-        } else {
-          const text = await res.text();
-          console.error("Failed to fetch media", text);
-          toast("Failed to fetch media", { type: "error" });
-        }
-      } catch (err) {
-        console.error("Failed to fetch media", err);
-        toast("Failed to fetch media", { type: "error" });
-      }
+        const res = await fetch(`/api/media?scope=${scope}&sort=latest`, { credentials: "include" });
+        if (res.ok) setItems(await res.json());
+        else toast("Failed to load media", { type: "error" });
+      } catch { toast("Failed to load media", { type: "error" }); }
     }
-
     if (tab === "my") fetchMedia("self");
     if (tab === "all" && allowAllMedia) fetchMedia("all");
   }, [tab, allowAllMedia, refreshKey, toast]);
 
-  const displayedItems = useMemo(() => {
-    return items.filter((m) => {
-      if (folderFilter === "admin" && m.folder !== "admin") return false;
-      if (folderFilter === "mine" && m.folder === "admin") return false;
-      if (tagFilter.trim()) {
-        const q = tagFilter.trim().toLowerCase();
-        const tags = (m.tags || "").toLowerCase();
-        if (!tags.includes(q)) return false;
-      }
-      return true;
-    });
-  }, [items, folderFilter, tagFilter]);
+  const displayed = useMemo(() => {
+    if (!search.trim()) return items;
+    const q = search.toLowerCase();
+    return items.filter((m) => m.filename.toLowerCase().includes(q) || (m.tags || "").toLowerCase().includes(q));
+  }, [items, search]);
 
   async function uploadFile() {
     if (!file) return;
@@ -100,10 +73,7 @@ export default function MediaBrowser({
         xhr.open("POST", "/api/media", true);
         xhr.withCredentials = true;
         xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const pct = Math.round((e.loaded / e.total) * 100);
-            setProgress(pct);
-          }
+          if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
         };
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
@@ -112,273 +82,187 @@ export default function MediaBrowser({
               setItems((prev) => [newItem, ...prev]);
               setFile(null);
               setTab("my");
-              setProgress(100);
-              toast("Upload successful", { type: "success" });
+              toast("Uploaded", { type: "success" });
               resolve();
-            } catch (err) {
-              reject(new Error("Invalid server response"));
-            }
+            } catch { reject(new Error("Invalid server response")); }
           } else if (xhr.status === 403) {
-            reject(new Error("Unauthorized. Please login."));
+            reject(new Error("Unauthorized — please log in"));
           } else {
-            const msg = xhr.responseText || `Upload failed (${xhr.status})`;
-            reject(new Error(msg));
+            reject(new Error(xhr.responseText || `Upload failed (${xhr.status})`));
           }
         };
-        xhr.onerror = () => {
-          reject(new Error("Network error during upload"));
-        };
-
+        xhr.onerror = () => reject(new Error("Network error"));
         xhr.send(formData);
       });
     } catch (err: any) {
-      console.error("Upload error", err);
       setErrorMessage(err?.message || "Upload failed");
       toast(err?.message || "Upload failed", { type: "error" });
     } finally {
       setUploading(false);
-      setTimeout(() => setProgress(0), 400);
+      setTimeout(() => setProgress(0), 600);
     }
   }
 
-  async function requestDelete(id: number) {
-    const ok = await confirm({
-      title: "Delete media",
-      message: "Are you sure you want to delete this media item? This action cannot be undone.",
-      confirmLabel: "Delete",
-      cancelLabel: "Cancel",
-    });
+  async function handleDelete(id: number) {
+    const ok = await confirm({ title: "Delete media", message: "Delete this file? This cannot be undone.", confirmLabel: "Delete", cancelLabel: "Cancel" });
     if (!ok) return;
     try {
-      const res = await fetch(`/api/media/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if (res.ok) {
-        setItems((prev) => prev.filter((m) => m.id !== id));
-        toast("Deleted successfully", { type: "success" });
-      } else {
-        const text = await res.text();
-        toast(`Delete failed: ${text}`, { type: "error" });
-      }
-    } catch (err) {
-      console.error("Delete error", err);
-      toast("Delete failed", { type: "error" });
-    }
+      const res = await fetch(`/api/media/${id}`, { method: "DELETE", credentials: "include" });
+      if (res.ok) { setItems((prev) => prev.filter((m) => m.id !== id)); toast("Deleted", { type: "success" }); }
+      else toast("Delete failed", { type: "error" });
+    } catch { toast("Delete failed", { type: "error" }); }
   }
 
-  function buildAbsoluteUrl(rawUrl: string) {
-    if (!rawUrl) return rawUrl;
-    if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
-    const path = rawUrl.startsWith("/") ? rawUrl : `/${rawUrl}`;
-    if (typeof window !== "undefined" && window.location && window.location.origin) {
-      return `${window.location.origin}${path}`;
-    }
-    return path;
+  function buildUrl(url: string) {
+    if (/^https?:\/\//i.test(url)) return url;
+    const path = url.startsWith("/") ? url : `/${url}`;
+    return typeof window !== "undefined" ? `${window.location.origin}${path}` : path;
   }
 
-  async function copyToClipboard(rawUrl: string) {
-    const fullUrl = buildAbsoluteUrl(rawUrl);
-
-    try {
-      if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(fullUrl);
-        toast("Copied to clipboard", { type: "success" });
-        return;
-      }
-      // fallback: show toast with action to copy using textarea
-      toast("Click Copy to copy the URL", {
-        type: "info",
-        duration: 10000,
-        actionLabel: "Copy",
-        action: () => {
-          try {
-            if (typeof document !== "undefined") {
-              const textarea = document.createElement("textarea");
-              textarea.value = fullUrl;
-              textarea.style.position = "fixed";
-              textarea.style.left = "-9999px";
-              document.body.appendChild(textarea);
-              textarea.select();
-              document.execCommand && document.execCommand("copy");
-              document.body.removeChild(textarea);
-              toast("Copied to clipboard", { type: "success" });
-            }
-          } catch (err) {
-            console.error("Fallback copy failed", err);
-            toast("Copy failed", { type: "error" });
-          }
-        },
-      });
-    } catch (err) {
-      console.error("Copy failed", err);
-      toast("Copy failed", { type: "error" });
-    }
+  async function copyUrl(url: string) {
+    try { await navigator.clipboard.writeText(buildUrl(url)); toast("Copied", { type: "success" }); }
+    catch { toast("Copy failed", { type: "error" }); }
   }
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
-    const droppedFile = e.dataTransfer.files?.[0];
-    if (droppedFile) setFile(droppedFile);
-  }
-
-  function refresh() {
-    setRefreshKey((k) => k + 1);
+    setDragging(false);
+    const f = e.dataTransfer.files?.[0];
+    if (f) setFile(f);
   }
 
   if (mode === "modal" && !open) return null;
 
-  return (
-    <div
-      className={mode === "modal" ? "fixed inset-0 z-60 flex items-center justify-center" : ""}
-      aria-hidden={mode === "modal" ? !open : undefined}
-    >
-      {/* Backdrop */}
-      {mode === "modal" && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50"
-          onClick={onClose}
-          aria-hidden="true"
-        />
-      )}
+  const TABS = [
+    { key: "upload", label: "Upload" },
+    { key: "my",     label: "My Files" },
+    ...(allowAllMedia ? [{ key: "all", label: "All Files" }] : []),
+  ];
 
-      <div
-        className={`bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-5xl ${
-          mode === "modal" ? "p-6 z-60 relative" : "p-0"
-        }`}
-        role="dialog"
-        aria-modal={mode === "modal"}
-      >
-        {/* Header / Tabs */}
-        <div className="flex justify-between items-center mb-4 border-b pb-2">
-          <div className="flex gap-2 items-center">
-            {["upload", "my", ...(allowAllMedia ? ["all"] : [])].map((key) => {
-              const label = key === "upload" ? "Upload" : key === "my" ? "My Media" : "All Media";
-              const isActive = tab === (key as "upload" | "my" | "all");
-              return (
-                <button
-                  key={key}
-                  onClick={() => setTab(key as any)}
-                  className={`px-4 py-2 rounded-t-md font-medium transition-colors duration-300 ${
-                    isActive ? "bg-[#b84c4c] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-            <button onClick={refresh} className="ml-3 px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">
-              Refresh
-            </button>
+  const inner = (
+    <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-4xl flex flex-col overflow-hidden shadow-2xl" style={{ maxHeight: mode === "page" ? undefined : "85vh" }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/8 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-orange-500/15 flex items-center justify-center text-orange-400">
+            <MdPhotoLibrary />
           </div>
-
-          <div className="flex items-center gap-3">
-            <select
-              value={folderFilter}
-              onChange={(e) => setFolderFilter(e.target.value as "all" | "admin" | "mine")}
-              className="px-3 py-1 border rounded-md bg-white text-sm"
-            >
-              <option value="all">All folders</option>
-              <option value="mine">My folder</option>
-              <option value="admin">Admin folder</option>
-            </select>
-
-            <input
-              value={tagFilter}
-              onChange={(e) => setTagFilter(e.target.value)}
-              placeholder="Filter by tag"
-              className="px-3 py-1 border rounded-md text-sm"
-            />
-
-            {mode === "modal" && (
-              <button onClick={onClose} className="text-sm text-gray-500">
-                × Close
+          <div className="flex gap-1">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key as any)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === t.key ? "bg-orange-500/15 text-orange-300 border border-orange-500/25" : "text-slate-400 hover:text-white hover:bg-white/5"}`}
+              >
+                {t.label}
               </button>
-            )}
+            ))}
           </div>
         </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setRefreshKey((k) => k + 1)} className="p-1.5 text-slate-500 hover:text-white hover:bg-white/5 rounded-lg transition-colors" title="Refresh">
+            <MdRefresh />
+          </button>
+          {mode === "modal" && (
+            <button onClick={onClose} className="p-1.5 text-slate-500 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+              <MdClose />
+            </button>
+          )}
+        </div>
+      </div>
 
-        {/* Upload Tab */}
-        <div className={`transition-opacity duration-300 ${tab === "upload" ? "opacity-100" : "opacity-0 hidden"}`}>
+      {/* Upload tab */}
+      {tab === "upload" && (
+        <div className="p-6 flex-1">
           <div
-            className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center relative"
-            onDragOver={(e) => e.preventDefault()}
+            onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
             onDrop={handleDrop}
+            className={`relative border-2 border-dashed rounded-2xl p-12 flex flex-col items-center justify-center text-center transition-colors ${dragging ? "border-orange-500/60 bg-orange-500/5" : "border-white/12 hover:border-white/20 bg-slate-800/30"}`}
           >
-            <p className="mb-4 text-gray-600">Drop files here or click to upload</p>
-
-            <input ref={fileInputRef} type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} className="hidden" id="fileInput" />
-            <label htmlFor="fileInput" onClick={() => fileInputRef.current?.click()} className="cursor-pointer px-4 py-2 bg-[#b84c4c] text-white rounded-md inline-block">
+            <div className="w-14 h-14 rounded-2xl bg-slate-700/60 flex items-center justify-center text-slate-400 mb-4">
+              <MdUpload size={28} />
+            </div>
+            <p className="text-white font-medium mb-1">Drop a file here</p>
+            <p className="text-slate-500 text-sm mb-5">or click to browse your device</p>
+            <input ref={fileInputRef} type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} className="hidden" id="mediaFileInput" />
+            <label htmlFor="mediaFileInput" className="px-5 py-2.5 bg-orange-500 hover:bg-orange-400 text-slate-900 font-semibold text-sm rounded-xl cursor-pointer transition-colors">
               Choose File
             </label>
 
             {uploading && (
-              <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center rounded-lg">
-                <div className="flex items-center gap-3">
-                  <svg className="animate-spin h-6 w-6 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                  </svg>
-                  <div className="text-sm text-gray-700">Uploading ... {progress}%</div>
+              <div className="absolute inset-0 bg-slate-900/80 flex flex-col items-center justify-center rounded-2xl backdrop-blur-sm">
+                <div className="w-7 h-7 rounded-full border-2 border-orange-500 border-t-transparent animate-spin mb-3" />
+                <p className="text-sm text-white mb-3">Uploading… {progress}%</p>
+                <div className="w-48 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                  <div style={{ width: `${progress}%` }} className="h-full bg-orange-500 transition-all rounded-full" />
                 </div>
-
-                <div className="w-64 h-2 bg-gray-200 rounded mt-4 overflow-hidden">
-                  <div style={{ width: `${progress}%` }} className="h-full bg-[#b84c4c] transition-all" />
-                </div>
-                {errorMessage && <div className="mt-3 text-xs text-red-600">{errorMessage}</div>}
+                {errorMessage && <p className="text-xs text-red-400 mt-3">{errorMessage}</p>}
               </div>
             )}
           </div>
         </div>
+      )}
 
-        {/* Media Grid */}
-        <div className={`transition-opacity duration-300 ${tab === "my" || tab === "all" ? "opacity-100" : "opacity-0 hidden"}`}>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4">
-            {displayedItems.length === 0 && <div className="col-span-full text-center text-sm text-gray-500">No media found.</div>}
+      {/* Media grid */}
+      {(tab === "my" || tab === "all") && (
+        <div className="flex flex-col flex-1 overflow-hidden">
+          {/* Search bar */}
+          <div className="px-5 py-3 border-b border-white/8 shrink-0">
+            <div className="flex items-center gap-2 bg-slate-800/60 border border-white/8 rounded-xl px-3 py-2">
+              <MdSearch className="text-slate-500 shrink-0" />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by filename or tag…" className="bg-transparent text-sm text-white placeholder-slate-500 outline-none w-full" />
+            </div>
+          </div>
 
-            {displayedItems.map((m) => (
-              <div key={m.id} className="border rounded-lg p-2 flex flex-col items-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onSelect && onSelect(m);
-                    toast("Selected", { type: "success" });
-                  }}
-                  className="w-full focus:outline-none"
-                  aria-label={`Select ${m.filename}`}
-                >
-                  <div className="w-full h-28 bg-gray-100 rounded overflow-hidden mb-2 flex items-center justify-center cursor-pointer transition-shadow focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400">
-                    {m.mimetype.startsWith("image/") ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={m.url} alt={m.filename} className="w-full h-full object-cover border-4 border-transparent hover:border-gray-400" style={{ boxSizing: "border-box" }} />
-                    ) : (
-                      <div className="text-xs text-gray-600 px-2">{m.filename}</div>
-                    )}
+          <div className="flex-1 overflow-y-auto p-5">
+            {displayed.length === 0 ? (
+              <div className="text-center py-14 text-slate-500 text-sm">No media found.</div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {displayed.map((m) => (
+                  <div key={m.id} className="group relative rounded-xl border border-white/8 bg-slate-800/50 overflow-hidden hover:border-orange-500/30 transition-colors">
+                    {/* Thumbnail */}
+                    <button
+                      type="button"
+                      onClick={() => { onSelect?.(m); if (onSelect) toast("Selected", { type: "success" }); }}
+                      className={`w-full h-28 bg-slate-900/60 flex items-center justify-center overflow-hidden ${onSelect ? "cursor-pointer" : "cursor-default"}`}
+                    >
+                      {m.mimetype.startsWith("image/") ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={m.url} alt={m.filename} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
+                      ) : (
+                        <div className="text-xs text-slate-500 px-2 text-center break-all">{m.filename}</div>
+                      )}
+                    </button>
+
+                    {/* Info */}
+                    <div className="p-2">
+                      <p className="text-xs text-slate-300 truncate" title={m.filename}>{m.filename}</p>
+                      <p className="text-xs text-slate-600">{m.mimetype.split("/")[1]?.toUpperCase()}</p>
+                    </div>
+
+                    {/* Actions (visible on hover) */}
+                    <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => window.open(buildUrl(m.url), "_blank")} className="p-1 bg-slate-900/80 hover:bg-slate-800 text-slate-300 rounded-lg" title="Open"><MdOpenInNew size={13} /></button>
+                      <button onClick={() => copyUrl(m.url)} className="p-1 bg-slate-900/80 hover:bg-slate-800 text-slate-300 rounded-lg" title="Copy URL"><MdContentCopy size={13} /></button>
+                      <button onClick={() => handleDelete(m.id)} className="p-1 bg-slate-900/80 hover:bg-red-500/80 text-slate-300 rounded-lg" title="Delete"><MdDelete size={13} /></button>
+                    </div>
                   </div>
-                </button>
-
-                <div className="text-sm text-center break-words">{m.filename}</div>
-                <div className="text-xs text-gray-500">{m.mimetype}</div>
-                {m.uploadedByEmail && <div className="text-xs text-gray-500">By: {m.uploadedByEmail}</div>}
-                {m.folder && <div className="text-xs text-gray-500">Folder: {m.folder}</div>}
-                {m.tags && <div className="text-xs text-gray-500">Tags: {m.tags}</div>}
-
-                <div className="flex gap-2 mt-2">
-                  <button onClick={() => window.open(buildAbsoluteUrl(m.url), "_blank")} className="text-xs text-blue-600">
-                    Open
-                  </button>
-                  <button onClick={() => copyToClipboard(m.url)} className="text-xs text-gray-600">
-                    Copy URL
-                  </button>
-                  <button onClick={() => requestDelete(m.id)} className="text-xs text-red-600">
-                    Delete
-                  </button>
-                </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         </div>
-      </div>
+      )}
+    </div>
+  );
+
+  if (mode === "page") return inner;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      {inner}
     </div>
   );
 }

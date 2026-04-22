@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import CategoryTreePicker, { CategoryNode } from "@/components/CategoryTreePicker";
 import { pickOrUploadMedia } from "@/lib/mediaManagerAdapter";
 import { slugify, getUniqueSlug } from "@/lib/filename";
+import MapPicker, { LatLng } from "@/components/MapPicker";
 
 type Expert = {
   id: number;
@@ -626,9 +627,12 @@ export default function ExpertsPage() {
                     <div className="sm:col-span-2">
                       <label className="block text-sm font-medium">Map Location (choose one)</label>
                       <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <input type="text" value={form.mapLocation} onChange={(e) => setForm({ ...form, mapLocation: e.target.value })} className="border px-3 py-2 rounded w-full" placeholder="Google Maps URL or place link" />
-                        <input type="text" value={form.mapLat} onChange={(e) => setForm({ ...form, mapLat: e.target.value })} className="border px-3 py-2 rounded w-full" placeholder="Latitude (e.g., 23.7809)" />
-                        <input type="text" value={form.mapLng} onChange={(e) => setForm({ ...form, mapLng: e.target.value })} className="border px-3 py-2 rounded w-full" placeholder="Longitude (e.g., 90.2792)" />
+                        <MapPicker
+                          value={form.mapLat && form.mapLng ? { lat: parseFloat(form.mapLat), lng: parseFloat(form.mapLng) } : null}
+                          onChange={(coords: LatLng, address?: string) => {
+                            setForm({ ...form, mapLat: String(coords.lat), mapLng: String(coords.lng), mapLocation: address || form.mapLocation });
+                          }}
+                        />
                       </div>
                       <p className="text-xs text-gray-500 mt-1">You can paste a Google Maps URL, or provide latitude and longitude. Map pin picker can be added later.</p>
                     </div>

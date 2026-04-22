@@ -27,6 +27,15 @@ export default function ReviewsPage() {
     finally { setLoading(false); }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this review?")) return;
+    try {
+      const res = await fetch(`/api/dashboard/reviews/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.ok) setReviews((prev) => prev.filter((r) => r.id !== id));
+    } catch { /* ignore */ }
+  };
+
   useEffect(() => { fetchReviews(); }, []);
 
   const stars = (n: number) => (
@@ -77,7 +86,7 @@ export default function ReviewsPage() {
                   <td className="px-5 py-3 text-slate-400 hidden md:table-cell max-w-xs truncate">{r.comment || "—"}</td>
                   <td className="px-5 py-3 text-slate-500 text-xs hidden sm:table-cell">{new Date(r.createdAt).toLocaleDateString()}</td>
                   <td className="px-5 py-3">
-                    <button className="flex items-center gap-1 text-xs text-slate-500 hover:text-red-400 transition-colors">
+                    <button onClick={() => handleDelete(r.id)} className="flex items-center gap-1 text-xs text-slate-500 hover:text-red-400 transition-colors">
                       <MdDelete /> Delete
                     </button>
                   </td>

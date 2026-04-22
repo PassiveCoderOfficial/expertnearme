@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Globe, Search } from 'lucide-react';
+import FlagIcon from './FlagIcon';
 
 type Country = { code: string; name: string; flagEmoji?: string };
 
@@ -119,7 +120,7 @@ export default function CountryPickerModal() {
                       onClick={() => pick(c.code)}
                       className="flex items-center gap-3 bg-slate-800/60 hover:bg-orange-500/10 border border-white/6 hover:border-orange-500/30 rounded-xl px-4 py-3 transition-all group text-left"
                     >
-                      <span className="text-2xl leading-none shrink-0">{c.flagEmoji || '🌍'}</span>
+                      <span className="shrink-0"><FlagIcon countryCode={c.code} width={24} height={18} /></span>
                       <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors truncate">
                         {c.name}
                       </span>

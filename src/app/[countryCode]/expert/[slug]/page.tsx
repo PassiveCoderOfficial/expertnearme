@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Star, MapPin, Phone, Globe, Mail, Shield, CheckCircle, Award, Crown, MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
+import ExpertMap, { MapExpert } from "@/components/ExpertMap";
 
 interface ExpertProfilePageProps {
   params: Promise<{ slug: string; countryCode: string }>;
@@ -61,6 +62,54 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
     expert.reviews.length > 0
       ? expert.reviews.reduce((s, r) => s + r.rating, 0) / expert.reviews.length
       : null;
+
+  // Nearby experts: same country + same categories, with coordinates
+  const categoryIds = expert.categories.map(c => c.categoryId);
+  const nearbyRaw = categoryIds.length > 0 ? await prisma.expert.findMany({
+    where: {
+      countryCode,
+      verified: true,
+      id: { not: expert.id },
+      latitude: { not: null },
+      longitude: { not: null },
+      categories: { some: { categoryId: { in: categoryIds } } },
+    },
+    include: {
+      categories: { include: { category: { select: { name: true, icon: true, color: true } } } },
+    },
+    orderBy: [{ mapFeatured: 'desc' }, { featured: 'desc' }],
+    take: 20,
+  }) : [];
+
+  // Build nearby list, always prepend the current expert so their pin is visible on the map
+  const currentExpertPin: MapExpert | null = (expert.latitude && expert.longitude) ? {
+    id:          expert.id,
+    name:        displayName,
+    profileLink: expert.profileLink || String(expert.id),
+    latitude:    expert.latitude,
+    longitude:   expert.longitude,
+    verified:    expert.verified,
+    featured:    expert.featured,
+    mapFeatured: expert.mapFeatured,
+    shortDesc:   expert.shortDesc,
+    categories:  expert.categories.map(c => ({ name: c.category.name, icon: null, color: null })),
+  } : null;
+
+  const nearbyExperts: MapExpert[] = [
+    ...(currentExpertPin ? [currentExpertPin] : []),
+    ...nearbyRaw.map(e => ({
+      id:          e.id,
+      name:        e.businessName || e.name,
+      profileLink: e.profileLink || String(e.id),
+      latitude:    e.latitude!,
+      longitude:   e.longitude!,
+      verified:    e.verified,
+      featured:    e.featured,
+      mapFeatured: e.mapFeatured,
+      shortDesc:   e.shortDesc,
+      categories:  e.categories.map(c => ({ name: c.category.name, icon: c.category.icon, color: c.category.color })),
+    })),
+  ];
 
   function initials(name: string) {
     return name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
@@ -301,6 +350,29 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
           </div>
         )}
       </section>
+
+      {/* Nearby Experts Map */}
+      {nearbyExperts.length > 0 && (
+        <section className="max-w-6xl mx-auto px-6 pb-12">
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-white">
+              {nearbyExperts.length > 1 ? "Experts Nearby in the Same Category" : "Location"}
+            </h2>
+            <p className="text-slate-400 text-sm mt-0.5">
+              {nearbyExperts.length > 1
+                ? `${nearbyExperts.length - 1} other expert${nearbyExperts.length - 1 !== 1 ? 's' : ''} with similar services in ${countryCode.toUpperCase()}`
+                : `Showing ${displayName}'s location`}
+            </p>
+          </div>
+          <ExpertMap
+            experts={nearbyExperts}
+            countryCode={countryCode}
+            center={expert.latitude && expert.longitude ? { lat: expert.latitude, lng: expert.longitude } : undefined}
+            zoom={nearbyExperts.length > 1 ? 10 : 13}
+            className="h-80 sm:h-96"
+          />
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-white/5 bg-slate-950/50">

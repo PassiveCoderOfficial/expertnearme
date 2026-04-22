@@ -8,6 +8,7 @@ import {
   Crown, User, Building2, MapPin, Phone, Globe, ChevronRight,
   ChevronLeft, Check, Eye, EyeOff, Loader2, ArrowRight, Star
 } from 'lucide-react';
+import MapPicker, { LatLng } from '@/components/MapPicker';
 
 interface Country { code: string; name: string; flagEmoji: string; }
 interface Category { id: number; name: string; icon: string | null; color: string | null; slug: string; }
@@ -41,6 +42,9 @@ function OnboardingForm() {
     bio:          '',
     webAddress:   '',
     categoryIds:  [] as number[],
+    latitude:     null as number | null,
+    longitude:    null as number | null,
+    mapAddress:   '',
   });
 
   const [result, setResult] = useState<{ slug: string; countryCode: string } | null>(null);
@@ -119,6 +123,9 @@ function OnboardingForm() {
           bio:         form.bio,
           webAddress:  form.webAddress,
           categoryIds: form.categoryIds,
+          latitude:    form.latitude,
+          longitude:   form.longitude,
+          mapLocation: form.mapAddress,
           claimFoundingSpot: isFounder,
         }),
       });
@@ -272,6 +279,18 @@ function OnboardingForm() {
                   <label className={labelCls}><Globe className="inline h-3.5 w-3.5 mr-1" />Website <span className="text-slate-500">(optional)</span></label>
                   <input className={inputCls} placeholder="https://yourwebsite.com" value={form.webAddress} onChange={e => set('webAddress', e.target.value)} />
                 </div>
+
+                {/* Map location picker */}
+                <MapPicker
+                  label="Location on map (optional — helps buyers find you)"
+                  value={form.latitude && form.longitude ? { lat: form.latitude, lng: form.longitude } : null}
+                  onChange={(coords: LatLng, address?: string) => {
+                    set('latitude', coords.lat);
+                    set('longitude', coords.lng);
+                    if (address) set('mapAddress', address);
+                  }}
+                  defaultCenter={form.countryCode === 'bd' ? { lat: 23.8, lng: 90.4 } : form.countryCode === 'ae' ? { lat: 25.2, lng: 55.3 } : form.countryCode === 'sg' ? { lat: 1.35, lng: 103.82 } : undefined}
+                />
               </div>
             </motion.div>
           )}

@@ -1,18 +1,54 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-const VALID_COUNTRY_CODES = new Set(['bd', 'ae', 'qa', 'my', 'th', 'iq', 'sa', 'sg', 'om', 'uae']);
+// Routes that are never country-prefixed — don't validate or redirect these
+const GLOBAL_ROUTES = new Set([
+  '', 'login', 'signup', 'dashboard', 'create-expert-account',
+  'for-experts', 'pricing', 'founding-experts', 'search', 'verify',
+  'api', '_next', 'favicon.ico',
+]);
+
+// Mapping from Vercel/Cloudflare geo country codes → our supported country slugs
+const GEO_TO_COUNTRY: Record<string, string> = {
+  BD: 'bd', AE: 'ae', SA: 'sa', QA: 'qa', OM: 'om',
+  KW: 'kw', BH: 'bh', SG: 'sg', MY: 'my', ID: 'id',
+  PH: 'ph', IN: 'in', PK: 'pk', LK: 'lk', NP: 'np',
+  GB: 'gb', US: 'us', AU: 'au', CA: 'ca', DE: 'de',
+};
+
+const VALID_COUNTRY_CODES = new Set(Object.values(GEO_TO_COUNTRY));
 
 export function middleware(request: NextRequest) {
-  const url = new URL(request.url);
-  const path = url.pathname;
+  const url      = new URL(request.url);
+  const path     = url.pathname;
+  const segments = path.split('/').filter(Boolean);
+  const first    = segments[0]?.toLowerCase() || '';
 
-  const countryMatch = path.match(/^\/([a-z]{2,3})(\/|$)/);
-
-  if (countryMatch) {
-    const countryCode = countryMatch[1].toLowerCase();
-    if (!VALID_COUNTRY_CODES.has(countryCode)) {
+  // ── 1. Validate existing country prefix ──────────────────────────────────
+  if (first && !GLOBAL_ROUTES.has(first) && /^[a-z]{2,3}$/.test(first)) {
+    if (!VALID_COUNTRY_CODES.has(first)) {
       return NextResponse.redirect(new URL('/', request.url));
+    }
+  }
+
+  // ── 2. IP-based auto-redirect on homepage only ────────────────────────────
+  if (path === '/') {
+    const alreadyRedirected = request.cookies.get('enm_country_redirected');
+    if (!alreadyRedirected) {
+      const geoCountry =
+        request.geo?.country ||
+        request.headers.get('cf-ipcountry') ||
+        request.headers.get('x-vercel-ip-country');
+
+      if (geoCountry) {
+        const mappedCode = GEO_TO_COUNTRY[geoCountry.toUpperCase()];
+        if (mappedCode) {
+          const response = NextResponse.redirect(new URL(`/${mappedCode}`, request.url));
+          // Short-lived cookie prevents redirect loop on manual root navigation
+          response.cookies.set('enm_country_redirected', '1', { maxAge: 60, path: '/' });
+          return response;
+        }
+      }
     }
   }
 

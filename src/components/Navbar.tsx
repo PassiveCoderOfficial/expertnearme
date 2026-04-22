@@ -9,6 +9,7 @@ import MobileNav from './MobileNav';
 import { useAuth } from '@/context/AuthContext';
 import { LogoMark } from './Logo';
 import { setStoredCountry } from './CountryPickerModal';
+import FlagIcon from './FlagIcon';
 
 type CountryOption = { code: string; name: string; flagEmoji?: string };
 
@@ -114,8 +115,8 @@ export default function Navbar() {
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="flex items-center gap-2 h-9 rounded-lg border border-white/15 bg-white/6 px-3 text-sm text-white hover:border-orange-500/40 transition-colors"
             >
-              <span className="text-base leading-none">
-                {currentCountry?.flagEmoji || <Globe className="w-4 h-4 text-slate-400" />}
+              <span className="flex items-center">
+                {currentCountry ? <FlagIcon countryCode={currentCountry.code} width={20} height={15} /> : <Globe className="w-4 h-4 text-slate-400" />}
               </span>
               <span className="text-slate-300 max-w-[80px] truncate">
                 {currentCountry?.name || 'Country'}
@@ -135,7 +136,7 @@ export default function Navbar() {
                         : 'text-slate-300'
                     }`}
                   >
-                    <span className="text-lg leading-none shrink-0">{c.flagEmoji || '🌍'}</span>
+                    <span className="shrink-0"><FlagIcon countryCode={c.code} width={20} height={15} /></span>
                     <span className="truncate">{c.name}</span>
                     {c.code === currentCode && (
                       <span className="ml-auto w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />

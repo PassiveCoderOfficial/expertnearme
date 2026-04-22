@@ -6,6 +6,7 @@ import {
   Save, ExternalLink, Crown, Globe, Phone, MapPin,
   Image, Loader2, CheckCircle, AlertCircle, Building2, User
 } from 'lucide-react';
+import MapPickerDark, { LatLng } from '@/components/MapPicker';
 
 interface Category { id: number; name: string; icon: string | null; slug: string; }
 interface Expert {
@@ -52,6 +53,8 @@ export default function MyProfilePage() {
     profilePicture: '',
     coverPhoto:    '',
     mapLocation:   '',
+    latitude:      null as number | null,
+    longitude:     null as number | null,
     categoryIds:   [] as number[],
   });
 
@@ -76,6 +79,8 @@ export default function MyProfilePage() {
             profilePicture: e.profilePicture ?? '',
             coverPhoto:    e.coverPhoto    ?? '',
             mapLocation:   e.mapLocation   ?? '',
+            latitude:      (e as unknown as { latitude?: number | null }).latitude ?? null,
+            longitude:     (e as unknown as { longitude?: number | null }).longitude ?? null,
             categoryIds:   e.categories.map(c => c.category.id),
           });
           if (e.countryCode) {
@@ -290,8 +295,15 @@ export default function MyProfilePage() {
             <input className={inputCls} placeholder="https://…/cover.jpg" value={form.coverPhoto} onChange={e => set('coverPhoto', e.target.value)} />
           </div>
           <div>
-            <label className={labelCls}>Google Maps link / coordinates</label>
-            <input className={inputCls} placeholder="https://maps.google.com/… or 1.3521,103.8198" value={form.mapLocation} onChange={e => set('mapLocation', e.target.value)} />
+            <MapPickerDark
+              label="Location on map"
+              value={form.latitude && form.longitude ? { lat: form.latitude, lng: form.longitude } : null}
+              onChange={(coords: LatLng, address?: string) => {
+                set('latitude', coords.lat);
+                set('longitude', coords.lng);
+                if (address) set('mapLocation', address);
+              }}
+            />
           </div>
         </div>
       </div>
