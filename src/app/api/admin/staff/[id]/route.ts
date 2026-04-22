@@ -37,7 +37,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   }
 
   const { id } = await params;
-  if (Number(id) === session.id) {
+  if (Number(id) === session.userId) {
     return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
   }
 

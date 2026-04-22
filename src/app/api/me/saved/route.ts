@@ -7,7 +7,7 @@ export async function GET() {
   if (!session?.authenticated) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const saved = await prisma.savedExpert.findMany({
-    where: { userId: session.id },
+    where: { userId: session.userId },
     include: {
       expert: {
         select: {
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   if (!expertId) return NextResponse.json({ error: "expertId required" }, { status: 400 });
 
   const existing = await prisma.savedExpert.findUnique({
-    where: { userId_expertId: { userId: session.id, expertId: Number(expertId) } },
+    where: { userId_expertId: { userId: session.userId, expertId: Number(expertId) } },
   });
 
   if (existing) {
@@ -41,6 +41,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ saved: false });
   }
 
-  await prisma.savedExpert.create({ data: { userId: session.id, expertId: Number(expertId) } });
+  await prisma.savedExpert.create({ data: { userId: session.userId, expertId: Number(expertId) } });
   return NextResponse.json({ saved: true });
 }

@@ -9,7 +9,7 @@ export async function GET() {
   }
 
   const sub = await prisma.subscription.findFirst({
-    where: { userId: session.id, status: "ACTIVE" },
+    where: { userId: session.userId, status: "ACTIVE" },
     include: { plan: true },
     orderBy: { createdAt: "desc" },
   });
