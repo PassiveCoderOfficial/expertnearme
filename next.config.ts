@@ -1,18 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Disable React Compiler for now - it's experimental and heavy
   reactCompiler: false,
-  
-  // Turbopack config (Next.js 16 default) - empty for now
-  turbopack: {},
-  
-  // Optimize bundle splitting (webpack fallback)
-  webpack: (config) => {
-    // Tree-shake Prisma better
-    config.externals = ['prisma', ...config.externals];
-    return config;
-  },
+  // Tell Next.js not to bundle these native/binary packages — they'll be
+  // loaded at runtime from node_modules (required for Prisma in serverless)
+  serverExternalPackages: ["@prisma/client", "prisma"],
 };
 
 export default nextConfig;
