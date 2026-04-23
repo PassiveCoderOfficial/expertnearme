@@ -11,9 +11,8 @@ export async function GET(
     
     // Fetch experts in this country
     const experts = await prisma.expert.findMany({
-      where: { 
+      where: {
         countryCode: countryCode,
-        verified: true 
       },
       include: {
         categories: {

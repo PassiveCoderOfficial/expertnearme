@@ -18,6 +18,7 @@ type Expert = {
   profilePicture?: string | null;
   coverPhoto?: string | null;
   countryCode?: string | null;
+  verified?: boolean;
   categories?: { category: { id: number; name: string } }[];
   createdAt?: string;
 };
@@ -320,6 +321,24 @@ export default function ExpertsPage() {
     }
   }
 
+  async function toggleVerified(id: number, current: boolean) {
+    setExperts((prev) => prev.map((e) => e.id === id ? { ...e, verified: !current } : e));
+    try {
+      const res = await fetch(`/api/dashboard/experts/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ verified: !current }),
+      });
+      if (!res.ok) {
+        setExperts((prev) => prev.map((e) => e.id === id ? { ...e, verified: current } : e));
+        setError("Failed to update verification status.");
+      }
+    } catch {
+      setExperts((prev) => prev.map((e) => e.id === id ? { ...e, verified: current } : e));
+      setError("Failed to update verification status.");
+    }
+  }
+
   async function handleDelete(id: number) {
     if (!confirm("Delete this expert? This action cannot be undone.")) return;
     try {
@@ -459,6 +478,7 @@ export default function ExpertsPage() {
               <th className="text-left px-4 py-3 hidden sm:table-cell">Email</th>
               <th className="text-left px-4 py-3 hidden md:table-cell">Profile Link</th>
               <th className="text-left px-4 py-3 hidden lg:table-cell">Categories</th>
+              <th className="text-center px-4 py-3">Verified</th>
               <th className="text-left px-4 py-3 hidden md:table-cell">Created</th>
               <th className="px-4 py-3">Actions</th>
             </tr>
@@ -482,6 +502,19 @@ export default function ExpertsPage() {
                 </td>
                 <td className="px-4 py-3 text-slate-400 text-xs hidden lg:table-cell">
                   {(expert.categories || []).map((c) => c.category?.name).filter(Boolean).join(", ") || "—"}
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => toggleVerified(expert.id, !!expert.verified)}
+                    title={expert.verified ? "Click to unverify" : "Click to verify"}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                      expert.verified
+                        ? "bg-green-500/15 text-green-300 border-green-500/25 hover:bg-green-500/25"
+                        : "bg-slate-700/50 text-slate-500 border-white/10 hover:bg-slate-700 hover:text-slate-300"
+                    }`}
+                  >
+                    {expert.verified ? "✓ Verified" : "Unverified"}
+                  </button>
                 </td>
                 <td className="px-4 py-3 text-slate-500 text-xs hidden md:table-cell">{expert.createdAt ? new Date(expert.createdAt).toLocaleDateString() : "—"}</td>
                 <td className="px-4 py-3">
