@@ -17,10 +17,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
+  const ADMIN_ROLES = new Set(["SUPER_ADMIN", "ADMIN", "MANAGER", "MARKETER"]);
   let where: any = {};
   if (scope === "self") {
     where = { uploadedById: session.userId };
-  } else if (scope === "all" && session.role === "ADMIN") {
+  } else if (scope === "all" && ADMIN_ROLES.has(session.role)) {
     where = {};
   } else {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });

@@ -43,17 +43,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const { userId, planId, isLifetime, endsAt, paymentRef, gateway } = await req.json();
+  const { userId, planId, cycles = 1, paymentRef, gateway } = await req.json();
   if (!userId || !planId) {
     return NextResponse.json({ error: "userId and planId required" }, { status: 400 });
   }
+
+  const plan = await prisma.pricing.findUnique({ where: { id: Number(planId) } });
+  const isLifetime = plan ? plan.duration === 0 : false;
+  const endsAt = plan && plan.duration > 0
+    ? new Date(Date.now() + plan.duration * Number(cycles) * 24 * 60 * 60 * 1000)
+    : null;
 
   const sub = await prisma.subscription.create({
     data: {
       userId: Number(userId),
       planId: Number(planId),
-      isLifetime: Boolean(isLifetime),
-      endsAt: endsAt ? new Date(endsAt) : null,
+      isLifetime,
+      endsAt,
       paymentRef: paymentRef || null,
       gateway: gateway || null,
       status: "ACTIVE",

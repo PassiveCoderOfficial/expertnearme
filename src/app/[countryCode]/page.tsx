@@ -71,6 +71,34 @@ export default function CountryPage() {
     })();
   }, [countryCode]);
 
+  // useMemo must be declared before any early returns (Rules of Hooks)
+  const mapExperts = useMemo<MapExpert[]>(() => {
+    return experts
+      .filter((e) => e.latitude && e.longitude)
+      .sort((a, b) => {
+        const aFeat = (a.mapFeatured || a.featured) ? 1 : 0;
+        const bFeat = (b.mapFeatured || b.featured) ? 1 : 0;
+        return bFeat - aFeat;
+      })
+      .map(e => ({
+        id: Number(e.id),
+        name: e.businessName || e.name,
+        profileLink: e.profileLink || String(e.id),
+        latitude: e.latitude!,
+        longitude: e.longitude!,
+        verified: e.verified,
+        featured: e.featured ?? false,
+        mapFeatured: e.mapFeatured ?? false,
+        profilePicture: e.profilePicture,
+        shortDesc: e.shortDesc,
+        categories: e.categories?.map((c) => ({
+          name: c.category.name,
+          icon: c.category.icon ?? null,
+          color: c.category.color ?? null,
+        })),
+      }));
+  }, [experts]);
+
   if (loading) return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center">
       <div className="w-10 h-10 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
@@ -90,49 +118,6 @@ export default function CountryPage() {
   const featured = experts.filter((e) => e.featured);
   const regular = experts.filter((e) => !e.featured);
 
-  // Category-wise map selection: up to 3 experts per category, prioritising mapFeatured > featured > regular
-  const mapExperts = useMemo<MapExpert[]>(() => {
-    const withCoords = experts.filter((e) => e.latitude && e.longitude);
-    const byCategory = new Map<string, Expert[]>();
-    for (const e of withCoords) {
-      const key = e.categories?.[0]?.category?.name || "__none__";
-      if (!byCategory.has(key)) byCategory.set(key, []);
-      byCategory.get(key)!.push(e);
-    }
-    const seen = new Set<string>();
-    const result: MapExpert[] = [];
-    for (const group of byCategory.values()) {
-      const sorted = [...group].sort((a, b) => {
-        if (a.mapFeatured && !b.mapFeatured) return -1;
-        if (!a.mapFeatured && b.mapFeatured) return 1;
-        if (a.featured && !b.featured) return -1;
-        if (!a.featured && b.featured) return 1;
-        return 0;
-      });
-      for (const e of sorted.slice(0, 3)) {
-        if (seen.has(e.id)) continue;
-        seen.add(e.id);
-        result.push({
-          id: Number(e.id),
-          name: e.businessName || e.name,
-          profileLink: e.profileLink || String(e.id),
-          latitude: e.latitude!,
-          longitude: e.longitude!,
-          verified: e.verified,
-          featured: e.featured ?? false,
-          mapFeatured: e.mapFeatured ?? false,
-          profilePicture: e.profilePicture,
-          shortDesc: e.shortDesc,
-          categories: e.categories?.map((c) => ({
-            name: c.category.name,
-            icon: c.category.icon ?? null,
-            color: c.category.color ?? null,
-          })),
-        });
-      }
-    }
-    return result.slice(0, 30);
-  }, [experts]);
   const overallAvg = experts.length
     ? (experts.flatMap((e) => e.reviews).reduce((s, r) => s + r.rating, 0) /
         Math.max(experts.flatMap((e) => e.reviews).length, 1)).toFixed(1)
@@ -209,7 +194,7 @@ export default function CountryPage() {
                 Experts on the Map
               </h2>
             </div>
-            <span className="text-xs text-slate-500">Featured picks per category · click a pin to view</span>
+            <span className="text-xs text-slate-500">All experts on map · featured pins highlighted · click to view</span>
           </div>
           <ExpertMap
             experts={mapExperts}

@@ -82,14 +82,13 @@ async function main() {
   console.log('\n📂 Seeding categories...');
   for (const country of COUNTRIES) {
     for (const cat of CATEGORY_DEFS) {
-      const slug = `${slugify(cat.name)}-${country.code}`;
+      const slug = slugify(cat.name);
       await prisma.category.upsert({
-        where: { slug },
+        where: { countryCode_slug: { countryCode: country.code, slug } },
         update: {
           name: cat.name,
           icon: cat.icon,
           color: cat.color,
-          countryCode: country.code,
           active: true,
           showOnHomepage: cat.show,
         },

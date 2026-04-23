@@ -39,15 +39,48 @@ type CreateBody = {
   categoryIds?: (string | number)[] | unknown;
 };
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get("search")?.trim() || "";
+    const limit  = Math.min(parseInt(searchParams.get("limit") || "200"), 200);
+
+    const where = search ? {
+      OR: [
+        { name:         { contains: search, mode: "insensitive" as const } },
+        { businessName: { contains: search, mode: "insensitive" as const } },
+        { email:        { contains: search, mode: "insensitive" as const } },
+        { phone:        { contains: search, mode: "insensitive" as const } },
+        { whatsapp:     { contains: search, mode: "insensitive" as const } },
+      ],
+    } : {};
+
+    // When searching return a lightweight payload; full payload otherwise
+    if (search) {
+      const experts = await prisma.expert.findMany({
+        where,
+        select: {
+          id: true, name: true, businessName: true, email: true, phone: true,
+          profileLink: true, countryCode: true, createdAt: true,
+          categories: { include: { category: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: limit,
+      });
+      // Resolve User.id for each expert (subscriptions are linked to User, not Expert)
+      const emailToUserId = new Map(
+        (await prisma.user.findMany({
+          where: { email: { in: experts.map(e => e.email) } },
+          select: { id: true, email: true },
+        })).map(u => [u.email, u.id])
+      );
+      return NextResponse.json(experts.map(e => ({ ...e, userId: emailToUserId.get(e.email) ?? null })));
+    }
+
     const experts = await prisma.expert.findMany({
-      include: {
-        categories: { include: { category: true } },
-        services: true,
-        portfolio: true,
-      },
+      include: { categories: { include: { category: true } }, services: true, portfolio: true },
       orderBy: { createdAt: "desc" },
+      take: limit,
     });
     return NextResponse.json(experts);
   } catch (err: any) {

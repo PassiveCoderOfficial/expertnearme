@@ -517,44 +517,35 @@ export default function ExpertsPage() {
               {/* Step 1 */}
               {step === 1 && (
                 <section>
-                  <h4 className="font-semibold mb-3">Identity & Contact</h4>
+                  <h4 className="font-semibold text-white mb-4">Identity & Contact</h4>
 
                   {/* Toggle pill */}
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex items-center bg-gray-100 rounded-full p-1">
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="flex items-center bg-slate-800 border border-white/10 rounded-full p-1">
                       <button
-                        onClick={() => {
-                          resetProfileLinkManualFlag();
-                          handleIdentityChange({ isBusiness: true });
-                        }}
-                        className={`px-4 py-1 rounded-full transition ${form.isBusiness ? "bg-white shadow text-gray-900" : "text-gray-600"}`}
-                        aria-pressed={form.isBusiness === true}
+                        onClick={() => { resetProfileLinkManualFlag(); handleIdentityChange({ isBusiness: true }); }}
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${form.isBusiness ? "bg-orange-500 text-slate-900" : "text-slate-400 hover:text-white"}`}
                       >
                         Business
                       </button>
                       <button
-                        onClick={() => {
-                          resetProfileLinkManualFlag();
-                          handleIdentityChange({ isBusiness: false });
-                        }}
-                        className={`px-4 py-1 rounded-full transition ${form.isBusiness === false ? "bg-white shadow text-gray-900" : "text-gray-600"}`}
-                        aria-pressed={form.isBusiness === false}
+                        onClick={() => { resetProfileLinkManualFlag(); handleIdentityChange({ isBusiness: false }); }}
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${form.isBusiness === false ? "bg-orange-500 text-slate-900" : "text-slate-400 hover:text-white"}`}
                       >
                         Individual
                       </button>
                     </div>
 
-                    {/* Contact Person to the right on desktop */}
                     <div className="ml-auto hidden sm:block">
                       {!form.isBusiness && (
                         <div>
-                          <label className="block text-sm font-medium">Contact Person</label>
+                          <label className="block text-xs font-medium text-slate-400 mb-1">Contact Person</label>
                           <input
                             type="text"
                             value={form.contactPerson}
                             onChange={(e) => setForm({ ...form, contactPerson: e.target.value })}
-                            className="mt-2 border px-3 py-2 rounded w-64"
-                            placeholder="Contact person"
+                            className="w-64 bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors"
+                            placeholder="Full name"
                           />
                         </div>
                       )}
@@ -562,81 +553,57 @@ export default function ExpertsPage() {
                   </div>
 
                   {/* Country of Operations */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Country of Operations <span className="text-red-400">*</span></label>
+                  <div className="mb-5">
+                    <label className="block text-xs font-medium text-slate-400 mb-1">Country of Operations <span className="text-red-400">*</span></label>
                     <select
                       value={form.countryCode}
                       onChange={(e) => setForm((s: any) => ({ ...s, countryCode: e.target.value, categoryIds: [] }))}
-                      className="w-full sm:w-64 bg-slate-800 border border-white/10 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
+                      className="w-full sm:w-64 bg-slate-800 border border-white/10 text-white rounded-xl px-3 py-2 text-sm outline-none focus:border-orange-500/50 transition-colors"
                     >
                       <option value="">— Select country —</option>
                       {countries.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.flagEmoji ? `${c.flagEmoji} ` : ""}{c.name} ({c.code.toUpperCase()})
-                        </option>
+                        <option key={c.code} value={c.code}>{c.flagEmoji ? `${c.flagEmoji} ` : ""}{c.name} ({c.code.toUpperCase()})</option>
                       ))}
                     </select>
                     <p className="text-xs text-slate-500 mt-1">Determines the profile URL prefix and available categories.</p>
                   </div>
 
-                  {/* Name/Title + Slug side-by-side on desktop */}
+                  {/* Name/Title + Slug */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                     <div>
-                      {form.isBusiness ? (
-                        <>
-                          <label className="block text-sm font-medium">Business Name</label>
-                          <input
-                            type="text"
-                            value={form.businessName}
-                            onChange={(e) => {
-                              userEditedSlugRef.current = false;
-                              handleIdentityChange({ businessName: e.target.value });
-                            }}
-                            className="mt-2 border px-3 py-2 rounded w-full"
-                            placeholder="Business name"
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <label className="block text-sm font-medium">Service Title</label>
-                          <input
-                            type="text"
-                            value={form.serviceTitle}
-                            onChange={(e) => {
-                              userEditedSlugRef.current = false;
-                              handleIdentityChange({ serviceTitle: e.target.value });
-                            }}
-                            className="mt-2 border px-3 py-2 rounded w-full"
-                            placeholder="Service title"
-                          />
-                        </>
-                      )}
+                      <label className="block text-xs font-medium text-slate-400 mb-1">{form.isBusiness ? "Business Name" : "Service Title"}</label>
+                      <input
+                        type="text"
+                        value={form.isBusiness ? form.businessName : form.serviceTitle}
+                        onChange={(e) => { userEditedSlugRef.current = false; handleIdentityChange(form.isBusiness ? { businessName: e.target.value } : { serviceTitle: e.target.value }); }}
+                        className="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors"
+                        placeholder={form.isBusiness ? "Business name" : "Service title"}
+                      />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium">Profile Link</label>
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="text-xs text-gray-600 select-all break-all">{origin}/</span>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Profile Link</label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500 select-all shrink-0">{origin}/</span>
                         <input
                           type="text"
                           value={form.profileLink}
                           onChange={(e) => handleProfileLinkInput(e.target.value)}
-                          className="border px-3 py-2 rounded flex-1"
+                          className="flex-1 bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors"
                           placeholder="auto-generated-slug"
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Auto-generated from Business Name / Service Title. You can customize it.</p>
+                      <p className="text-xs text-slate-500 mt-1">Auto-generated from name. You can customize it.</p>
 
-                      {/* Contact Person on mobile */}
                       {!form.isBusiness && (
                         <div className="mt-3 block sm:hidden">
-                          <label className="block text-sm font-medium">Contact Person</label>
+                          <label className="block text-xs font-medium text-slate-400 mb-1">Contact Person</label>
                           <input
                             type="text"
                             value={form.contactPerson}
                             onChange={(e) => setForm({ ...form, contactPerson: e.target.value })}
-                            className="mt-2 border px-3 py-2 rounded w-full"
-                            placeholder="Contact person"
+                            className="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors"
+                            placeholder="Full name"
                           />
                         </div>
                       )}
@@ -646,23 +613,22 @@ export default function ExpertsPage() {
                   {/* Email / Phone */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                     <div>
-                      <label className="block text-sm font-medium">Email</label>
-                      <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="mt-2 border px-3 py-2 rounded w-full" placeholder="email@example.com" />
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Email</label>
+                      <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors" placeholder="email@example.com" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium">Phone (WhatsApp)</label>
-                      <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="mt-2 border px-3 py-2 rounded w-full" placeholder="+8801..." />
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Phone (WhatsApp)</label>
+                      <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors" placeholder="+8801..." />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium">WhatsApp (if different)</label>
-                      <input type="text" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} className="mt-2 border px-3 py-2 rounded w-full" placeholder="+8801..." />
+                      <label className="block text-xs font-medium text-slate-400 mb-1">WhatsApp (if different)</label>
+                      <input type="text" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} className="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors" placeholder="+8801..." />
                     </div>
                   </div>
 
-                  {/* Profile preview directly beneath slug */}
-                  <div className="mt-3 text-sm text-gray-700">
-                    <span className="font-medium">Profile preview:</span>{" "}
-                    <a href={profilePreview} target="_blank" rel="noreferrer" className="text-blue-600 break-all">
+                  <div className="mt-3 text-xs text-slate-500">
+                    Profile preview:{" "}
+                    <a href={profilePreview} target="_blank" rel="noreferrer" className="text-orange-400 hover:text-orange-300 break-all transition-colors">
                       {profilePreview}
                     </a>
                   </div>
@@ -672,59 +638,60 @@ export default function ExpertsPage() {
               {/* Step 2 */}
               {step === 2 && (
                 <section>
-                  <h4 className="font-semibold mb-3">Location, Website & Media</h4>
+                  <h4 className="font-semibold text-white mb-4">Location, Website & Media</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium">Office / Registered Address</label>
-                      <input type="text" value={form.officeAddress} onChange={(e) => setForm({ ...form, officeAddress: e.target.value })} className="mt-2 border px-3 py-2 rounded w-full" placeholder="Street, City, Country" />
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Office / Registered Address</label>
+                      <input type="text" value={form.officeAddress} onChange={(e) => setForm({ ...form, officeAddress: e.target.value })} className="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors" placeholder="Street, City, Country" />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium">Website</label>
-                      <input type="text" value={form.webAddress} onChange={(e) => setForm({ ...form, webAddress: e.target.value })} className="mt-2 border px-3 py-2 rounded w-full" placeholder="https://example.com" />
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Website</label>
+                      <input type="text" value={form.webAddress} onChange={(e) => setForm({ ...form, webAddress: e.target.value })} className="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors" placeholder="https://example.com" />
                     </div>
 
                     <div className="sm:col-span-2">
-                      <label className="block text-sm font-medium">Map Location (choose one)</label>
-                      <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <MapPicker
-                          value={form.mapLat && form.mapLng ? { lat: parseFloat(form.mapLat), lng: parseFloat(form.mapLng) } : null}
-                          onChange={(coords: LatLng, address?: string) => {
-                            setForm({ ...form, mapLat: String(coords.lat), mapLng: String(coords.lng), mapLocation: address || form.mapLocation });
-                          }}
-                        />
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">You can paste a Google Maps URL, or provide latitude and longitude. Map pin picker can be added later.</p>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Map Location</label>
+                      <MapPicker
+                        value={form.mapLat && form.mapLng ? { lat: parseFloat(form.mapLat), lng: parseFloat(form.mapLng) } : null}
+                        onChange={(coords: LatLng, address?: string) => {
+                          setForm({ ...form, mapLat: String(coords.lat), mapLng: String(coords.lng), mapLocation: address || form.mapLocation });
+                        }}
+                      />
                     </div>
 
                     <div className="sm:col-span-2">
-                      <label className="block text-sm font-medium">Categories</label>
-                      <div className="mt-2 border rounded p-3 max-h-48 overflow-auto">
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Categories</label>
+                      <div className="mt-1 bg-slate-800 border border-white/10 rounded-xl p-3 max-h-48 overflow-auto">
                         <CategoryTreePicker tree={categories} selectedIds={form.categoryIds} onChange={(ids: number[]) => setForm({ ...form, categoryIds: ids })} />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium">Profile Picture</label>
-                      <div className="mt-2 flex gap-2">
-                        <button type="button" onClick={handlePickProfilePicture} className="px-3 py-2 border rounded">Choose from Media Manager</button>
-                        <input type="text" placeholder="Or paste image URL" value={form.profilePicture} onChange={(e) => setForm({ ...form, profilePicture: e.target.value })} className="border px-3 py-2 rounded flex-1" />
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Profile Picture</label>
+                      <div className="flex gap-2">
+                        <button type="button" onClick={handlePickProfilePicture} className="shrink-0 bg-slate-800 border border-white/10 hover:border-orange-500/40 text-slate-300 hover:text-white text-xs px-3 py-2 rounded-xl transition-colors">
+                          Media Manager
+                        </button>
+                        <input type="text" placeholder="Or paste image URL" value={form.profilePicture} onChange={(e) => setForm({ ...form, profilePicture: e.target.value })} className="flex-1 bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors" />
                       </div>
-                      {form.profilePicture && <img src={form.profilePicture} alt="profile" className="mt-2 w-28 h-28 object-cover rounded" />}
+                      {form.profilePicture && <img src={form.profilePicture} alt="profile" className="mt-2 w-20 h-20 object-cover rounded-xl border border-white/10" />}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium">Cover Photo</label>
-                      <div className="mt-2 flex gap-2">
-                        <button type="button" onClick={handlePickCoverPhoto} className="px-3 py-2 border rounded">Choose from Media Manager</button>
-                        <input type="text" placeholder="Or paste image URL" value={form.coverPhoto} onChange={(e) => setForm({ ...form, coverPhoto: e.target.value })} className="border px-3 py-2 rounded flex-1" />
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Cover Photo</label>
+                      <div className="flex gap-2">
+                        <button type="button" onClick={handlePickCoverPhoto} className="shrink-0 bg-slate-800 border border-white/10 hover:border-orange-500/40 text-slate-300 hover:text-white text-xs px-3 py-2 rounded-xl transition-colors">
+                          Media Manager
+                        </button>
+                        <input type="text" placeholder="Or paste image URL" value={form.coverPhoto} onChange={(e) => setForm({ ...form, coverPhoto: e.target.value })} className="flex-1 bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors" />
                       </div>
-                      {form.coverPhoto && <img src={form.coverPhoto} alt="cover" className="mt-2 w-full h-24 object-cover rounded" />}
+                      {form.coverPhoto && <img src={form.coverPhoto} alt="cover" className="mt-2 w-full h-20 object-cover rounded-xl border border-white/10" />}
                     </div>
 
                     <div className="sm:col-span-2">
-                      <label className="block text-sm font-medium">Short Description</label>
-                      <textarea value={form.shortDesc} onChange={(e) => setForm({ ...form, shortDesc: e.target.value })} className="mt-2 border px-3 py-2 rounded w-full" rows={3} />
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Short Description</label>
+                      <textarea value={form.shortDesc} onChange={(e) => setForm({ ...form, shortDesc: e.target.value })} className="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors resize-none" rows={3} placeholder="Brief description shown on listing cards…" />
                     </div>
                   </div>
                 </section>
@@ -733,22 +700,20 @@ export default function ExpertsPage() {
               {/* Step 3 */}
               {step === 3 && (
                 <section>
-                  <h4 className="font-semibold mb-3">Services Offered</h4>
-                  <div className="space-y-4">
+                  <h4 className="font-semibold text-white mb-4">Services Offered</h4>
+                  <div className="space-y-3">
                     {(form.services || []).map((svc: any, idx: number) => (
-                      <div key={idx} className="border rounded p-3">
-                        <div className="flex justify-between items-center mb-2">
-                          <strong>Service {idx + 1}</strong>
-                          <div className="flex gap-2">
-                            <button type="button" onClick={() => removeService(idx)} className="text-sm text-red-600">Remove</button>
-                          </div>
+                      <div key={idx} className="bg-slate-800/60 border border-white/8 rounded-xl p-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-sm font-medium text-white">Service {idx + 1}</span>
+                          <button type="button" onClick={() => removeService(idx)} className="text-xs text-red-400 hover:text-red-300 transition-colors">Remove</button>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <input type="text" placeholder="Service name" value={svc.name} onChange={(e) => updateService(idx, "name", e.target.value)} className="border px-3 py-2 rounded w-full" />
+                          <input type="text" placeholder="Service name" value={svc.name} onChange={(e) => updateService(idx, "name", e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors" />
                           <div>
-                            <label className="block text-sm">Image</label>
+                            <label className="block text-xs text-slate-400 mb-1">Image</label>
                             <div className="flex gap-2 items-center">
-                              <input type="file" accept="image/*" onChange={(e) => handleServiceImageFile(e, idx)} />
+                              <input type="file" accept="image/*" onChange={(e) => handleServiceImageFile(e, idx)} className="text-xs text-slate-400 file:mr-2 file:text-xs file:bg-slate-700 file:border-0 file:text-slate-300 file:rounded-lg file:px-2 file:py-1" />
                               <button type="button" onClick={async () => {
                                 try {
                                   const selected = await pickOrUploadMedia(undefined, { accept: "image/*" });
@@ -757,18 +722,18 @@ export default function ExpertsPage() {
                                   console.error(err);
                                   setError("Service image selection failed.");
                                 }
-                              }} className="px-2 py-1 border rounded text-sm">Choose from Media Manager</button>
+                              }} className="shrink-0 bg-slate-700 border border-white/10 hover:border-orange-500/40 text-slate-300 text-xs px-2 py-1 rounded-lg transition-colors">Media</button>
                             </div>
-                            {svc.image && <img src={svc.image} alt="svc" className="mt-2 w-28 h-20 object-cover rounded" />}
+                            {svc.image && <img src={svc.image} alt="svc" className="mt-2 w-24 h-16 object-cover rounded-lg border border-white/10" />}
                           </div>
-                          <textarea placeholder="Description" value={svc.description} onChange={(e) => updateService(idx, "description", e.target.value)} className="border px-3 py-2 rounded col-span-2 w-full" />
-                          <input type="text" placeholder="Rate / Unit (optional)" value={svc.rateUnit} onChange={(e) => updateService(idx, "rateUnit", e.target.value)} className="border px-3 py-2 rounded w-full" />
+                          <textarea placeholder="Description" value={svc.description} onChange={(e) => updateService(idx, "description", e.target.value)} className="sm:col-span-2 w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors resize-none" rows={2} />
+                          <input type="text" placeholder="Rate / Unit (optional)" value={svc.rateUnit} onChange={(e) => updateService(idx, "rateUnit", e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors" />
                         </div>
                       </div>
                     ))}
-                    <div>
-                      <button type="button" onClick={addService} className="px-3 py-2 bg-gray-200 rounded">+ Add Service</button>
-                    </div>
+                    <button type="button" onClick={addService} className="w-full border border-dashed border-white/15 hover:border-orange-500/40 text-slate-400 hover:text-white text-sm py-2.5 rounded-xl transition-colors">
+                      + Add Service
+                    </button>
                   </div>
                 </section>
               )}
@@ -776,21 +741,19 @@ export default function ExpertsPage() {
               {/* Step 4 */}
               {step === 4 && (
                 <section>
-                  <h4 className="font-semibold mb-3">Portfolio & Finalize</h4>
-                  <div className="space-y-4">
+                  <h4 className="font-semibold text-white mb-4">Portfolio & Finalize</h4>
+                  <div className="space-y-3">
                     {(form.portfolio || []).map((p: any, idx: number) => (
-                      <div key={idx} className="border rounded p-3">
-                        <div className="flex justify-between items-center mb-2">
-                          <strong>Item {idx + 1}</strong>
-                          <div className="flex gap-2">
-                            <button type="button" onClick={() => removePortfolio(idx)} className="text-sm text-red-600">Remove</button>
-                          </div>
+                      <div key={idx} className="bg-slate-800/60 border border-white/8 rounded-xl p-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-sm font-medium text-white">Item {idx + 1}</span>
+                          <button type="button" onClick={() => removePortfolio(idx)} className="text-xs text-red-400 hover:text-red-300 transition-colors">Remove</button>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-sm">Image</label>
-                            <div className="flex gap-2 items-center">
-                              <input type="file" accept="image/*" onChange={(e) => handlePortfolioImageFile(e, idx)} />
+                            <label className="block text-xs text-slate-400 mb-1">Image</label>
+                            <div className="flex gap-2 items-center flex-wrap">
+                              <input type="file" accept="image/*" onChange={(e) => handlePortfolioImageFile(e, idx)} className="text-xs text-slate-400 file:mr-2 file:text-xs file:bg-slate-700 file:border-0 file:text-slate-300 file:rounded-lg file:px-2 file:py-1" />
                               <button type="button" onClick={async () => {
                                 try {
                                   const selected = await pickOrUploadMedia(undefined, { accept: "image/*" });
@@ -799,23 +762,23 @@ export default function ExpertsPage() {
                                   console.error(err);
                                   setError("Portfolio image selection failed.");
                                 }
-                              }} className="px-2 py-1 border rounded text-sm">Choose from Media Manager</button>
+                              }} className="shrink-0 bg-slate-700 border border-white/10 hover:border-orange-500/40 text-slate-300 text-xs px-2 py-1 rounded-lg transition-colors">Media</button>
                             </div>
-                            {p.imageUrl && <img src={p.imageUrl} alt="pf" className="mt-2 w-28 h-20 object-cover rounded" />}
+                            {p.imageUrl && <img src={p.imageUrl} alt="pf" className="mt-2 w-24 h-16 object-cover rounded-lg border border-white/10" />}
                           </div>
-                          <input type="text" placeholder="Video URL (YouTube/Facebook)" value={p.videoUrl} onChange={(e) => updatePortfolio(idx, "videoUrl", e.target.value)} className="border px-3 py-2 rounded w-full" />
-                          <input type="text" placeholder="Social / External link" value={p.socialUrl} onChange={(e) => updatePortfolio(idx, "socialUrl", e.target.value)} className="border px-3 py-2 rounded w-full" />
+                          <input type="text" placeholder="Video URL (YouTube/Facebook)" value={p.videoUrl} onChange={(e) => updatePortfolio(idx, "videoUrl", e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors" />
+                          <input type="text" placeholder="Social / External link" value={p.socialUrl} onChange={(e) => updatePortfolio(idx, "socialUrl", e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/50 transition-colors" />
                         </div>
                       </div>
                     ))}
-                    <div>
-                      <button type="button" onClick={addPortfolio} className="px-3 py-2 bg-gray-200 rounded">+ Add Portfolio Item</button>
-                    </div>
+                    <button type="button" onClick={addPortfolio} className="w-full border border-dashed border-white/15 hover:border-orange-500/40 text-slate-400 hover:text-white text-sm py-2.5 rounded-xl transition-colors">
+                      + Add Portfolio Item
+                    </button>
 
-                    <div className="mt-4">
-                      <label className="flex items-center gap-2">
-                        <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} />
-                        <span>Mark as featured</span>
+                    <div className="mt-2">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} className="w-4 h-4 accent-orange-500 rounded" />
+                        <span className="text-sm text-slate-300">Mark as featured</span>
                       </label>
                     </div>
                   </div>

@@ -17,6 +17,8 @@ const CONFIG_KEYS = [
   "active_gateway",
 ];
 
+const MANUAL_KEYS = ["payment_whatsapp", "payment_methods", "payment_default_tab", "payment_tab_order"];
+
 export async function GET() {
   const session = await getSession();
   if (!session || !ALLOWED.has(session.role)) {
@@ -24,13 +26,27 @@ export async function GET() {
   }
 
   const settings = await prisma.setting.findMany({
-    where: { key: { in: CONFIG_KEYS } },
+    where: { key: { in: [...CONFIG_KEYS, ...MANUAL_KEYS] } },
     select: { key: true, value: true },
   });
 
   const config: Record<string, string> = {};
   for (const s of settings) config[s.key] = s.value;
-  return NextResponse.json({ config });
+
+  let paymentMethods = [];
+  if (config["payment_methods"]) { try { paymentMethods = JSON.parse(config["payment_methods"]); } catch {} }
+  let tabOrder = ["lemonsqueezy", "surjopay", "manual"];
+  if (config["payment_tab_order"]) { try { tabOrder = JSON.parse(config["payment_tab_order"]); } catch {} }
+
+  return NextResponse.json({
+    config,
+    manual: {
+      whatsapp: config["payment_whatsapp"] || "",
+      methods: paymentMethods,
+      defaultTab: config["payment_default_tab"] || "manual",
+      tabOrder,
+    },
+  });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -41,15 +57,19 @@ export async function PATCH(req: NextRequest) {
 
   const body: Record<string, string> = await req.json();
 
-  for (const key of CONFIG_KEYS) {
+  const allKeys = [...CONFIG_KEYS, ...MANUAL_KEYS];
+  const upserts: Promise<unknown>[] = [];
+
+  for (const key of allKeys) {
     if (body[key] !== undefined) {
-      await prisma.setting.upsert({
+      upserts.push(prisma.setting.upsert({
         where: { key },
-        update: { value: body[key] },
-        create: { key, value: body[key] },
-      });
+        update: { value: String(body[key]) },
+        create: { key, value: String(body[key]) },
+      }));
     }
   }
 
+  await Promise.all(upserts);
   return NextResponse.json({ ok: true });
 }

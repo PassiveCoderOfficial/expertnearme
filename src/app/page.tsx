@@ -14,7 +14,7 @@ export default async function GlobalHomePage() {
   let countryPins: CountryPin[] = [];
 
   try {
-    const [countriesResult, expertCountResult, categoryCountResult, expertsByCountry] = await Promise.all([
+    const [countriesResult, expertCountResult, categoryCountResult, expertsWithCountry] = await Promise.all([
       prisma.country.findMany({
         where: { active: true },
         orderBy: { name: "asc" },
@@ -22,18 +22,21 @@ export default async function GlobalHomePage() {
       }),
       prisma.expert.count({ where: { verified: true } }),
       prisma.category.count({ where: { active: true } }),
-      prisma.expert.groupBy({ by: ["countryCode"], _count: { id: true }, where: { verified: true } }),
+      prisma.expert.findMany({
+        where: { verified: true, countryCode: { not: null } },
+        select: { countryCode: true },
+      }),
     ]);
 
     countries = countriesResult;
     expertCount = expertCountResult;
     categoryCount = categoryCountResult;
 
-    const expertCountByCode = Object.fromEntries(
-      expertsByCountry
-        .filter(r => r.countryCode != null)
-        .map(r => [r.countryCode as string, r._count.id])
-    );
+    const expertCountByCode: Record<string, number> = {};
+    for (const e of expertsWithCountry) {
+      const code = e.countryCode!;
+      expertCountByCode[code] = (expertCountByCode[code] || 0) + 1;
+    }
 
     countryPins = countries
       .filter(c => COUNTRY_CENTROIDS[c.code])

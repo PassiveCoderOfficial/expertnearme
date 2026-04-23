@@ -26,6 +26,9 @@ model User {
   pushSubscriptions PushSubscription[]
   subscriptions     Subscription[]
   savedExperts      SavedExpert[]
+  conversations1    Conversation[]     @relation("ConvUser1")
+  conversations2    Conversation[]     @relation("ConvUser2")
+  sentMessages      Message[]
 }
 
 model UserProfile {
@@ -80,19 +83,19 @@ model Expert {
   name           String
   email          String   @unique
   phone          String?
-  whatsapp       String? // separate WhatsApp if different
+  whatsapp       String?
   isBusiness     Boolean  @default(false)
-  businessName   String? // for business accounts
-  contactPerson  String? // if business
+  businessName   String?
+  contactPerson  String?
   officeAddress  String?
-  webAddress     String? // badge if verified
-  mapLocation    String? // lat/lng or Google Maps link
-  latitude       Float?  // for precise location searches
-  longitude      Float?  // for precise location searches
-  countryCode    String? // ISO country code
+  webAddress     String?
+  mapLocation    String?
+  latitude       Float?
+  longitude      Float?
+  countryCode    String?
   profilePicture String?
   coverPhoto     String?
-  bio            String? // long biography
+  bio            String?
   shortDesc      String?
   verified            Boolean   @default(false)
   featured            Boolean   @default(false)
@@ -100,30 +103,41 @@ model Expert {
   mapFeatured         Boolean   @default(false)
   foundingExpert      Boolean   @default(false)
   foundingExpertSince DateTime?
+  // Booking settings
+  allowBooking          Boolean @default(false)
+  blockSlotAfterBooking Boolean @default(true)
+  urgentBooking         Boolean @default(false)
+  urgentFeePercent      Float   @default(50)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  categories  ExpertCategory[]
-  services    Service[]
-  portfolio   Portfolio[]
-  reviews     Review[]
-  bookings    Booking[]
-  savedBy     SavedExpert[]
+  categories    ExpertCategory[]
+  services      Service[]
+  portfolio     Portfolio[]
+  reviews       Review[]
+  bookings      Booking[]
+  savedBy       SavedExpert[]
+  availability  ExpertAvailability[]
 
   @@unique([countryCode, profileLink])
   @@index([countryCode])
 }
 
 model Service {
-  id          Int     @id @default(autoincrement())
-  expertId    Int
-  categoryId  Int?
-  name        String
-  image       String?
-  description String?
-  rateUnit    String? // optional toggle
-  expert      Expert  @relation(fields: [expertId], references: [id])
+  id                 Int     @id @default(autoincrement())
+  expertId           Int
+  categoryId         Int?
+  name               String
+  image              String?
+  description        String?
+  rateUnit           String? // price display string e.g. "$50/hr"
+  // Booking fields
+  availableForBooking Boolean @default(false)
+  duration            Int     @default(60)  // minutes
+  rateType            String  @default("fixed") // "fixed" | "hourly"
+  expert      Expert    @relation(fields: [expertId], references: [id])
   category    Category? @relation(fields: [categoryId], references: [id])
+  bookings    Booking[]
 }
 
 model Portfolio {
@@ -138,7 +152,7 @@ model Portfolio {
 model Category {
   id             Int              @id @default(autoincrement())
   name           String
-  slug           String           @unique
+  slug           String
   countryCode    String           // ISO country code
   active         Boolean          @default(true)
   updatedAt      DateTime         @updatedAt
@@ -154,6 +168,7 @@ model Category {
   experts        ExpertCategory[]
   services       Service[]
 
+  @@unique([countryCode, slug])
   @@index([parentId])
   @@index([slug])
   @@index([countryCode])
@@ -169,17 +184,63 @@ model ExpertCategory {
   @@id([expertId, categoryId])
 }
 
+model ExpertAvailability {
+  id        Int    @id @default(autoincrement())
+  expertId  Int
+  dayOfWeek Int    // 0=Sun … 6=Sat
+  startTime String // "09:00"
+  endTime   String // "17:00"
+  expert    Expert @relation(fields: [expertId], references: [id])
+
+  @@index([expertId])
+}
+
 model Booking {
   id          Int           @id @default(autoincrement())
   expertId    Int
   clientId    Int
+  serviceId   Int?
   status      BookingStatus @default(PENDING)
   scheduledAt DateTime
+  endsAt      DateTime?
+  notes       String?
+  isUrgent    Boolean       @default(false)
+  urgentFee   Float?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   client      User          @relation(fields: [clientId], references: [id])
   expert      Expert        @relation(fields: [expertId], references: [id])
+  service     Service?      @relation(fields: [serviceId], references: [id])
   reviews     Review[]
+}
+
+model Conversation {
+  id           Int       @id @default(autoincrement())
+  participant1 Int       // always the lower userId
+  participant2 Int       // always the higher userId
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user1        User      @relation("ConvUser1", fields: [participant1], references: [id])
+  user2        User      @relation("ConvUser2", fields: [participant2], references: [id])
+  messages     Message[]
+
+  @@unique([participant1, participant2])
+  @@index([participant1])
+  @@index([participant2])
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  senderId       Int
+  content        String
+  read           Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId])
+  @@index([senderId])
 }
 
 model Review {
@@ -213,9 +274,13 @@ model Notification {
   userId    Int
   title     String
   message   String
+  type      String   @default("system") // "booking" | "message" | "system"
+  link      String?
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, read])
 }
 
 model Country {

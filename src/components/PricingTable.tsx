@@ -111,6 +111,34 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
 
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentTab, setPaymentTab] = useState<'lemonsqueezy' | 'surjopay' | 'manual'>('manual');
+  const [paymentConfig, setPaymentConfig] = useState<{
+    whatsapp: string;
+    defaultTab: string;
+    tabOrder: string[];
+    methods: { title: string; details: string; icon?: string }[];
+  }>({
+    whatsapp: '+8801678669699',
+    defaultTab: 'manual',
+    tabOrder: ['lemonsqueezy', 'surjopay', 'manual'],
+    methods: [
+      { title: 'bKash Personal', details: '01678-669699' },
+      { title: 'City Bank PLC (Current Account)', details: 'Name: Passive Coder\nAccount: 1254771069001\nBranch: Uttara\nRouting: 225264634' },
+    ],
+  });
+
+  useEffect(() => {
+    fetch('/api/public/payment-config')
+      .then(r => r.json())
+      .then(d => {
+        if (d && !d.error) {
+          setPaymentConfig(d);
+          setPaymentTab((d.defaultTab as 'lemonsqueezy' | 'surjopay' | 'manual') || 'manual');
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleWaitlist = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,7 +251,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
             aria-label="Toggle billing cycle"
           >
             <span
-              className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${billingCycle === 'yearly' ? 'translate-x-7' : 'translate-x-1'}`}
+              className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${billingCycle === 'yearly' ? 'translate-x-6' : ''}`}
             />
           </button>
           <span className={`text-sm transition-colors ${billingCycle === 'yearly' ? 'text-white' : 'text-slate-500'}`}>
@@ -303,18 +331,11 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
             </div>
 
             <button
-              onClick={handleCheckout}
-              disabled={checkoutLoading}
-              className="block w-full text-center py-3.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 disabled:opacity-70 disabled:cursor-wait text-slate-900 font-bold text-sm transition-all shadow-lg shadow-orange-500/25 mb-1 group"
+              onClick={() => setShowPaymentModal(true)}
+              className="block w-full text-center py-3.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-orange-500/25 mb-1 group"
             >
-              {checkoutLoading ? 'Redirecting…' : (
-                <>Claim Your Spot{' '}<ArrowRight className="inline h-4 w-4 ml-1 group-hover:translate-x-0.5 transition-transform" /></>
-              )}
+              Claim Your Spot{' '}<ArrowRight className="inline h-4 w-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
             </button>
-            {checkoutError && (
-              <p className="text-red-400 text-xs text-center mb-2">{checkoutError}</p>
-            )}
-
             <p className="text-center text-xs text-slate-400 mb-8">
               <Users className="inline h-3.5 w-3.5 mr-1 text-orange-400" />
               {spotsLeft} of {TOTAL_SPOTS} spots · Expires Aug 15, 2026
@@ -524,9 +545,8 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                     We'll email you the moment Pro launches. Meanwhile, the Founding Expert deal is still open — only {spotsLeft} spots left.
                   </p>
                   <button
-                    onClick={() => { setShowWaitlist(false); handleCheckout(); }}
-                    disabled={checkoutLoading}
-                    className="block w-full text-center py-3 bg-orange-500 hover:bg-orange-400 disabled:opacity-70 text-slate-900 font-bold rounded-xl transition-colors text-sm mb-3"
+                    onClick={() => { setShowWaitlist(false); setShowPaymentModal(true); }}
+                    className="block w-full text-center py-3 bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold rounded-xl transition-colors text-sm mb-3"
                   >
                     Claim Founding Expert Spot Instead
                   </button>
@@ -538,6 +558,148 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                   </button>
                 </div>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Payment Options Modal */}
+      <AnimatePresence>
+        {showPaymentModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowPaymentModal(false); }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-5 border-b border-white/8">
+                <div>
+                  <h3 className="text-lg font-bold text-white">Claim Your Founding Expert Spot</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Choose your preferred payment method</p>
+                </div>
+                <button onClick={() => setShowPaymentModal(false)} className="text-slate-400 hover:text-white transition-colors">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Tabs — order driven by paymentConfig.tabOrder */}
+              {(() => {
+                const ALL_TABS = {
+                  lemonsqueezy: { label: 'LemonSqueezy', sub: 'Card / PayPal' },
+                  surjopay:     { label: 'SurjoPay',     sub: 'BD Gateway' },
+                  manual:       { label: 'Manual',        sub: 'Bank / bKash' },
+                } as const;
+                const ordered = (paymentConfig.tabOrder || ['lemonsqueezy', 'surjopay', 'manual'])
+                  .filter((k): k is keyof typeof ALL_TABS => k in ALL_TABS);
+                return (
+                  <div className="flex border-b border-white/8">
+                    {ordered.map(id => {
+                      const tab = ALL_TABS[id];
+                      return (
+                        <button
+                          key={id}
+                          onClick={() => setPaymentTab(id)}
+                          className={`flex-1 py-3 text-xs font-semibold transition-colors border-b-2 ${
+                            paymentTab === id
+                              ? 'border-orange-500 text-orange-400'
+                              : 'border-transparent text-slate-500 hover:text-slate-300'
+                          }`}
+                        >
+                          {tab.label}
+                          <span className="block text-[10px] font-normal opacity-70">{tab.sub}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+
+              {/* Tab content */}
+              <div className="p-6">
+                {paymentTab === 'lemonsqueezy' && (
+                  <div className="text-center space-y-4">
+                    <div className="w-16 h-16 rounded-2xl bg-yellow-500/15 border border-yellow-500/25 flex items-center justify-center mx-auto text-3xl">
+                      🍋
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold mb-1">Pay with LemonSqueezy</h4>
+                      <p className="text-slate-400 text-sm">Secure checkout via LemonSqueezy. Accepts all major cards, PayPal and more.</p>
+                    </div>
+                    {checkoutError && <p className="text-red-400 text-xs">{checkoutError}</p>}
+                    <button
+                      onClick={handleCheckout}
+                      disabled={checkoutLoading}
+                      className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 disabled:opacity-70 disabled:cursor-wait text-slate-900 font-bold rounded-xl transition-all text-sm shadow-lg shadow-orange-500/20"
+                    >
+                      {checkoutLoading ? 'Redirecting to checkout…' : 'Pay $999 via LemonSqueezy →'}
+                    </button>
+                    <p className="text-xs text-slate-500">You'll be redirected to a secure LemonSqueezy checkout page.</p>
+                  </div>
+                )}
+
+                {paymentTab === 'surjopay' && (
+                  <div className="text-center space-y-4">
+                    <div className="w-16 h-16 rounded-2xl bg-green-500/15 border border-green-500/25 flex items-center justify-center mx-auto text-2xl font-bold text-green-400">
+                      SP
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold mb-1">Pay with SurjoPay</h4>
+                      <p className="text-slate-400 text-sm">Bangladesh-friendly payment gateway. Supports local cards and mobile banking.</p>
+                    </div>
+                    <a
+                      href={`https://wa.me/${paymentConfig.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent('Hi, I want to pay for the Founding Expert plan ($999) via SurjoPay.')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-3.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors text-sm"
+                    >
+                      <span>💬</span> Contact us on WhatsApp to proceed
+                    </a>
+                    <p className="text-xs text-slate-500">SurjoPay integration coming soon — contact us on WhatsApp and we'll send you a payment link directly.</p>
+                  </div>
+                )}
+
+                {paymentTab === 'manual' && (
+                  <div className="space-y-4">
+                    <p className="text-sm text-slate-300">Transfer <span className="text-orange-400 font-bold">$999 USD</span> equivalent to any of the accounts below, then contact us on WhatsApp with your receipt.</p>
+
+                    <div className="space-y-3">
+                      {paymentConfig.methods.map((method, i) => (
+                        <div key={i} className="bg-slate-800/60 border border-white/8 rounded-xl p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            {method.icon ? (
+                              <img src={method.icon} alt={method.title} className="w-6 h-6 rounded object-cover" />
+                            ) : (
+                              <div className="w-6 h-6 rounded bg-orange-500/20 flex items-center justify-center text-orange-400 text-xs font-bold">
+                                {method.title[0]}
+                              </div>
+                            )}
+                            <p className="text-sm font-semibold text-white">{method.title}</p>
+                          </div>
+                          <pre className="text-xs text-slate-300 font-mono whitespace-pre-wrap leading-relaxed">{method.details}</pre>
+                        </div>
+                      ))}
+                    </div>
+
+                    <a
+                      href={`https://wa.me/${paymentConfig.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent('Hi, I have made a manual payment for the Founding Expert plan ($999). Please find my payment receipt attached.')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-3.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors text-sm"
+                    >
+                      <span>💬</span> Send Receipt on WhatsApp
+                    </a>
+                    <p className="text-xs text-slate-500 text-center">WhatsApp: {paymentConfig.whatsapp} — We'll activate your account within 24 hours of receiving payment confirmation.</p>
+                  </div>
+                )}
+              </div>
             </motion.div>
           </motion.div>
         )}

@@ -52,7 +52,13 @@ export default function SettingsPage() {
     fetch("/api/admin/settings")
       .then((r) => r.json())
       .then((d) => {
-        if (d && !d.error) setSettings({ ...d });
+        if (d && !d.error) setSettings({
+          emailVerificationRequired: d.emailVerificationRequired ?? true,
+          allowGoogleLogin: d.allowGoogleLogin ?? false,
+          allowSignup: d.allowSignup ?? true,
+          logo: d.logo ?? null,
+          favicon: d.favicon ?? null,
+        });
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -188,7 +194,13 @@ export default function SettingsPage() {
         />
       </div>
 
-      {/* Media picker modal */}
+      {/* Note pointing to Payment Config */}
+      <div className="rounded-2xl border border-blue-500/15 bg-blue-500/5 px-5 py-4 text-xs text-blue-300">
+        Manual payment options (bKash, bank, WhatsApp) and checkout tab settings are managed in{" "}
+        <a href="/dashboard/payment-config" className="underline hover:text-white">Payment Config</a>.
+      </div>
+
+      {/* Media picker — logo/favicon */}
       {mediaTarget && (
         <MediaBrowser
           open={true}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Wrapper, Status } from '@googlemaps/react-wrapper';
 import { MapPin } from 'lucide-react';
 
@@ -42,8 +42,10 @@ interface WorldMapInnerProps {
 }
 
 function WorldMapInner({ countries }: WorldMapInnerProps) {
-  const ref    = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<google.maps.Map | null>(null);
+  const ref        = useRef<HTMLDivElement>(null);
+  const mapRef     = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     if (!ref.current || mapRef.current) return;
@@ -70,32 +72,37 @@ function WorldMapInner({ countries }: WorldMapInnerProps) {
       gestureHandling: 'cooperative',
     });
 
+    setMapReady(true);
+    return () => { mapRef.current = null; setMapReady(false); };
+  }, []);
+
+  // Add / replace markers whenever the map becomes ready or countries list changes
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return;
+
+    // Clear previous markers
+    markersRef.current.forEach(m => m.setMap(null));
+    markersRef.current = [];
+
     countries.forEach(country => {
       const hasExperts = (country.expertCount || 0) > 0;
 
-      // Custom SVG marker with country flag emoji
-      const svg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="60" height="70" viewBox="0 0 60 70">
-          <!-- Drop shadow -->
-          <ellipse cx="30" cy="68" rx="14" ry="4" fill="rgba(0,0,0,0.4)"/>
-          <!-- Pin body -->
-          <path d="M30 2C18.954 2 10 10.954 10 22c0 14.667 20 46 20 46S50 36.667 50 22C50 10.954 41.046 2 30 2z"
-                fill="${hasExperts ? '#f97316' : '#374151'}"
-                stroke="${hasExperts ? '#fed7aa' : '#4b5563'}"
-                stroke-width="1.5"/>
-          <!-- Circle background -->
-          <circle cx="30" cy="22" r="14" fill="${hasExperts ? '#1a0a00' : '#1e293b'}"/>
-          <!-- Flag emoji -->
-          <text x="30" y="27" text-anchor="middle" font-size="14" font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">${country.flagEmoji || '🌍'}</text>
-        </svg>
-      `;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="70" viewBox="0 0 60 70">
+        <ellipse cx="30" cy="68" rx="14" ry="4" fill="rgba(0,0,0,0.4)"/>
+        <path d="M30 2C18.954 2 10 10.954 10 22c0 14.667 20 46 20 46S50 36.667 50 22C50 10.954 41.046 2 30 2z"
+              fill="${hasExperts ? '#f97316' : '#374151'}"
+              stroke="${hasExperts ? '#fed7aa' : '#4b5563'}" stroke-width="1.5"/>
+        <circle cx="30" cy="22" r="14" fill="${hasExperts ? '#1a0a00' : '#1e293b'}"/>
+        <text x="30" y="27" text-anchor="middle" font-size="14"
+              font-family="'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif">${country.flagEmoji || '🌍'}</text>
+      </svg>`;
 
       const marker = new google.maps.Marker({
         position: { lat: country.lat, lng: country.lng },
         map:      mapRef.current!,
         title:    country.name,
         icon: {
-          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+          url:        'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
           scaledSize: new google.maps.Size(60, 70),
           anchor:     new google.maps.Point(30, 68),
         },
@@ -111,18 +118,16 @@ function WorldMapInner({ countries }: WorldMapInnerProps) {
               ${country.expertCount ? `<p style="color:#f97316;font-size:11px;margin:0;">${country.expertCount} expert${country.expertCount !== 1 ? 's' : ''}</p>` : ''}
             </div>
           </div>
-          <a href="/${country.code}"
-             style="display:block;text-align:center;background:#f97316;color:#1a1a2e;font-weight:700;font-size:12px;padding:6px 12px;border-radius:8px;text-decoration:none;margin-top:4px;">
+          <a href="/${country.code}" style="display:block;text-align:center;background:#f97316;color:#1a1a2e;font-weight:700;font-size:12px;padding:6px 12px;border-radius:8px;text-decoration:none;margin-top:4px;">
             Browse Experts →
           </a>
-        </div>
-      `;
+        </div>`;
 
       const infoWindow = new google.maps.InfoWindow({ content: infoContent, disableAutoPan: false });
       marker.addListener('click', () => infoWindow.open({ anchor: marker, map: mapRef.current }));
+      markersRef.current.push(marker);
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mapReady, countries]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <div ref={ref} className="w-full h-full" />;
 }

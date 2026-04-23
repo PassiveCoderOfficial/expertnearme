@@ -8,7 +8,7 @@ import {
   MdNotifications, MdSettings, MdPeople, MdPhotoLibrary, MdPublic,
   MdCurrencyExchange, MdEdit, MdMenu, MdClose, MdLogout,
   MdStar, MdMap, MdPayment, MdAdminPanelSettings, MdBarChart,
-  MdFavorite, MdSearch, MdCampaign, MdSupportAgent,
+  MdFavorite, MdSearch, MdCampaign, MdSupportAgent, MdMessage, MdAccessTime,
 } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
 import { LogoMark } from "@/components/Logo";
@@ -27,6 +27,7 @@ const ADMIN_NAV: NavItem[] = [
   { name: "Pricing",        href: "/dashboard/pricing",             icon: <MdBarChart /> },
   { name: "Payment Config", href: "/dashboard/payment-config",      icon: <MdPayment /> },
   { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
+  { name: "Messages",       href: "/dashboard/messages",            icon: <MdMessage /> },
   { name: "Reviews",        href: "/dashboard/reviews",             icon: <MdRateReview /> },
   { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
   { name: "Media",          href: "/dashboard/media",               icon: <MdPhotoLibrary /> },
@@ -40,6 +41,7 @@ const MANAGER_NAV: NavItem[] = [
   { name: "Categories",     href: "/dashboard/categories",          icon: <MdCategory /> },
   { name: "Subscriptions",  href: "/dashboard/subscriptions",       icon: <MdCurrencyExchange /> },
   { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
+  { name: "Messages",       href: "/dashboard/messages",            icon: <MdMessage /> },
   { name: "Reviews",        href: "/dashboard/reviews",             icon: <MdRateReview /> },
   { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
 ];
@@ -65,6 +67,7 @@ const SALES_NAV: NavItem[] = [
   { name: "Experts",        href: "/dashboard/experts",             icon: <MdPerson /> },
   { name: "Subscriptions",  href: "/dashboard/subscriptions",       icon: <MdCurrencyExchange /> },
   { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
+  { name: "Messages",       href: "/dashboard/messages",            icon: <MdMessage /> },
   { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdSupportAgent /> },
 ];
 
@@ -72,7 +75,9 @@ const EXPERT_NAV: NavItem[] = [
   { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
   { name: "My Profile",     href: "/dashboard/profile",             icon: <MdEdit /> },
   { name: "My Plan",        href: "/dashboard/my-subscription",     icon: <MdCurrencyExchange /> },
+  { name: "Availability",   href: "/dashboard/availability",        icon: <MdAccessTime /> },
   { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
+  { name: "Messages",       href: "/dashboard/messages",            icon: <MdMessage /> },
   { name: "Reviews",        href: "/dashboard/reviews",             icon: <MdRateReview /> },
   { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
 ];
@@ -81,6 +86,7 @@ const BUYER_NAV: NavItem[] = [
   { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
   { name: "Saved Experts",  href: "/dashboard/saved",               icon: <MdFavorite /> },
   { name: "My Bookings",    href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
+  { name: "Messages",       href: "/dashboard/messages",            icon: <MdMessage /> },
   { name: "My Reviews",     href: "/dashboard/reviews",             icon: <MdRateReview /> },
   { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
 ];
@@ -133,6 +139,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const r = await fetch("/api/notifications?unread=1");
+        if (r.ok) { const d = await r.json(); setUnreadCount(d.unreadCount || 0); }
+      } catch {}
+    };
+    if (session?.authenticated) {
+      fetchUnread();
+      const t = setInterval(fetchUnread, 30000);
+      return () => clearInterval(t);
+    }
+  }, [session]);
 
   useEffect(() => {
     if (!loading && (!session || !session.authenticated)) router.push("/login");
@@ -154,21 +175,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const roleLabel = ROLE_LABEL[role] || role;
 
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
-    <aside className={`${mobile ? "w-full" : "w-64 hidden md:flex"} flex-col bg-slate-950 border-r border-white/8 min-h-screen`}>
-      {/* Brand */}
-      <div className="px-5 py-5 border-b border-white/8 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5">
-          <LogoMark size={28} />
-          <span className="text-sm font-bold text-white tracking-tight">
-            <span className="text-orange-400">Expert</span>Near.Me
-          </span>
-        </Link>
-        {mobile && (
+    <aside className={`${mobile ? "w-full" : "w-64 hidden md:flex"} flex-col bg-slate-950 border-r border-white/8 sticky top-16 self-start h-[calc(100vh-4rem)] overflow-y-auto`}>
+      {/* Brand (mobile only — desktop Navbar already shows logo) */}
+      {mobile && (
+        <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <LogoMark size={26} />
+            <span className="text-sm font-bold text-white tracking-tight">
+              <span className="text-orange-400">Expert</span>Near.Me
+            </span>
+          </Link>
           <button onClick={() => setSidebarOpen(false)} className="text-slate-400 hover:text-white">
             <MdClose size={22} />
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Role badge */}
       <div className="px-5 py-3 border-b border-white/5">
@@ -194,7 +215,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               }`}
             >
               <span className={`text-lg ${active ? "text-orange-400" : "text-slate-500"}`}>{item.icon}</span>
-              {item.name}
+              <span className="flex-1">{item.name}</span>
+              {item.href === "/dashboard/notifications" && unreadCount > 0 && (
+                <span className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -214,13 +240,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <div className="flex min-h-screen bg-slate-900 text-white">
+    <div className="flex min-h-screen bg-slate-900 text-white pt-16">
       <Sidebar />
 
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-          <div className="relative w-72 h-full bg-slate-950">
+          <div className="relative w-72 h-full bg-slate-950 pt-16">
             <Sidebar mobile />
           </div>
         </div>

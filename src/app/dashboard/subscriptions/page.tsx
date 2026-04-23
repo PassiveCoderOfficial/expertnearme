@@ -40,9 +40,14 @@ export default function SubscriptionsPage() {
   const [search, setSearch]   = useState("");
   const [plans, setPlans]     = useState<Plan[]>([]);
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm]       = useState({ userId: "", planId: "", isLifetime: false, endsAt: "", paymentRef: "", gateway: "paddle" });
+  const [form, setForm]       = useState({ userId: "", planId: "", cycles: 1, paymentRef: "", gateway: "manual" });
   const [saving, setSaving]   = useState(false);
   const [error, setError]     = useState("");
+  // Expert search state
+  const [expertQuery, setExpertQuery]     = useState("");
+  const [expertResults, setExpertResults] = useState<{ id: number; userId: number | null; name: string; email: string; businessName?: string }[]>([]);
+  const [selectedExpert, setSelectedExpert] = useState<{ id: number; label: string } | null>(null);
+  const [expertSearching, setExpertSearching] = useState(false);
 
   const load = async (p = page, s = status, g = gateway) => {
     setLoading(true);
@@ -57,22 +62,44 @@ export default function SubscriptionsPage() {
   };
 
   useEffect(() => { load(); }, []);
-  useEffect(() => { fetch("/api/dashboard/pricing? ").then(r=>r.json()).then(d=>setPlans(Array.isArray(d)?d:[])).catch(()=>{}); }, []);
+  useEffect(() => { fetch("/api/admin/plans").then(r=>r.json()).then(d=>setPlans(Array.isArray(d.plans)?d.plans:[])).catch(()=>{}); }, []);
 
   const handleFilter = () => { setPage(1); load(1, status, gateway); };
 
+  const searchExperts = async (q: string) => {
+    setExpertQuery(q);
+    if (q.length < 2) { setExpertResults([]); return; }
+    setExpertSearching(true);
+    try {
+      const r = await fetch(`/api/dashboard/experts?search=${encodeURIComponent(q)}&limit=8`);
+      const d = await r.json();
+      setExpertResults(Array.isArray(d) ? d : []);
+    } catch { setExpertResults([]); }
+    finally { setExpertSearching(false); }
+  };
+
+  const selectExpert = (e: { id: number; userId: number | null; name: string; email: string; businessName?: string }) => {
+    const label = `${e.businessName || e.name} — ${e.email}`;
+    const uid = e.userId ?? e.id; // fallback to expert id if no user found
+    setSelectedExpert({ id: uid, label });
+    setForm(prev => ({ ...prev, userId: String(uid) }));
+    setExpertQuery(label);
+    setExpertResults([]);
+  };
+
   const handleAdd = async () => {
-    if (!form.userId || !form.planId) { setError("User ID and plan are required"); return; }
+    if (!form.userId || !form.planId) { setError("Expert and plan are required"); return; }
     setSaving(true); setError("");
     const r = await fetch("/api/admin/subscriptions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, userId: Number(form.userId), planId: Number(form.planId) }),
+      body: JSON.stringify({ userId: Number(form.userId), planId: Number(form.planId), cycles: form.cycles, paymentRef: form.paymentRef, gateway: form.gateway }),
     });
     const d = await r.json();
     if (!r.ok) { setError(d.error || "Failed"); setSaving(false); return; }
     setShowAdd(false);
-    setForm({ userId: "", planId: "", isLifetime: false, endsAt: "", paymentRef: "", gateway: "paddle" });
+    setForm({ userId: "", planId: "", cycles: 1, paymentRef: "", gateway: "manual" });
+    setExpertQuery(""); setSelectedExpert(null); setExpertResults([]);
     load(1, status, gateway);
     setSaving(false);
   };
@@ -240,47 +267,104 @@ export default function SubscriptionsPage() {
           <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-white font-bold text-lg">Add Manual Subscription</h2>
-              <button onClick={() => setShowAdd(false)} className="text-slate-400 hover:text-white"><MdClose size={20} /></button>
+              <button onClick={() => { setShowAdd(false); setExpertQuery(""); setSelectedExpert(null); setExpertResults([]); }} className="text-slate-400 hover:text-white"><MdClose size={20} /></button>
             </div>
             {error && <p className="text-red-400 text-sm">{error}</p>}
-            {[
-              { label: "User ID", key: "userId", type: "number", placeholder: "e.g. 42" },
-              { label: "Payment Reference", key: "paymentRef", type: "text", placeholder: "txn_xxx" },
-              { label: "Expires At (leave blank = no expiry)", key: "endsAt", type: "date", placeholder: "" },
-            ].map(f => (
-              <div key={f.key}>
-                <label className="block text-xs text-slate-400 mb-1">{f.label}</label>
+
+            {/* Expert search */}
+            <div className="relative">
+              <label className="block text-xs text-slate-400 mb-1">Expert / Member</label>
+              <div className="flex items-center gap-2 bg-slate-800 border border-white/10 rounded-xl px-3 py-2">
+                <MdSearch className="text-slate-500 shrink-0" />
                 <input
-                  type={f.type}
-                  value={(form as any)[f.key]}
-                  onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                  placeholder={f.placeholder}
-                  className="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-orange-500/40"
+                  type="text"
+                  value={expertQuery}
+                  onChange={e => searchExperts(e.target.value)}
+                  placeholder="Search by name, email or phone…"
+                  className="flex-1 bg-transparent text-sm text-white placeholder-slate-500 outline-none"
                 />
+                {expertSearching && <div className="w-3 h-3 rounded-full border border-orange-500 border-t-transparent animate-spin shrink-0" />}
               </div>
-            ))}
+              {expertResults.length > 0 && (
+                <div className="absolute z-10 left-0 right-0 mt-1 bg-slate-800 border border-white/10 rounded-xl overflow-hidden shadow-xl">
+                  {expertResults.map(e => (
+                    <button
+                      key={e.id}
+                      type="button"
+                      onClick={() => selectExpert(e)}
+                      className="w-full text-left px-4 py-2.5 hover:bg-slate-700 transition-colors border-b border-white/5 last:border-0"
+                    >
+                      <p className="text-sm text-white font-medium">{e.businessName || e.name}</p>
+                      <p className="text-xs text-slate-400">{e.email} · User #{e.userId ?? "⚠ no user"}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {selectedExpert && (
+                <p className="text-xs text-green-400 mt-1">✓ Selected: {selectedExpert.label} (ID {selectedExpert.id})</p>
+              )}
+            </div>
+
+            {/* Plan */}
             <div>
               <label className="block text-xs text-slate-400 mb-1">Plan</label>
-              <select value={form.planId} onChange={e => setForm(prev => ({...prev, planId: e.target.value}))} className="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-300 outline-none">
-                <option value="">Select plan…</option>
-                {plans.map((p:Plan) => <option key={p.id} value={p.id}>{p.name} — {p.currency} {p.price}</option>)}
+              <select
+                value={form.planId}
+                onChange={e => setForm(prev => ({ ...prev, planId: e.target.value }))}
+                className="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-orange-500/40"
+                style={{ colorScheme: "dark" }}
+              >
+                <option value="" style={{ background: "#1e293b", color: "#94a3b8" }}>Select plan…</option>
+                {plans.map((p: Plan) => (
+                  <option key={p.id} value={p.id} style={{ background: "#1e293b", color: "#f1f5f9" }}>
+                    {p.name} — {p.currency} {p.price}
+                  </option>
+                ))}
               </select>
             </div>
+
+            {/* Payment reference */}
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Payment Reference</label>
+              <input
+                type="text"
+                value={form.paymentRef}
+                onChange={e => setForm(prev => ({ ...prev, paymentRef: e.target.value }))}
+                placeholder="e.g. bank transfer ref, cheque no."
+                className="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/40"
+              />
+            </div>
+
+            {/* Billing cycles */}
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Billing Cycles</label>
+              <input
+                type="number"
+                min={1}
+                value={form.cycles}
+                onChange={e => setForm(prev => ({ ...prev, cycles: Math.max(1, parseInt(e.target.value) || 1) }))}
+                className="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-orange-500/40"
+              />
+              <p className="text-xs text-slate-500 mt-1">Number of billing periods (e.g. 1 = one plan duration). Set by plan manager for lifetime plans.</p>
+            </div>
+
+            {/* Gateway */}
             <div>
               <label className="block text-xs text-slate-400 mb-1">Gateway</label>
-              <select value={form.gateway} onChange={e => setForm(prev => ({...prev, gateway: e.target.value}))} className="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-300 outline-none">
-                <option value="paddle">Paddle</option>
-                <option value="lemonsqueezy">LemonSqueezy</option>
-                <option value="surjopay">SurjoPay</option>
-                <option value="manual">Manual</option>
+              <select
+                value={form.gateway}
+                onChange={e => setForm(prev => ({ ...prev, gateway: e.target.value }))}
+                className="w-full bg-slate-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-orange-500/40"
+                style={{ colorScheme: "dark" }}
+              >
+                {[["manual","Manual / Cash"],["surjopay","SurjoPay"],["paddle","Paddle"],["lemonsqueezy","LemonSqueezy"]].map(([v,l]) => (
+                  <option key={v} value={v} style={{ background: "#1e293b", color: "#f1f5f9" }}>{l}</option>
+                ))}
               </select>
             </div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={form.isLifetime} onChange={e => setForm(prev=>({...prev,isLifetime:e.target.checked}))} className="w-4 h-4 accent-orange-500" />
-              <span className="text-sm text-slate-300">Lifetime membership</span>
-            </label>
+
             <div className="flex gap-3 pt-2">
-              <button onClick={() => setShowAdd(false)} className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-xl text-sm text-slate-300 transition-colors">Cancel</button>
+              <button onClick={() => { setShowAdd(false); setExpertQuery(""); setSelectedExpert(null); setExpertResults([]); }} className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-xl text-sm text-slate-300 transition-colors">Cancel</button>
               <button onClick={handleAdd} disabled={saving} className="flex-1 px-4 py-2.5 bg-orange-500 hover:bg-orange-400 disabled:opacity-60 rounded-xl text-sm text-slate-900 font-semibold transition-colors">
                 {saving ? "Saving…" : "Add Subscription"}
               </button>
