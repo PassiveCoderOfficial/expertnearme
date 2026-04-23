@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ArrowRight, Shield, MapPin, Star, Users, CheckCircle, ChevronRight } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { LogoMark } from "@/components/Logo";
-import WorldMap, { COUNTRY_CENTROIDS, CountryPin } from "@/components/WorldMap";
 import FlagIcon from "@/components/FlagIcon";
 
 export const dynamic = "force-dynamic";
@@ -11,43 +10,21 @@ export default async function GlobalHomePage() {
   let countries: { code: string; name: string; flagEmoji: string | null; metaDesc: string | null }[] = [];
   let expertCount = 0;
   let categoryCount = 0;
-  let countryPins: CountryPin[] = [];
 
   try {
-    const [countriesResult, expertCountResult, categoryCountResult, expertsWithCountry] = await Promise.all([
+    const [countriesResult, expertCountResult, categoryCountResult] = await Promise.all([
       prisma.country.findMany({
         where: { active: true },
         orderBy: { name: "asc" },
         select: { code: true, name: true, flagEmoji: true, metaDesc: true },
       }),
-      prisma.expert.count({ where: { verified: true } }),
+      prisma.expert.count(),
       prisma.category.count({ where: { active: true } }),
-      prisma.expert.findMany({
-        where: { verified: true, countryCode: { not: null } },
-        select: { countryCode: true },
-      }),
     ]);
 
     countries = countriesResult;
     expertCount = expertCountResult;
     categoryCount = categoryCountResult;
-
-    const expertCountByCode: Record<string, number> = {};
-    for (const e of expertsWithCountry) {
-      const code = e.countryCode!;
-      expertCountByCode[code] = (expertCountByCode[code] || 0) + 1;
-    }
-
-    countryPins = countries
-      .filter(c => COUNTRY_CENTROIDS[c.code])
-      .map(c => ({
-        code:        c.code,
-        name:        c.name,
-        flagEmoji:   c.flagEmoji || undefined,
-        lat:         COUNTRY_CENTROIDS[c.code].lat,
-        lng:         COUNTRY_CENTROIDS[c.code].lng,
-        expertCount: expertCountByCode[c.code] || 0,
-      }));
   } catch (err) {
     console.error("[Homepage] DB error:", err);
   }
@@ -135,7 +112,7 @@ export default async function GlobalHomePage() {
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
             <Link
-              href="/for-experts"
+              href="/pricing"
               className="inline-flex items-center gap-2 border border-white/15 hover:border-orange-500/40 text-slate-300 hover:text-white font-medium px-8 py-4 rounded-xl transition-colors text-base"
             >
               List Your Business
@@ -152,16 +129,6 @@ export default async function GlobalHomePage() {
             </div>
           ))}
         </div>
-      </section>
-
-      {/* ─── World Map ────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 pb-6">
-        <div className="text-center mb-6">
-          <p className="text-xs uppercase tracking-widest text-orange-400 mb-1">We&apos;re Live In</p>
-          <h2 className="text-2xl font-bold text-white">Find Experts on the Map</h2>
-          <p className="text-slate-400 text-sm mt-1">Click any pin to browse experts in that country</p>
-        </div>
-        <WorldMap countries={countryPins} className="h-[420px] sm:h-[520px]" />
       </section>
 
       {/* ─── Countries ────────────────────────────────────────────── */}
@@ -262,7 +229,7 @@ export default async function GlobalHomePage() {
               </ul>
             </div>
             <Link
-              href="/for-experts"
+              href="/pricing"
               className="shrink-0 bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold px-8 py-4 rounded-xl transition-colors text-sm whitespace-nowrap"
             >
               List Your Business →
@@ -279,7 +246,7 @@ export default async function GlobalHomePage() {
             <span>ExpertNear.Me — Local Expert Directory</span>
           </div>
           <div className="flex items-center gap-5">
-            <Link href="/for-experts" className="hover:text-slate-400 transition-colors">For Experts</Link>
+            <Link href="/pricing" className="hover:text-slate-400 transition-colors">For Experts</Link>
             <Link href="/login" className="hover:text-slate-400 transition-colors">Login</Link>
             <Link href="/signup" className="hover:text-slate-400 transition-colors">Sign Up</Link>
           </div>

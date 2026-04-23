@@ -13,7 +13,6 @@ export async function GET(req: NextRequest) {
   const [expertResults, categoryResults] = await Promise.all([
     prisma.expert.findMany({
       where: {
-        verified: true,
         ...(country ? { countryCode: country } : {}),
         OR: [
           { name: { contains: q } },
