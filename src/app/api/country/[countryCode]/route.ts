@@ -26,8 +26,8 @@ export async function GET(
         flagEmoji: country.flagEmoji,
       }
     });
-  } catch (error) {
-    console.error('Error fetching country:', error);
-    return NextResponse.json({ error: 'Failed to fetch country data' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Error fetching country:', error?.message ?? error);
+    return NextResponse.json({ error: error?.message ?? 'Failed to fetch country data' }, { status: 500 });
   }
 }

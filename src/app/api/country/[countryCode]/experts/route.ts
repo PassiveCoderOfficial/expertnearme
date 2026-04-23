@@ -30,8 +30,8 @@ export async function GET(
       ok: true, 
       experts 
     });
-  } catch (error) {
-    console.error('Error fetching experts:', error);
-    return NextResponse.json({ error: 'Failed to fetch experts data' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Error fetching experts:', error?.message ?? error);
+    return NextResponse.json({ error: error?.message ?? 'Failed to fetch experts data' }, { status: 500 });
   }
 }
