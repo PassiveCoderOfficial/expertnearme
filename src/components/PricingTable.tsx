@@ -49,15 +49,10 @@ function parseFeatures(raw: string): string[] {
   try { return JSON.parse(raw); } catch { return raw ? raw.split('\n').map(s => s.trim()).filter(Boolean) : []; }
 }
 
-function priceLabel(plan: Plan, cycle: 'monthly' | 'yearly'): { amount: string; period: string } {
+function priceLabel(plan: Plan): { amount: string; period: string } {
   if (plan.duration === -1) return { amount: `$${plan.price}`, period: 'one-time' };
   if (plan.duration === 30)  return { amount: `$${plan.price}`, period: '/month' };
-  if (plan.duration === 365) {
-    if (cycle === 'monthly') {
-      return { amount: `$${Math.round(plan.price / 12)}`, period: '/month (billed yearly)' };
-    }
-    return { amount: `$${plan.price}`, period: '/year' };
-  }
+  if (plan.duration === 365) return { amount: `$${plan.price}`, period: '/year' };
   return { amount: `$${plan.price}`, period: `/ ${plan.duration} days` };
 }
 
@@ -69,7 +64,7 @@ const FOUNDING_EXPERTS_PREVIEW = [
 ];
 
 export default function PricingTable({ asSection = false }: { asSection?: boolean }) {
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [showWaitlist, setShowWaitlist] = useState(false);
   const [waitlistEmail, setWaitlistEmail] = useState('');
   const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
@@ -142,11 +137,31 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
     finally { setCheckoutLoading(false); }
   };
 
-  // Whether a plan is the lifetime/founding deal
   const isLifetime = (p: Plan) => p.duration === -1;
 
-  // Show billing toggle only if any plan has monthly or yearly billing
-  const hasSubscriptionPlan = plans.some(p => p.duration === 30 || p.duration === 365);
+  // Group plans by type
+  const freePlans     = plans.filter(p => p.price === 0);
+  const monthlyPlans  = plans.filter(p => p.duration === 30 && p.price > 0);
+  const yearlyPlans   = plans.filter(p => p.duration === 365 && p.price > 0);
+  const lifetimePlans = plans.filter(p => p.duration === -1);
+
+  const hasMonthly = monthlyPlans.length > 0;
+  const hasYearly  = yearlyPlans.length > 0;
+  // Only show toggle when both monthly AND yearly plans exist
+  const showToggle = hasMonthly && hasYearly;
+  // The single subscription card to display
+  const subPlan = billingCycle === 'monthly'
+    ? (monthlyPlans[0] ?? yearlyPlans[0])
+    : (yearlyPlans[0] ?? monthlyPlans[0]);
+  // If only one type exists (no toggle), just pick whichever is available
+  const effectiveSubPlan = showToggle ? subPlan : (monthlyPlans[0] ?? yearlyPlans[0] ?? null);
+
+  // Build the ordered display list: [free..., subscription slot, lifetime...]
+  const displayPlans: (Plan | 'sub')[] = [
+    ...freePlans,
+    ...(effectiveSubPlan ? ['sub' as const] : []),
+    ...lifetimePlans,
+  ];
 
   return (
     <div className={asSection ? '' : 'min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white'}>
@@ -208,18 +223,23 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
           </div>
         </motion.div>
 
-        {/* Billing toggle — only if subscription plans exist */}
-        {hasSubscriptionPlan && (
+        {/* Billing toggle — only when BOTH monthly and yearly plans exist */}
+        {showToggle && (
           <div className="flex items-center justify-center gap-4 mb-12">
-            <span className={`text-sm transition-colors ${billingCycle === 'monthly' ? 'text-white' : 'text-slate-500'}`}>Monthly</span>
+            <span className={`text-sm transition-colors ${billingCycle === 'monthly' ? 'text-white font-medium' : 'text-slate-500'}`}>Monthly</span>
             <button
               onClick={() => setBillingCycle(b => b === 'monthly' ? 'yearly' : 'monthly')}
               className={`relative w-12 h-6 rounded-full transition-colors ${billingCycle === 'yearly' ? 'bg-orange-500' : 'bg-slate-600'}`}
             >
               <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${billingCycle === 'yearly' ? 'translate-x-6' : ''}`} />
             </button>
-            <span className={`text-sm transition-colors ${billingCycle === 'yearly' ? 'text-white' : 'text-slate-500'}`}>
-              Yearly <span className="text-orange-400 text-xs font-medium">Save 58%</span>
+            <span className={`text-sm transition-colors ${billingCycle === 'yearly' ? 'text-white font-medium' : 'text-slate-500'}`}>
+              Yearly{' '}
+              {monthlyPlans[0] && yearlyPlans[0] && (
+                <span className="text-orange-400 text-xs font-medium">
+                  Save {Math.round((1 - yearlyPlans[0].price / (monthlyPlans[0].price * 12)) * 100)}%
+                </span>
+              )}
             </span>
           </div>
         )}
@@ -229,20 +249,21 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
           <div className="flex items-center justify-center h-64">
             <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
           </div>
-        ) : plans.length === 0 ? (
+        ) : displayPlans.length === 0 ? (
           <div className="text-center text-slate-400 py-16">No pricing plans available right now.</div>
         ) : (
-          <div className={`grid grid-cols-1 gap-6 items-start ${plans.length === 1 ? 'max-w-sm mx-auto' : plans.length === 2 ? 'md:grid-cols-2 max-w-3xl mx-auto' : 'md:grid-cols-3'}`}>
-            {plans.map((plan, idx) => {
+          <div className={`grid grid-cols-1 gap-6 items-start ${displayPlans.length === 1 ? 'max-w-sm mx-auto' : displayPlans.length === 2 ? 'md:grid-cols-2 max-w-3xl mx-auto' : 'md:grid-cols-3'}`}>
+            {displayPlans.map((slot, idx) => {
+              const plan = slot === 'sub' ? effectiveSubPlan! : slot;
               const features = parseFeatures(plan.features);
-              const { amount, period } = priceLabel(plan, billingCycle);
+              const { amount, period } = priceLabel(plan);
               const lifetime = isLifetime(plan);
               const isHero = plan.featured;
               const isLocked = !plan.active;
 
               return (
                 <motion.div
-                  key={plan.id}
+                  key={slot === 'sub' ? 'sub-slot' : plan.id}
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 + idx * 0.05 }}
@@ -256,7 +277,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                   {isHero && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-orange-500 to-amber-400 text-slate-900 text-xs font-bold px-4 py-1.5 rounded-full flex items-center gap-1.5 whitespace-nowrap shadow-lg z-20">
                       <Crown className="h-3.5 w-3.5" />
-                      FOUNDING EXPERT — BEST VALUE
+                      {lifetime ? 'FOUNDING EXPERT — BEST VALUE' : 'MOST POPULAR'}
                     </div>
                   )}
 
@@ -266,7 +287,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                       <Lock className="h-7 w-7 text-slate-400 mb-3" />
                       <p className="text-white font-semibold text-lg mb-1">Launching Aug 16, 2026</p>
                       <p className="text-sm text-slate-400 mb-6 text-center">
-                        {plan.description || 'Monthly & yearly subscriptions go live at launch.'}
+                        {plan.description || 'Subscriptions go live at launch.'}
                       </p>
                       <button
                         onClick={() => setShowWaitlist(true)}
