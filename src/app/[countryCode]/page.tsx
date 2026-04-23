@@ -220,8 +220,8 @@ export default function CountryPage() {
               return (
                 <Link
                   key={expert.id}
-                  href={expert.profileLink ? `/${countryCode}/expert/${expert.profileLink}` : "#"}
-                  className="group rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/8 to-slate-800/60 hover:border-amber-500/50 hover:from-amber-500/12 transition-all overflow-hidden block"
+                  href={`/${countryCode}/expert/${expert.profileLink || expert.id}`}
+                  className="group rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/8 to-slate-800/60 hover:border-amber-500/50 hover:from-amber-500/12 transition-all overflow-hidden block touch-manipulation"
                 >
                   <div className="h-20 bg-gradient-to-br from-slate-700/60 to-slate-800/60 flex items-center justify-center relative">
                     {expert.profilePicture ? (
@@ -320,8 +320,8 @@ export default function CountryPage() {
               return (
                 <Link
                   key={expert.id}
-                  href={expert.profileLink ? `/${countryCode}/expert/${expert.profileLink}` : "#"}
-                  className="group rounded-2xl border border-white/8 bg-slate-800/50 hover:border-orange-500/30 hover:bg-slate-800/70 transition-colors overflow-hidden block"
+                  href={`/${countryCode}/expert/${expert.profileLink || expert.id}`}
+                  className="group rounded-2xl border border-white/8 bg-slate-800/50 hover:border-orange-500/30 hover:bg-slate-800/70 transition-colors overflow-hidden block touch-manipulation"
                 >
                   <div className="h-20 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center relative">
                     {expert.profilePicture ? (

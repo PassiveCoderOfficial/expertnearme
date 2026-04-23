@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronDown, Globe } from 'lucide-react';
+import { ChevronDown, Globe, Menu } from 'lucide-react';
 import SearchBar from './SearchBar';
 import MobileNav from './MobileNav';
 import { useAuth } from '@/context/AuthContext';
@@ -91,23 +91,38 @@ export default function Navbar() {
 
   const isDashboard = pathname?.startsWith('/dashboard');
 
+  const openDashboardSidebar = () => {
+    document.dispatchEvent(new CustomEvent('toggle-dashboard-sidebar'));
+  };
+
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-white/8 ${isDashboard ? 'hidden md:block' : ''}`}>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-white/8">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
 
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          {customLogo ? (
-            <img src={customLogo} alt="ExpertNear.Me" className="h-9 w-auto" />
-          ) : (
-            <>
-              <LogoMark size={30} />
-              <span className="text-base font-bold text-white tracking-tight hidden sm:inline">
-                <span className="text-orange-400">Expert</span>Near.Me
-              </span>
-            </>
+        {/* Left: dashboard toggle (mobile only) + logo */}
+        <div className="flex items-center gap-2 shrink-0">
+          {isDashboard && (
+            <button
+              onClick={openDashboardSidebar}
+              className="md:hidden p-1.5 text-slate-400 hover:text-white transition-colors"
+              aria-label="Open dashboard menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
           )}
-        </Link>
+          <Link href="/" className="flex items-center gap-2.5">
+            {customLogo ? (
+              <img src={customLogo} alt="ExpertNear.Me" className="h-9 w-auto" />
+            ) : (
+              <>
+                <LogoMark size={30} />
+                <span className="text-base font-bold text-white tracking-tight">
+                  <span className="text-orange-400">Expert</span>Near.Me
+                </span>
+              </>
+            )}
+          </Link>
+        </div>
 
         {/* Center nav */}
         <div className="hidden md:flex items-center gap-5">

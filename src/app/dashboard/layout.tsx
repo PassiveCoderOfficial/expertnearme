@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   MdDashboard, MdPerson, MdCategory, MdCalendarToday, MdRateReview,
   MdNotifications, MdSettings, MdPeople, MdPhotoLibrary, MdPublic,
-  MdCurrencyExchange, MdEdit, MdMenu, MdClose, MdLogout,
+  MdCurrencyExchange, MdEdit, MdClose, MdLogout,
   MdStar, MdMap, MdPayment, MdAdminPanelSettings, MdBarChart,
   MdFavorite, MdSearch, MdCampaign, MdSupportAgent, MdMessage, MdAccessTime,
 } from "react-icons/md";
@@ -156,6 +156,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [session]);
 
   useEffect(() => {
+    const handler = () => setSidebarOpen(prev => !prev);
+    document.addEventListener('toggle-dashboard-sidebar', handler);
+    return () => document.removeEventListener('toggle-dashboard-sidebar', handler);
+  }, []);
+
+  useEffect(() => {
     if (!loading && (!session || !session.authenticated)) router.push("/login");
   }, [session, loading, router]);
 
@@ -240,32 +246,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <div className="flex min-h-screen bg-slate-900 text-white md:pt-16">
+    <div className="flex min-h-screen bg-slate-900 text-white pt-16">
       <Sidebar />
 
       {sidebarOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-          <div className="relative w-72 h-full bg-slate-950">
+          <div className="relative w-72 h-full bg-slate-950 pt-16">
             <Sidebar mobile />
           </div>
         </div>
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="md:hidden flex items-center justify-between px-4 h-14 bg-slate-950 border-b border-white/8">
-          <button onClick={() => setSidebarOpen(true)} className="text-slate-400 hover:text-white">
-            <MdMenu size={24} />
-          </button>
-          <Link href="/" className="flex items-center gap-2">
-            <LogoMark size={24} />
-            <span className="text-sm font-bold text-white">
-              <span className="text-orange-400">Expert</span>Near.Me
-            </span>
-          </Link>
-          <div className="w-6" />
-        </div>
-
         <main className="flex-1 p-6 overflow-auto">{children}</main>
       </div>
     </div>
