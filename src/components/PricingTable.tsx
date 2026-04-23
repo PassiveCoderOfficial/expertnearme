@@ -267,7 +267,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 + idx * 0.05 }}
-                  className={`rounded-2xl p-8 flex flex-col relative overflow-hidden ${
+                  className={`rounded-2xl p-8 flex flex-col relative ${
                     isHero
                       ? 'border-2 border-orange-500/60 bg-gradient-to-b from-orange-950/40 via-slate-900/90 to-slate-900/60 shadow-2xl shadow-orange-950/40 md:-mt-4 md:mb-4'
                       : 'border border-slate-700 bg-slate-800/50'
@@ -283,7 +283,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
 
                   {/* Coming soon overlay */}
                   {isLocked && (
-                    <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center rounded-2xl p-8">
+                    <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center rounded-2xl overflow-hidden p-8">
                       <Lock className="h-7 w-7 text-slate-400 mb-3" />
                       <p className="text-white font-semibold text-lg mb-1">Launching Aug 16, 2026</p>
                       <p className="text-sm text-slate-400 mb-6 text-center">
