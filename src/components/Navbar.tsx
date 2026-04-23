@@ -110,7 +110,7 @@ export default function Navbar() {
               <Menu className="w-5 h-5" />
             </button>
           )}
-          <Link href="/" className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-1.5">
             {customLogo ? (
               <img src={customLogo} alt="ExpertNear.Me" className="h-9 w-auto" />
             ) : (

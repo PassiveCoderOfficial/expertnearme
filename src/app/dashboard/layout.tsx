@@ -185,7 +185,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Brand (mobile only — desktop Navbar already shows logo) */}
       {mobile && (
         <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-1.5">
             <LogoMark size={26} />
             <span className="text-sm font-bold text-white tracking-tight">
               <span className="text-orange-400">Expert</span>Near.Me

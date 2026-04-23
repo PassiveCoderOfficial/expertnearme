@@ -252,7 +252,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
         ) : displayPlans.length === 0 ? (
           <div className="text-center text-slate-400 py-16">No pricing plans available right now.</div>
         ) : (
-          <div className={`grid grid-cols-1 gap-6 items-start ${displayPlans.length === 1 ? 'max-w-sm mx-auto' : displayPlans.length === 2 ? 'md:grid-cols-2 max-w-3xl mx-auto' : 'md:grid-cols-3'}`}>
+          <div className={`grid grid-cols-1 gap-6 items-start pt-6 ${displayPlans.length === 1 ? 'max-w-sm mx-auto' : displayPlans.length === 2 ? 'md:grid-cols-2 max-w-3xl mx-auto' : 'md:grid-cols-3'}`}>
             {displayPlans.map((slot, idx) => {
               const plan = slot === 'sub' ? effectiveSubPlan! : slot;
               const features = parseFeatures(plan.features);
