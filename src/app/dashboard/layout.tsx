@@ -240,13 +240,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <div className="flex min-h-screen bg-slate-900 text-white pt-16">
+    <div className="flex min-h-screen bg-slate-900 text-white md:pt-16">
       <Sidebar />
 
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-          <div className="relative w-72 h-full bg-slate-950 pt-16">
+          <div className="relative w-72 h-full bg-slate-950">
             <Sidebar mobile />
           </div>
         </div>
