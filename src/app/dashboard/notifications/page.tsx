@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { MdNotifications, MdCheckCircle, MdInfo, MdWarning, MdCalendarToday, MdMessage, MdStar, MdDoneAll } from "react-icons/md";
 
 type Notification = {
@@ -36,6 +37,7 @@ function timeAgo(iso: string) {
 }
 
 export default function NotificationsPage() {
+  const router = useRouter();
   const [items, setItems]     = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter]   = useState<"all" | "unread">("all");
@@ -109,7 +111,7 @@ export default function NotificationsPage() {
           {displayed.map(n => (
             <div
               key={n.id}
-              onClick={() => { if (!n.read) markOne(n.id); if (n.link) window.location.href = n.link; }}
+              onClick={() => { if (!n.read) markOne(n.id); if (n.link) router.push(n.link); }}
               className={`flex items-start gap-4 p-4 rounded-2xl border transition-colors cursor-pointer ${
                 n.read
                   ? "bg-slate-800/30 border-white/5 hover:bg-slate-800/50"

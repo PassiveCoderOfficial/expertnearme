@@ -40,9 +40,8 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
         services: { include: { category: true } },
         portfolio: true,
         reviews: {
-          include: { client: true },
+          include: { client: { select: { id: true, name: true } } },
           orderBy: { createdAt: "desc" },
-          take: 6,
         },
       },
     });
@@ -51,6 +50,10 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
 
     const expertUser = await prisma.user.findUnique({ where: { email: expert.email }, select: { id: true } }).catch(() => null);
     const displayName = expert.businessName || expert.name;
+
+    // Rating distribution
+    const ratingDist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    for (const r of expert.reviews) ratingDist[r.rating] = (ratingDist[r.rating] || 0) + 1;
     const avgRating =
       expert.reviews.length > 0
         ? expert.reviews.reduce((s, r) => s + r.rating, 0) / expert.reviews.length
@@ -298,54 +301,67 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
 
         {/* Reviews */}
         <section className="max-w-6xl mx-auto px-6 pb-16">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-xl font-bold text-white">
-              Reviews {expert.reviews.length > 0 && <span className="text-slate-400 font-normal text-base">({expert.reviews.length})</span>}
-            </h2>
-            {avgRating !== null && (
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-orange-400">{avgRating.toFixed(1)}</span>
-                <div className="flex">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${i < Math.round(avgRating) ? "text-yellow-400 fill-yellow-400" : "text-slate-600"}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          <h2 className="text-xl font-bold text-white mb-5">
+            Reviews {expert.reviews.length > 0 && <span className="text-slate-400 font-normal text-base">({expert.reviews.length})</span>}
+          </h2>
 
           {expert.reviews.length === 0 ? (
             <div className="rounded-2xl bg-slate-800/40 border border-white/8 p-10 text-center text-slate-500">
               No reviews yet — be the first to work with {displayName}.
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 gap-5">
-              {expert.reviews.map((review) => (
-                <div key={review.id} className="rounded-2xl bg-slate-800/50 border border-white/8 p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-slate-900 font-bold text-sm shrink-0">
-                      {review.client.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-white text-sm">{review.client.name}</p>
-                      <p className="text-xs text-slate-500">{new Date(review.createdAt).toLocaleDateString()}</p>
-                    </div>
-                    <div className="ml-auto flex">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-3.5 h-3.5 ${i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-600"}`}
-                        />
-                      ))}
-                    </div>
+            <>
+              {/* Rating summary */}
+              <div className="rounded-2xl bg-slate-800/50 border border-white/8 p-6 mb-6 flex flex-col sm:flex-row gap-6 items-center">
+                <div className="text-center shrink-0">
+                  <p className="text-5xl font-bold text-orange-400">{avgRating!.toFixed(1)}</p>
+                  <div className="flex justify-center mt-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} className={`w-4 h-4 ${i < Math.round(avgRating!) ? "text-yellow-400 fill-yellow-400" : "text-slate-600"}`} />
+                    ))}
                   </div>
-                  {review.comment && <p className="text-slate-300 text-sm leading-relaxed">{review.comment}</p>}
+                  <p className="text-xs text-slate-500 mt-1">{expert.reviews.length} review{expert.reviews.length !== 1 ? "s" : ""}</p>
                 </div>
-              ))}
-            </div>
+                <div className="flex-1 w-full space-y-1.5">
+                  {[5, 4, 3, 2, 1].map(star => (
+                    <div key={star} className="flex items-center gap-2">
+                      <span className="text-xs text-slate-400 w-3">{star}</span>
+                      <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                      <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-yellow-400 rounded-full"
+                          style={{ width: `${expert.reviews.length ? (ratingDist[star] / expert.reviews.length) * 100 : 0}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-slate-500 w-4">{ratingDist[star]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Review cards */}
+              <div className="grid sm:grid-cols-2 gap-5">
+                {expert.reviews.map((review) => (
+                  <div key={review.id} className="rounded-2xl bg-slate-800/50 border border-white/8 p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-slate-900 font-bold text-sm shrink-0">
+                        {review.client.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-white text-sm">{review.client.name}</p>
+                        <p className="text-xs text-slate-500">{new Date(review.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex shrink-0">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} className={`w-3.5 h-3.5 ${i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-600"}`} />
+                        ))}
+                      </div>
+                    </div>
+                    {review.comment && <p className="text-slate-300 text-sm leading-relaxed">{review.comment}</p>}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </section>
 

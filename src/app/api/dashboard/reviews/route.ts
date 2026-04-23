@@ -1,24 +1,23 @@
-// File: src/app/api/dashboard/reviews/route.ts
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 
-const prisma = new PrismaClient();
-
+// Admin view — all reviews
 export async function GET() {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const ADMIN_ROLES = new Set(["SUPER_ADMIN", "ADMIN", "MANAGER"]);
+  if (!ADMIN_ROLES.has(session.role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   const reviews = await prisma.review.findMany({
-    include: { expert: true, client: true },
+    include: {
+      expert: { select: { id: true, name: true, businessName: true, profileLink: true } },
+      client: { select: { id: true, name: true, email: true } },
+      booking: { select: { id: true, scheduledAt: true, service: { select: { name: true } } } },
+    },
     orderBy: { createdAt: "desc" },
   });
-  return NextResponse.json(reviews);
-}
 
-export async function POST(req: Request) {
-  const data = await req.json();
-
-  if (!data.bookingId || !data.expertId || !data.clientId || !data.rating) {
-    return NextResponse.json({ error: "Booking, Expert, Client, and Rating are required." }, { status: 400 });
-  }
-
-  const review = await prisma.review.create({ data });
-  return NextResponse.json(review);
+  return NextResponse.json({ ok: true, reviews });
 }

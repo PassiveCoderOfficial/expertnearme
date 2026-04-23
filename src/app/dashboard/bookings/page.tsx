@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MdCalendarToday, MdRefresh, MdCheck, MdClose, MdSchedule, MdMessage } from "react-icons/md";
+import { MdCalendarToday, MdRefresh, MdCheck, MdClose, MdSchedule, MdMessage, MdStar, MdRateReview } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -32,8 +32,14 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading]   = useState(true);
   const [tab, setTab]           = useState<"incoming" | "mine">("incoming");
-  const [acting, setActing]     = useState<number | null>(null);
-  const [messaging, setMessaging] = useState<number | null>(null);
+  const [acting, setActing]         = useState<number | null>(null);
+  const [messaging, setMessaging]   = useState<number | null>(null);
+  const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
+  const [reviewRating, setReviewRating]   = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewHover, setReviewHover]     = useState(0);
+  const [reviewSaving, setReviewSaving]   = useState(false);
+  const [reviewedIds, setReviewedIds]     = useState<Set<number>>(new Set());
 
   const isExpert = session?.role === "EXPERT";
 
@@ -46,7 +52,32 @@ export default function BookingsPage() {
     setLoading(false);
   };
 
-  useEffect(() => { if (session) load(); }, [session]);
+  useEffect(() => {
+    if (!session) return;
+    load();
+    if (session.role !== "EXPERT") {
+      fetch("/api/my/reviews").then(r => r.json()).then(d => {
+        setReviewedIds(new Set((d.reviews || []).map((r: { bookingId: number }) => r.bookingId)));
+      });
+    }
+  }, [session]);
+
+  const submitReview = async () => {
+    if (!reviewBooking || !reviewRating) return;
+    setReviewSaving(true);
+    const r = await fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId: reviewBooking.id, rating: reviewRating, comment: reviewComment }),
+    });
+    if (r.ok) {
+      setReviewedIds(prev => new Set([...prev, reviewBooking.id]));
+      setReviewBooking(null);
+      setReviewRating(0);
+      setReviewComment("");
+    }
+    setReviewSaving(false);
+  };
 
   const messageUser = async (toUserId: number, bookingId: number) => {
     setMessaging(bookingId);
@@ -73,8 +104,60 @@ export default function BookingsPage() {
   const past      = bookings.filter(b => new Date(b.scheduledAt) < new Date() || b.status === "DONE" || b.status === "DECLINED");
   const displayed = tab === "incoming" ? upcoming : past;
 
+  const expertName = (b: Booking) => b.expert.businessName || b.expert.name;
+
   return (
     <div className="space-y-6 max-w-5xl">
+      {/* Review modal */}
+      {reviewBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
+              <h2 className="font-bold text-white">Write a Review</h2>
+              <button onClick={() => setReviewBooking(null)} className="text-slate-400 hover:text-white"><MdClose /></button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div className="p-3 bg-slate-800/60 border border-white/8 rounded-xl">
+                <p className="text-sm font-semibold text-white">{expertName(reviewBooking)}</p>
+                {reviewBooking.service && <p className="text-xs text-orange-300">{reviewBooking.service.name}</p>}
+                <p className="text-xs text-slate-500">{new Date(reviewBooking.scheduledAt).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 mb-2">Your rating</p>
+                <div className="flex gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <MdStar
+                      key={i}
+                      className={`text-2xl cursor-pointer transition-colors ${(reviewHover || reviewRating) > i ? "text-yellow-400" : "text-slate-600"}`}
+                      onMouseEnter={() => setReviewHover(i + 1)}
+                      onMouseLeave={() => setReviewHover(0)}
+                      onClick={() => setReviewRating(i + 1)}
+                    />
+                  ))}
+                </div>
+                {reviewRating > 0 && (
+                  <p className="text-xs text-slate-500 mt-1">{["", "Poor", "Fair", "Good", "Very Good", "Excellent"][reviewRating]}</p>
+                )}
+              </div>
+              <textarea
+                value={reviewComment}
+                onChange={e => setReviewComment(e.target.value)}
+                rows={3}
+                placeholder="Share your experience (optional)…"
+                className="w-full bg-slate-800/60 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/40 resize-none"
+              />
+              <button
+                onClick={submitReview}
+                disabled={reviewSaving || !reviewRating}
+                className="w-full py-2.5 bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-slate-900 font-bold rounded-xl text-sm transition-colors"
+              >
+                {reviewSaving ? "Submitting…" : "Submit Review"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Bookings</h1>
@@ -225,6 +308,20 @@ export default function BookingsPage() {
                     >
                       <MdMessage /> Message
                     </button>
+                  )}
+                  {/* Write review — buyer, DONE booking, not yet reviewed */}
+                  {!isExpert && b.status === "DONE" && !reviewedIds.has(b.id) && (
+                    <button
+                      onClick={() => { setReviewBooking(b); setReviewRating(0); setReviewComment(""); }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-500/15 hover:bg-yellow-500/25 border border-yellow-500/25 text-yellow-400 text-xs font-semibold rounded-lg transition-colors shrink-0"
+                    >
+                      <MdStar /> Review
+                    </button>
+                  )}
+                  {!isExpert && b.status === "DONE" && reviewedIds.has(b.id) && (
+                    <span className="flex items-center gap-1 text-xs text-slate-600 shrink-0">
+                      <MdRateReview /> Reviewed
+                    </span>
                   )}
                 </div>
               </div>
