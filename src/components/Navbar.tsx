@@ -160,7 +160,7 @@ export default function Navbar() {
               Categories
             </Link>
             <Link
-              href="/for-experts"
+              href="/pricing"
               className="text-orange-400 hover:text-orange-300 transition-colors font-semibold"
             >
               List Your Business

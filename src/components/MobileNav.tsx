@@ -143,7 +143,7 @@ export default function MobileNav() {
             <button onClick={() => go(withCountry("/categories"))} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-white/6 transition-colors">
               Categories
             </button>
-            <button onClick={() => go("/for-experts")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold text-orange-400 hover:text-orange-300 hover:bg-orange-500/8 transition-colors">
+            <button onClick={() => go("/pricing")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold text-orange-400 hover:text-orange-300 hover:bg-orange-500/8 transition-colors">
               List Your Business
             </button>
 

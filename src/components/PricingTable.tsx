@@ -320,6 +320,13 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                         {spotsLeft} of {TOTAL_SPOTS} spots · Expires Aug 15, 2026
                       </p>
                     </>
+                  ) : plan.active ? (
+                    <button
+                      onClick={() => { setActivePlan(plan); setShowPaymentModal(true); }}
+                      className="block w-full text-center py-3.5 px-4 rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-orange-500/20 mb-8 group"
+                    >
+                      Get Started <ArrowRight className="inline h-4 w-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
                   ) : (
                     <button
                       disabled
@@ -496,7 +503,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                       <h4 className="text-white font-semibold mb-1">Pay with SurjoPay</h4>
                       <p className="text-slate-400 text-sm">BD-friendly gateway. Supports local cards and mobile banking.</p>
                     </div>
-                    <a href={`https://wa.me/${paymentConfig.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent('Hi, I want to pay for the Founding Expert plan ($999) via SurjoPay.')}`}
+                    <a href={`https://wa.me/${paymentConfig.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, I want to pay for the ${activePlan?.name ?? 'plan'} ($${activePlan?.price ?? ''}) via SurjoPay.`)}`}
                       target="_blank" rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 w-full py-3.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors text-sm">
                       💬 Contact us on WhatsApp to proceed
@@ -519,7 +526,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                         </div>
                       ))}
                     </div>
-                    <a href={`https://wa.me/${paymentConfig.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent('Hi, I have made a manual payment for the Founding Expert plan. Please find my payment receipt attached.')}`}
+                    <a href={`https://wa.me/${paymentConfig.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, I have made a manual payment for the ${activePlan?.name ?? 'plan'} ($${activePlan?.price ?? ''}). Please find my payment receipt attached.`)}`}
                       target="_blank" rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 w-full py-3.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors text-sm">
                       💬 Send Receipt on WhatsApp
