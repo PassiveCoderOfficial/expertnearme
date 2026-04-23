@@ -1,8 +1,9 @@
+import { prisma } from "@/lib/db";
 // File: src/app/api/dashboard/bookings/route.ts
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+
+
 
 export async function GET() {
   const bookings = await prisma.booking.findMany({
