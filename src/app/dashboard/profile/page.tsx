@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Save, ExternalLink, Crown, Globe, Phone, MapPin,
-  Image, Loader2, CheckCircle, AlertCircle, Building2, User
+  Image, Loader2, CheckCircle, AlertCircle, Building2, User, Upload,
 } from 'lucide-react';
 import MapPickerDark, { LatLng } from '@/components/MapPicker';
 
@@ -126,9 +126,19 @@ export default function MyProfilePage() {
     }
   };
 
-  const inputCls  = 'w-full bg-gray-800 border border-gray-700 focus:border-orange-500 rounded-lg px-3 py-2.5 text-white placeholder-gray-500 outline-none transition-colors text-sm';
-  const labelCls  = 'block text-sm font-medium text-gray-300 mb-1';
-  const sectionCls = 'bg-white rounded-xl shadow-sm p-6 mb-5';
+  const inputCls  = 'w-full bg-slate-800 border border-white/10 focus:border-orange-500/50 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 outline-none transition-colors text-sm';
+  const labelCls  = 'block text-sm font-medium text-slate-300 mb-1';
+  const sectionCls = 'bg-slate-800/50 border border-white/8 rounded-2xl p-6 mb-5';
+
+  const uploadImage = async (file: File, field: 'profilePicture' | 'coverPhoto') => {
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const res = await fetch('/api/media', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.url) set(field, data.url);
+    } catch { /* ignore */ }
+  };
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -138,13 +148,11 @@ export default function MyProfilePage() {
 
   if (!expert) return (
     <div className="max-w-2xl mx-auto">
-      <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+      <div className="bg-slate-800/50 border border-white/8 rounded-2xl p-8 text-center">
         <AlertCircle className="h-10 w-10 text-orange-500 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold mb-2 text-gray-800">No expert profile found</h2>
-        <p className="text-gray-500 mb-6 text-sm">
-          Your account doesn't have an expert profile yet.
-        </p>
-        <Link href="/create-expert-account" className="bg-orange-500 hover:bg-orange-400 text-white font-medium px-5 py-2.5 rounded-lg text-sm transition-colors">
+        <h2 className="text-xl font-semibold mb-2 text-white">No expert profile found</h2>
+        <p className="text-slate-400 mb-6 text-sm">Your account doesn&apos;t have an expert profile yet.</p>
+        <Link href="/create-expert-account" className="bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold px-5 py-2.5 rounded-xl text-sm transition-colors">
           Create Expert Profile
         </Link>
       </div>
@@ -160,58 +168,57 @@ export default function MyProfilePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Changes save immediately and update your public profile.</p>
+          <h1 className="text-2xl font-bold text-white">My Profile</h1>
+          <p className="text-sm text-slate-400 mt-0.5">Changes save immediately and update your public profile.</p>
         </div>
         <div className="flex items-center gap-3">
           {profileUrl && (
             <Link href={profileUrl} target="_blank"
-              className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+              className="flex items-center gap-1.5 text-sm text-slate-300 hover:text-white border border-white/10 px-3 py-2 rounded-xl hover:border-white/20 transition-colors">
               <ExternalLink className="h-4 w-4" /> View Profile
             </Link>
           )}
           <button onClick={save} disabled={saving}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 disabled:opacity-60 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors">
+            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 disabled:opacity-60 text-slate-900 font-bold px-4 py-2 rounded-xl text-sm transition-colors">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
       </div>
 
-      {/* Status banners */}
       {saved && (
-        <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl mb-5">
+        <div className="flex items-center gap-2 bg-green-500/15 border border-green-500/25 text-green-300 text-sm px-4 py-3 rounded-xl mb-5">
           <CheckCircle className="h-4 w-4" /> Profile saved successfully.
         </div>
       )}
       {error && (
-        <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-5">
+        <div className="flex items-center gap-2 bg-red-500/15 border border-red-500/25 text-red-300 text-sm px-4 py-3 rounded-xl mb-5">
           <AlertCircle className="h-4 w-4" /> {error}
         </div>
       )}
 
       {/* Founding Expert badge */}
       {expert.foundingExpert && (
-        <div className="flex items-center gap-3 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl px-5 py-4 mb-5">
-          <Crown className="h-5 w-5 text-orange-500 shrink-0" />
+        <div className="flex items-center gap-3 bg-gradient-to-r from-orange-500/15 to-amber-500/10 border border-orange-500/25 rounded-2xl px-5 py-4 mb-5">
+          <Crown className="h-5 w-5 text-amber-400 shrink-0" />
           <div>
-            <p className="font-semibold text-gray-800 text-sm">Founding Expert</p>
-            <p className="text-xs text-gray-500 mt-0.5">You're permanently listed on the <Link href="/founding-experts" className="text-orange-500 hover:underline">Founding Experts</Link> page.</p>
+            <p className="font-semibold text-amber-300 text-sm">Founding Expert</p>
+            <p className="text-xs text-slate-400 mt-0.5">You&apos;re permanently listed on the <Link href="/founding-experts" className="text-orange-400 hover:underline">Founding Experts</Link> page.</p>
           </div>
         </div>
       )}
 
       {/* Basic info */}
-      <div className={sectionCls} style={{ background: 'white' }}>
-        <h2 className="font-semibold text-gray-800 mb-4">Basic Information</h2>
+      <div className={sectionCls}>
+        <h2 className="font-semibold text-white mb-4">Basic Information</h2>
         <div className="space-y-4">
           <div className="flex gap-3">
             <button onClick={() => set('isBusiness', false)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium border transition-colors ${!form.isBusiness ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium border transition-colors ${!form.isBusiness ? 'border-orange-500 bg-orange-500/15 text-orange-300' : 'border-white/10 text-slate-400 hover:border-white/20'}`}>
               <User className="h-4 w-4" /> Individual
             </button>
             <button onClick={() => set('isBusiness', true)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium border transition-colors ${form.isBusiness ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium border transition-colors ${form.isBusiness ? 'border-orange-500 bg-orange-500/15 text-orange-300' : 'border-white/10 text-slate-400 hover:border-white/20'}`}>
               <Building2 className="h-4 w-4" /> Business
             </button>
           </div>
@@ -234,19 +241,19 @@ export default function MyProfilePage() {
           <div>
             <label className={labelCls}>Email</label>
             <input className={inputCls + ' opacity-60 cursor-not-allowed'} value={expert.email} readOnly />
-            <p className="text-xs text-gray-400 mt-1">Email cannot be changed.</p>
+            <p className="text-xs text-slate-500 mt-1">Email cannot be changed.</p>
           </div>
           <div>
             <label className={labelCls}>Country</label>
             <input className={inputCls + ' opacity-60 cursor-not-allowed'} value={expert.countryCode?.toUpperCase() ?? ''} readOnly />
-            <p className="text-xs text-gray-400 mt-1">Contact support to change country.</p>
+            <p className="text-xs text-slate-500 mt-1">Contact support to change country.</p>
           </div>
         </div>
       </div>
 
       {/* Contact */}
-      <div className={sectionCls} style={{ background: 'white' }}>
-        <h2 className="font-semibold text-gray-800 mb-4"><Phone className="inline h-4 w-4 mr-1.5 text-gray-400" />Contact</h2>
+      <div className={sectionCls}>
+        <h2 className="font-semibold text-white mb-4"><Phone className="inline h-4 w-4 mr-1.5 text-slate-500" />Contact</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className={labelCls}>Phone</label>
@@ -268,11 +275,11 @@ export default function MyProfilePage() {
       </div>
 
       {/* Profile content */}
-      <div className={sectionCls} style={{ background: 'white' }}>
-        <h2 className="font-semibold text-gray-800 mb-4">Profile Content</h2>
+      <div className={sectionCls}>
+        <h2 className="font-semibold text-white mb-4">Profile Content</h2>
         <div className="space-y-4">
           <div>
-            <label className={labelCls}>Short description <span className="text-gray-400">({form.shortDesc.length}/160)</span></label>
+            <label className={labelCls}>Short description <span className="text-slate-500">({form.shortDesc.length}/160)</span></label>
             <textarea className={inputCls} rows={2} maxLength={160} placeholder="One or two sentences about what you do." value={form.shortDesc} onChange={e => set('shortDesc', e.target.value)} />
           </div>
           <div>
@@ -283,17 +290,43 @@ export default function MyProfilePage() {
       </div>
 
       {/* Media */}
-      <div className={sectionCls} style={{ background: 'white' }}>
-        <h2 className="font-semibold text-gray-800 mb-4"><Image className="inline h-4 w-4 mr-1.5 text-gray-400" />Media (paste URLs)</h2>
-        <div className="space-y-4">
+      <div className={sectionCls}>
+        <h2 className="font-semibold text-white mb-4 flex items-center gap-2"><Image className="h-4 w-4 text-slate-400" />Media</h2>
+        <div className="space-y-5">
+          {/* Profile picture */}
           <div>
-            <label className={labelCls}>Profile picture URL</label>
-            <input className={inputCls} placeholder="https://…/photo.jpg" value={form.profilePicture} onChange={e => set('profilePicture', e.target.value)} />
+            <label className={labelCls}>Profile Picture</label>
+            <div className="flex items-center gap-3">
+              {form.profilePicture
+                ? <img src={form.profilePicture} alt="profile" className="w-14 h-14 rounded-xl object-cover border border-white/10 shrink-0" />
+                : <div className="w-14 h-14 rounded-xl bg-slate-700 border border-white/10 flex items-center justify-center shrink-0"><User className="w-6 h-6 text-slate-500" /></div>
+              }
+              <div className="flex-1 space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer bg-slate-700/60 hover:bg-slate-700 border border-white/10 hover:border-orange-500/30 px-3 py-2 rounded-xl text-sm text-slate-300 hover:text-white transition-colors w-fit">
+                  <Upload className="w-4 h-4" /> Upload photo
+                  <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, 'profilePicture'); }} />
+                </label>
+                <input className={inputCls} placeholder="or paste image URL" value={form.profilePicture} onChange={e => set('profilePicture', e.target.value)} />
+              </div>
+            </div>
           </div>
+
+          {/* Cover photo */}
           <div>
-            <label className={labelCls}>Cover photo URL</label>
-            <input className={inputCls} placeholder="https://…/cover.jpg" value={form.coverPhoto} onChange={e => set('coverPhoto', e.target.value)} />
+            <label className={labelCls}>Cover Photo</label>
+            {form.coverPhoto && (
+              <img src={form.coverPhoto} alt="cover" className="w-full h-24 object-cover rounded-xl border border-white/10 mb-2" />
+            )}
+            <div className="flex gap-2">
+              <label className="flex items-center gap-2 cursor-pointer bg-slate-700/60 hover:bg-slate-700 border border-white/10 hover:border-orange-500/30 px-3 py-2 rounded-xl text-sm text-slate-300 hover:text-white transition-colors shrink-0">
+                <Upload className="w-4 h-4" /> Upload cover
+                <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, 'coverPhoto'); }} />
+              </label>
+              <input className={inputCls} placeholder="or paste cover URL" value={form.coverPhoto} onChange={e => set('coverPhoto', e.target.value)} />
+            </div>
           </div>
+
+          {/* Map */}
           <div>
             <MapPickerDark
               label="Location on map"
@@ -310,15 +343,15 @@ export default function MyProfilePage() {
 
       {/* Categories */}
       {categories.length > 0 && (
-        <div className={sectionCls} style={{ background: 'white' }}>
-          <h2 className="font-semibold text-gray-800 mb-1">Categories</h2>
-          <p className="text-xs text-gray-500 mb-4">Pick up to 5 that describe your work. {form.categoryIds.length}/5 selected.</p>
+        <div className={sectionCls}>
+          <h2 className="font-semibold text-white mb-1">Categories</h2>
+          <p className="text-xs text-slate-400 mb-4">Pick up to 5 that describe your work. {form.categoryIds.length}/5 selected.</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {categories.map(cat => {
               const sel = form.categoryIds.includes(cat.id);
               return (
                 <button key={cat.id} onClick={() => toggleCategory(cat.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm border transition-colors text-left ${sel ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm border transition-colors text-left ${sel ? 'border-orange-500 bg-orange-500/15 text-orange-300' : 'border-white/10 text-slate-400 hover:border-white/20 hover:text-slate-300'}`}>
                   <span>{cat.icon ?? '📌'}</span>
                   <span className="text-xs font-medium truncate">{cat.name}</span>
                 </button>
@@ -331,7 +364,7 @@ export default function MyProfilePage() {
       {/* Save footer */}
       <div className="flex justify-end pb-10">
         <button onClick={save} disabled={saving}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 disabled:opacity-60 text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors">
+          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 disabled:opacity-60 text-slate-900 font-bold px-6 py-3 rounded-xl text-sm transition-colors">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {saving ? 'Saving…' : 'Save Changes'}
         </button>

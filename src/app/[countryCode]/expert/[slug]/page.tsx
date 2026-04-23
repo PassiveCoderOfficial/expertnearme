@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { Star, MapPin, Phone, Globe, Mail, CheckCircle, Award, Crown, MessageCircle } from "lucide-react";
+import { Star, MapPin, Phone, Globe, Mail, CheckCircle, Award, Crown, MessageCircle, Pencil } from "lucide-react";
 import type { Metadata } from "next";
 import ExpertMap, { MapExpert } from "@/components/ExpertMap";
 import BookingWidget from "@/components/BookingWidget";
 import MessageButton from "@/components/MessageButton";
 import { notFound } from "next/navigation";
+import { getSession } from "@/lib/auth";
 
 interface ExpertProfilePageProps {
   params: Promise<{ slug: string; countryCode: string }>;
@@ -48,7 +49,11 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
 
     if (!expert) notFound();
 
-    const expertUser = await prisma.user.findUnique({ where: { email: expert.email }, select: { id: true } }).catch(() => null);
+    const [expertUser, session] = await Promise.all([
+      prisma.user.findUnique({ where: { email: expert.email }, select: { id: true } }).catch(() => null),
+      getSession(),
+    ]);
+    const isOwner = session.authenticated && session.email === expert.email;
     const displayName = expert.businessName || expert.name;
 
     // Rating distribution
@@ -224,7 +229,16 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                     <Globe className="w-4 h-4" /> Website
                   </a>
                 )}
-                {expertUser && <MessageButton toUserId={expertUser.id} />}
+                {isOwner ? (
+                  <Link
+                    href="/dashboard/profile"
+                    className="flex items-center justify-center gap-2 border border-orange-500/40 hover:border-orange-500/70 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 font-medium px-5 py-2.5 rounded-xl transition-colors text-sm"
+                  >
+                    <Pencil className="w-4 h-4" /> Edit Profile
+                  </Link>
+                ) : (
+                  expertUser && <MessageButton toUserId={expertUser.id} />
+                )}
               </div>
             </div>
           </div>
