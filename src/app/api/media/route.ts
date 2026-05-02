@@ -51,6 +51,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No file" }, { status: 400 });
   }
 
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+  const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    return NextResponse.json({ error: 'Only image files are allowed (JPEG, PNG, WebP, GIF, SVG)' }, { status: 400 });
+  }
+  if (file.size > MAX_SIZE) {
+    return NextResponse.json({ error: 'File too large. Maximum size is 10MB.' }, { status: 400 });
+  }
+
   const tags = (formData.get("tags") as string) || null;
   const accountSlug =
     (session as any).profile?.slug ||

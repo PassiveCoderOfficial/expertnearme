@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -97,6 +98,10 @@ model Expert {
   coverPhoto     String?
   bio            String?
   shortDesc      String?
+  linkedinUrl    String?
+  instagramUrl   String?
+  twitterUrl     String?
+  facebookUrl    String?
   verified            Boolean   @default(false)
   featured            Boolean   @default(false)
   homeFeatured        Boolean   @default(false)
@@ -130,23 +135,27 @@ model Service {
   name               String
   image              String?
   description        String?
-  rateUnit           String? // price display string e.g. "$50/hr"
-  // Booking fields
+  rateUnit           String?
+  price              Float?
+  sortOrder          Int     @default(0)
   availableForBooking Boolean @default(false)
-  duration            Int     @default(60)  // minutes
-  rateType            String  @default("fixed") // "fixed" | "hourly"
+  duration            Int     @default(60)
+  rateType            String  @default("fixed")
   expert      Expert    @relation(fields: [expertId], references: [id])
   category    Category? @relation(fields: [categoryId], references: [id])
   bookings    Booking[]
 }
 
 model Portfolio {
-  id        Int     @id @default(autoincrement())
-  expertId  Int
-  imageUrl  String?
-  videoUrl  String?
-  socialUrl String?
-  expert    Expert  @relation(fields: [expertId], references: [id])
+  id          Int     @id @default(autoincrement())
+  expertId    Int
+  title       String?
+  description String?
+  imageUrl    String?
+  videoUrl    String?
+  socialUrl   String?
+  sortOrder   Int     @default(0)
+  expert      Expert  @relation(fields: [expertId], references: [id])
 }
 
 model Category {

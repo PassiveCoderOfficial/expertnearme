@@ -46,12 +46,15 @@ export async function PATCH(request: NextRequest) {
     const updateData: Record<string, unknown> = {};
     const strings = ['name', 'businessName', 'contactPerson', 'phone', 'whatsapp',
                      'bio', 'shortDesc', 'webAddress', 'officeAddress',
-                     'profilePicture', 'coverPhoto', 'mapLocation'];
+                     'profilePicture', 'coverPhoto', 'mapLocation',
+                     'linkedinUrl', 'instagramUrl', 'twitterUrl', 'facebookUrl'];
     for (const key of strings) {
       if (key in body) updateData[key] = (body[key] ?? '').trim() || null;
     }
     if ('isBusiness'  in body) updateData.isBusiness  = Boolean(body.isBusiness);
     if ('featured'    in body) updateData.featured    = Boolean(body.featured);
+    if ('latitude'    in body) updateData.latitude    = body.latitude  != null ? Number(body.latitude)  : null;
+    if ('longitude'   in body) updateData.longitude   = body.longitude != null ? Number(body.longitude) : null;
 
     const expert = await prisma.expert.update({
       where: { email: session.email },

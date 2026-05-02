@@ -1,14 +1,34 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   Save, ExternalLink, Crown, Globe, Phone, MapPin,
   Image, Loader2, CheckCircle, AlertCircle, Building2, User, Upload,
+  Plus, Trash2, Pencil, X, Linkedin, Instagram, Twitter, Facebook,
+  GripVertical, Video, Link2,
 } from 'lucide-react';
 import MapPickerDark, { LatLng } from '@/components/MapPicker';
 
 interface Category { id: number; name: string; icon: string | null; slug: string; }
+interface PortfolioItem {
+  id: number;
+  title: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  videoUrl: string | null;
+  socialUrl: string | null;
+  sortOrder: number;
+}
+interface ServiceItem {
+  id: number;
+  name: string;
+  description: string | null;
+  rateUnit: string | null;
+  price: number | null;
+  image: string | null;
+  sortOrder: number;
+}
 interface Expert {
   id: number;
   name: string;
@@ -28,16 +48,123 @@ interface Expert {
   mapLocation: string | null;
   profileLink: string | null;
   foundingExpert: boolean;
+  linkedinUrl: string | null;
+  instagramUrl: string | null;
+  twitterUrl: string | null;
+  facebookUrl: string | null;
   categories: { category: Category }[];
 }
 
+function UploadButton({
+  label, field, currentUrl, onUploaded, aspect,
+}: {
+  label: string;
+  field: string;
+  currentUrl: string;
+  onUploaded: (url: string) => void;
+  aspect?: 'square' | 'wide';
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [err, setErr] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file: File) => {
+    setErr('');
+    if (file.size > 10 * 1024 * 1024) { setErr('Max 10 MB'); return; }
+    if (!file.type.startsWith('image/')) { setErr('Images only'); return; }
+    const reader = new FileReader();
+    reader.onload = e => setPreview(e.target?.result as string);
+    reader.readAsDataURL(file);
+
+    setUploading(true);
+    setProgress(0);
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const xhr = new XMLHttpRequest();
+      xhr.upload.onprogress = e => { if (e.lengthComputable) setProgress(Math.round(e.loaded / e.total * 100)); };
+      await new Promise<void>((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const data = JSON.parse(xhr.responseText);
+            if (data.url) { onUploaded(data.url); setPreview(null); resolve(); }
+            else { setErr(data.error ?? 'Upload failed'); reject(); }
+          } else {
+            try { setErr(JSON.parse(xhr.responseText).error ?? 'Upload failed'); } catch { setErr('Upload failed'); }
+            reject();
+          }
+        };
+        xhr.onerror = () => { setErr('Upload failed'); reject(); };
+        xhr.open('POST', '/api/media');
+        xhr.send(fd);
+      });
+    } catch {
+      // error already set
+    } finally {
+      setUploading(false);
+      setProgress(0);
+    }
+  };
+
+  const displayUrl = preview ?? currentUrl;
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-300 mb-2">{label}</label>
+      {displayUrl && (
+        <div className={`relative mb-3 rounded-xl overflow-hidden border border-white/10 ${aspect === 'wide' ? 'w-full h-28' : 'w-20 h-20'}`}>
+          <img src={displayUrl} alt="" className="w-full h-full object-cover" />
+          {preview && (
+            <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center">
+              <span className="text-xs text-orange-300 font-medium">Preview</span>
+            </div>
+          )}
+        </div>
+      )}
+      {uploading && (
+        <div className="mb-2">
+          <div className="flex items-center gap-2 mb-1">
+            <Loader2 className="h-3.5 w-3.5 text-orange-400 animate-spin" />
+            <span className="text-xs text-slate-400">Uploading… {progress}%</span>
+          </div>
+          <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
+            <div className="h-full bg-orange-500 rounded-full transition-all" style={{ width: `${progress}%` }} />
+          </div>
+        </div>
+      )}
+      <div className="flex gap-2 flex-wrap">
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="flex items-center gap-2 cursor-pointer bg-slate-700/60 hover:bg-slate-700 border border-white/10 hover:border-orange-500/30 px-3 py-2 rounded-xl text-sm text-slate-300 hover:text-white transition-colors disabled:opacity-50"
+        >
+          <Upload className="w-4 h-4" /> {currentUrl ? 'Replace' : 'Upload'}
+        </button>
+        <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ''; }} />
+        {currentUrl && !preview && (
+          <button type="button" onClick={() => onUploaded('')} className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-400 transition-colors px-2">
+            <X className="w-3.5 h-3.5" /> Remove
+          </button>
+        )}
+      </div>
+      {err && <p className="text-xs text-red-400 mt-1.5">{err}</p>}
+    </div>
+  );
+}
+
 export default function MyProfilePage() {
-  const [expert, setExpert]       = useState<Expert | null>(null);
+  const [expert, setExpert]         = useState<Expert | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [saving, setSaving]       = useState(false);
-  const [saved, setSaved]         = useState(false);
-  const [error, setError]         = useState('');
+  const [loading, setLoading]       = useState(true);
+  const [saving, setSaving]         = useState(false);
+  const [saved, setSaved]           = useState(false);
+  const [error, setError]           = useState('');
+
+  const [portfolio, setPortfolio]   = useState<PortfolioItem[]>([]);
+  const [services, setServices]     = useState<ServiceItem[]>([]);
 
   const [form, setForm] = useState({
     name:          '',
@@ -56,43 +183,55 @@ export default function MyProfilePage() {
     latitude:      null as number | null,
     longitude:     null as number | null,
     categoryIds:   [] as number[],
+    linkedinUrl:   '',
+    instagramUrl:  '',
+    twitterUrl:    '',
+    facebookUrl:   '',
   });
 
   useEffect(() => {
-    fetch('/api/me/expert')
-      .then(r => r.json())
-      .then(d => {
-        if (d.expert) {
-          const e: Expert = d.expert;
-          setExpert(e);
-          setForm({
-            name:          e.name          ?? '',
-            isBusiness:    e.isBusiness    ?? false,
-            businessName:  e.businessName  ?? '',
-            contactPerson: e.contactPerson ?? '',
-            phone:         e.phone         ?? '',
-            whatsapp:      e.whatsapp      ?? '',
-            shortDesc:     e.shortDesc     ?? '',
-            bio:           e.bio           ?? '',
-            webAddress:    e.webAddress    ?? '',
-            officeAddress: e.officeAddress ?? '',
-            profilePicture: e.profilePicture ?? '',
-            coverPhoto:    e.coverPhoto    ?? '',
-            mapLocation:   e.mapLocation   ?? '',
-            latitude:      (e as unknown as { latitude?: number | null }).latitude ?? null,
-            longitude:     (e as unknown as { longitude?: number | null }).longitude ?? null,
-            categoryIds:   e.categories.map(c => c.category.id),
-          });
-          if (e.countryCode) {
-            fetch(`/api/country/${e.countryCode}/categories`)
-              .then(r => r.json())
-              .then(d2 => setCategories(d2.categories ?? []))
-              .catch(() => {});
-          }
+    Promise.all([
+      fetch('/api/me/expert').then(r => r.json()),
+      fetch('/api/me/portfolio').then(r => r.json()).catch(() => ({ portfolio: [] })),
+      fetch('/api/me/services').then(r => r.json()).catch(() => ({ services: [] })),
+    ]).then(([expertData, portfolioData, servicesData]) => {
+      if (expertData.expert) {
+        const e: Expert = expertData.expert;
+        setExpert(e);
+        setForm({
+          name:          e.name          ?? '',
+          isBusiness:    e.isBusiness    ?? false,
+          businessName:  e.businessName  ?? '',
+          contactPerson: e.contactPerson ?? '',
+          phone:         e.phone         ?? '',
+          whatsapp:      e.whatsapp      ?? '',
+          shortDesc:     e.shortDesc     ?? '',
+          bio:           e.bio           ?? '',
+          webAddress:    e.webAddress    ?? '',
+          officeAddress: e.officeAddress ?? '',
+          profilePicture: e.profilePicture ?? '',
+          coverPhoto:    e.coverPhoto    ?? '',
+          mapLocation:   e.mapLocation   ?? '',
+          latitude:      (e as unknown as { latitude?: number | null }).latitude ?? null,
+          longitude:     (e as unknown as { longitude?: number | null }).longitude ?? null,
+          categoryIds:   e.categories.map(c => c.category.id),
+          linkedinUrl:   e.linkedinUrl   ?? '',
+          instagramUrl:  e.instagramUrl  ?? '',
+          twitterUrl:    e.twitterUrl    ?? '',
+          facebookUrl:   e.facebookUrl   ?? '',
+        });
+        if (e.countryCode) {
+          fetch(`/api/country/${e.countryCode}/categories`)
+            .then(r => r.json())
+            .then(d => setCategories(d.categories ?? []))
+            .catch(() => {});
         }
-      })
-      .catch(() => setError('Failed to load your profile.'))
-      .finally(() => setLoading(false));
+      }
+      setPortfolio(portfolioData.portfolio ?? []);
+      setServices(servicesData.services ?? []);
+    })
+    .catch(() => setError('Failed to load your profile.'))
+    .finally(() => setLoading(false));
   }, []);
 
   const set = (k: string, v: unknown) => setForm(f => ({ ...f, [k]: v }));
@@ -126,19 +265,114 @@ export default function MyProfilePage() {
     }
   };
 
-  const inputCls  = 'w-full bg-slate-800 border border-white/10 focus:border-orange-500/50 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 outline-none transition-colors text-sm';
-  const labelCls  = 'block text-sm font-medium text-slate-300 mb-1';
-  const sectionCls = 'bg-slate-800/50 border border-white/8 rounded-2xl p-6 mb-5';
+  // Portfolio CRUD
+  const [newPortfolio, setNewPortfolio] = useState({ title: '', description: '', imageUrl: '', videoUrl: '' });
+  const [addingPortfolio, setAddingPortfolio] = useState(false);
+  const [portfolioSaving, setPortfolioSaving] = useState(false);
+  const [editingPortfolio, setEditingPortfolio] = useState<number | null>(null);
+  const [editPortfolioForm, setEditPortfolioForm] = useState({ title: '', description: '', imageUrl: '', videoUrl: '' });
+  const [portfolioUploadProgress, setPortfolioUploadProgress] = useState<Record<number | string, number>>({});
 
-  const uploadImage = async (file: File, field: 'profilePicture' | 'coverPhoto') => {
+  const uploadPortfolioImage = async (file: File, key: number | 'new'): Promise<string | null> => {
+    if (file.size > 10 * 1024 * 1024) return null;
+    if (!file.type.startsWith('image/')) return null;
     const fd = new FormData();
     fd.append('file', file);
-    try {
-      const res = await fetch('/api/media', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (data.url) set(field, data.url);
-    } catch { /* ignore */ }
+    return new Promise(resolve => {
+      const xhr = new XMLHttpRequest();
+      xhr.upload.onprogress = e => { if (e.lengthComputable) setPortfolioUploadProgress(p => ({ ...p, [key]: Math.round(e.loaded / e.total * 100) })); };
+      xhr.onload = () => {
+        setPortfolioUploadProgress(p => { const n = { ...p }; delete n[key]; return n; });
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try { resolve(JSON.parse(xhr.responseText).url ?? null); } catch { resolve(null); }
+        } else { resolve(null); }
+      };
+      xhr.onerror = () => resolve(null);
+      xhr.open('POST', '/api/media');
+      xhr.send(fd);
+    });
   };
+
+  const addPortfolioItem = async () => {
+    if (!newPortfolio.imageUrl && !newPortfolio.videoUrl && !newPortfolio.title) return;
+    setPortfolioSaving(true);
+    const res = await fetch('/api/me/portfolio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newPortfolio),
+    });
+    const data = await res.json();
+    if (data.item) {
+      setPortfolio(p => [...p, data.item]);
+      setNewPortfolio({ title: '', description: '', imageUrl: '', videoUrl: '' });
+      setAddingPortfolio(false);
+    }
+    setPortfolioSaving(false);
+  };
+
+  const deletePortfolioItem = async (id: number) => {
+    await fetch(`/api/me/portfolio?id=${id}`, { method: 'DELETE' });
+    setPortfolio(p => p.filter(x => x.id !== id));
+  };
+
+  const saveEditPortfolio = async (id: number) => {
+    const res = await fetch('/api/me/portfolio', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...editPortfolioForm }),
+    });
+    const data = await res.json();
+    if (data.item) {
+      setPortfolio(p => p.map(x => x.id === id ? data.item : x));
+      setEditingPortfolio(null);
+    }
+  };
+
+  // Services CRUD
+  const [newService, setNewService] = useState({ name: '', description: '', rateUnit: '', price: '' });
+  const [addingService, setAddingService] = useState(false);
+  const [serviceSaving, setServiceSaving] = useState(false);
+  const [editingService, setEditingService] = useState<number | null>(null);
+  const [editServiceForm, setEditServiceForm] = useState({ name: '', description: '', rateUnit: '', price: '' });
+
+  const addService = async () => {
+    if (!newService.name.trim()) return;
+    setServiceSaving(true);
+    const res = await fetch('/api/me/services', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...newService, price: newService.price ? Number(newService.price) : null }),
+    });
+    const data = await res.json();
+    if (data.service) {
+      setServices(s => [...s, data.service]);
+      setNewService({ name: '', description: '', rateUnit: '', price: '' });
+      setAddingService(false);
+    }
+    setServiceSaving(false);
+  };
+
+  const deleteService = async (id: number) => {
+    await fetch(`/api/me/services?id=${id}`, { method: 'DELETE' });
+    setServices(s => s.filter(x => x.id !== id));
+  };
+
+  const saveEditService = async (id: number) => {
+    const res = await fetch('/api/me/services', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...editServiceForm, price: editServiceForm.price ? Number(editServiceForm.price) : null }),
+    });
+    const data = await res.json();
+    if (data.service) {
+      setServices(s => s.map(x => x.id === id ? data.service : x));
+      setEditingService(null);
+    }
+  };
+
+  const inputCls   = 'w-full bg-slate-800 border border-white/10 focus:border-orange-500/50 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 outline-none transition-colors text-sm';
+  const labelCls   = 'block text-sm font-medium text-slate-300 mb-1';
+  const sectionCls = 'bg-slate-800/50 border border-white/8 rounded-2xl p-6 mb-5';
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -274,6 +508,29 @@ export default function MyProfilePage() {
         </div>
       </div>
 
+      {/* Social links */}
+      <div className={sectionCls}>
+        <h2 className="font-semibold text-white mb-4"><Link2 className="inline h-4 w-4 mr-1.5 text-slate-500" />Social Links</h2>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Linkedin className="h-4 w-4 text-blue-400 shrink-0" />
+            <input className={inputCls} placeholder="https://linkedin.com/in/yourprofile" value={form.linkedinUrl} onChange={e => set('linkedinUrl', e.target.value)} />
+          </div>
+          <div className="flex items-center gap-2">
+            <Instagram className="h-4 w-4 text-pink-400 shrink-0" />
+            <input className={inputCls} placeholder="https://instagram.com/yourhandle" value={form.instagramUrl} onChange={e => set('instagramUrl', e.target.value)} />
+          </div>
+          <div className="flex items-center gap-2">
+            <Twitter className="h-4 w-4 text-sky-400 shrink-0" />
+            <input className={inputCls} placeholder="https://twitter.com/yourhandle" value={form.twitterUrl} onChange={e => set('twitterUrl', e.target.value)} />
+          </div>
+          <div className="flex items-center gap-2">
+            <Facebook className="h-4 w-4 text-blue-500 shrink-0" />
+            <input className={inputCls} placeholder="https://facebook.com/yourpage" value={form.facebookUrl} onChange={e => set('facebookUrl', e.target.value)} />
+          </div>
+        </div>
+      </div>
+
       {/* Profile content */}
       <div className={sectionCls}>
         <h2 className="font-semibold text-white mb-4">Profile Content</h2>
@@ -284,7 +541,7 @@ export default function MyProfilePage() {
           </div>
           <div>
             <label className={labelCls}>Full bio</label>
-            <textarea className={inputCls} rows={4} placeholder="Your background, experience, specialisations..." value={form.bio} onChange={e => set('bio', e.target.value)} />
+            <textarea className={inputCls} rows={5} placeholder="Your background, experience, specialisations..." value={form.bio} onChange={e => set('bio', e.target.value)} />
           </div>
         </div>
       </div>
@@ -292,41 +549,21 @@ export default function MyProfilePage() {
       {/* Media */}
       <div className={sectionCls}>
         <h2 className="font-semibold text-white mb-4 flex items-center gap-2"><Image className="h-4 w-4 text-slate-400" />Media</h2>
-        <div className="space-y-5">
-          {/* Profile picture */}
-          <div>
-            <label className={labelCls}>Profile Picture</label>
-            <div className="flex items-center gap-3">
-              {form.profilePicture
-                ? <img src={form.profilePicture} alt="profile" className="w-14 h-14 rounded-xl object-cover border border-white/10 shrink-0" />
-                : <div className="w-14 h-14 rounded-xl bg-slate-700 border border-white/10 flex items-center justify-center shrink-0"><User className="w-6 h-6 text-slate-500" /></div>
-              }
-              <div className="flex-1 space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer bg-slate-700/60 hover:bg-slate-700 border border-white/10 hover:border-orange-500/30 px-3 py-2 rounded-xl text-sm text-slate-300 hover:text-white transition-colors w-fit">
-                  <Upload className="w-4 h-4" /> Upload photo
-                  <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, 'profilePicture'); }} />
-                </label>
-                <input className={inputCls} placeholder="or paste image URL" value={form.profilePicture} onChange={e => set('profilePicture', e.target.value)} />
-              </div>
-            </div>
-          </div>
-
-          {/* Cover photo */}
-          <div>
-            <label className={labelCls}>Cover Photo</label>
-            {form.coverPhoto && (
-              <img src={form.coverPhoto} alt="cover" className="w-full h-24 object-cover rounded-xl border border-white/10 mb-2" />
-            )}
-            <div className="flex gap-2">
-              <label className="flex items-center gap-2 cursor-pointer bg-slate-700/60 hover:bg-slate-700 border border-white/10 hover:border-orange-500/30 px-3 py-2 rounded-xl text-sm text-slate-300 hover:text-white transition-colors shrink-0">
-                <Upload className="w-4 h-4" /> Upload cover
-                <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, 'coverPhoto'); }} />
-              </label>
-              <input className={inputCls} placeholder="or paste cover URL" value={form.coverPhoto} onChange={e => set('coverPhoto', e.target.value)} />
-            </div>
-          </div>
-
-          {/* Map */}
+        <div className="space-y-6">
+          <UploadButton
+            label="Profile Picture"
+            field="profilePicture"
+            currentUrl={form.profilePicture}
+            onUploaded={url => set('profilePicture', url)}
+            aspect="square"
+          />
+          <UploadButton
+            label="Cover Photo"
+            field="coverPhoto"
+            currentUrl={form.coverPhoto}
+            onUploaded={url => set('coverPhoto', url)}
+            aspect="wide"
+          />
           <div>
             <MapPickerDark
               label="Location on map"
@@ -360,6 +597,233 @@ export default function MyProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Services */}
+      <div className={sectionCls}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="font-semibold text-white">Services</h2>
+            <p className="text-xs text-slate-400 mt-0.5">What you offer to clients</p>
+          </div>
+          {!addingService && (
+            <button onClick={() => setAddingService(true)}
+              className="flex items-center gap-1.5 text-sm bg-orange-500/15 border border-orange-500/30 text-orange-300 hover:bg-orange-500/25 px-3 py-1.5 rounded-xl transition-colors">
+              <Plus className="h-4 w-4" /> Add Service
+            </button>
+          )}
+        </div>
+
+        {services.length > 0 && (
+          <div className="space-y-3 mb-4">
+            {services.map(svc => (
+              <div key={svc.id} className="bg-slate-900/50 border border-white/8 rounded-xl p-4">
+                {editingService === svc.id ? (
+                  <div className="space-y-3">
+                    <input className={inputCls} placeholder="Service name *" value={editServiceForm.name} onChange={e => setEditServiceForm(f => ({ ...f, name: e.target.value }))} />
+                    <textarea className={inputCls} rows={2} placeholder="Description (optional)" value={editServiceForm.description} onChange={e => setEditServiceForm(f => ({ ...f, description: e.target.value }))} />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input className={inputCls} placeholder="Price (e.g. 150)" type="number" min="0" value={editServiceForm.price} onChange={e => setEditServiceForm(f => ({ ...f, price: e.target.value }))} />
+                      <input className={inputCls} placeholder="Unit (e.g. /hr, /project)" value={editServiceForm.rateUnit} onChange={e => setEditServiceForm(f => ({ ...f, rateUnit: e.target.value }))} />
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => saveEditService(svc.id)} className="flex-1 bg-orange-500 hover:bg-orange-400 text-slate-900 font-semibold py-2 rounded-xl text-sm transition-colors">Save</button>
+                      <button onClick={() => setEditingService(null)} className="px-4 py-2 border border-white/10 rounded-xl text-sm text-slate-400 hover:text-white transition-colors">Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-3">
+                    <GripVertical className="h-4 w-4 text-slate-600 mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-white text-sm">{svc.name}</p>
+                      {svc.description && <p className="text-slate-400 text-xs mt-0.5 line-clamp-2">{svc.description}</p>}
+                      {(svc.price != null || svc.rateUnit) && (
+                        <p className="text-orange-400 text-xs font-semibold mt-1">
+                          {svc.price != null ? `$${svc.price}` : ''}{svc.rateUnit ? ` ${svc.rateUnit}` : ''}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <button onClick={() => { setEditingService(svc.id); setEditServiceForm({ name: svc.name, description: svc.description ?? '', rateUnit: svc.rateUnit ?? '', price: svc.price?.toString() ?? '' }); }}
+                        className="p-1.5 text-slate-500 hover:text-orange-400 transition-colors rounded-lg hover:bg-orange-500/10">
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button onClick={() => deleteService(svc.id)} className="p-1.5 text-slate-500 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {addingService && (
+          <div className="bg-slate-900/50 border border-orange-500/20 rounded-xl p-4 space-y-3">
+            <input className={inputCls} placeholder="Service name *" value={newService.name} onChange={e => setNewService(f => ({ ...f, name: e.target.value }))} autoFocus />
+            <textarea className={inputCls} rows={2} placeholder="Description (optional)" value={newService.description} onChange={e => setNewService(f => ({ ...f, description: e.target.value }))} />
+            <div className="grid grid-cols-2 gap-2">
+              <input className={inputCls} placeholder="Price (e.g. 150)" type="number" min="0" value={newService.price} onChange={e => setNewService(f => ({ ...f, price: e.target.value }))} />
+              <input className={inputCls} placeholder="Unit (e.g. /hr, /project)" value={newService.rateUnit} onChange={e => setNewService(f => ({ ...f, rateUnit: e.target.value }))} />
+            </div>
+            <div className="flex gap-2">
+              <button onClick={addService} disabled={serviceSaving || !newService.name.trim()}
+                className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-slate-900 font-semibold py-2 rounded-xl text-sm transition-colors">
+                {serviceSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                Add Service
+              </button>
+              <button onClick={() => { setAddingService(false); setNewService({ name: '', description: '', rateUnit: '', price: '' }); }}
+                className="px-4 py-2 border border-white/10 rounded-xl text-sm text-slate-400 hover:text-white transition-colors">
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {services.length === 0 && !addingService && (
+          <p className="text-sm text-slate-500 text-center py-4">No services yet. Add what you offer to attract clients.</p>
+        )}
+      </div>
+
+      {/* Portfolio */}
+      <div className={sectionCls}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="font-semibold text-white">Portfolio</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Showcase your best work ({portfolio.length}/20)</p>
+          </div>
+          {!addingPortfolio && portfolio.length < 20 && (
+            <button onClick={() => setAddingPortfolio(true)}
+              className="flex items-center gap-1.5 text-sm bg-orange-500/15 border border-orange-500/30 text-orange-300 hover:bg-orange-500/25 px-3 py-1.5 rounded-xl transition-colors">
+              <Plus className="h-4 w-4" /> Add Item
+            </button>
+          )}
+        </div>
+
+        {portfolio.length > 0 && (
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {portfolio.map(item => (
+              <div key={item.id} className="bg-slate-900/50 border border-white/8 rounded-xl overflow-hidden group">
+                {editingPortfolio === item.id ? (
+                  <div className="p-3 space-y-2">
+                    <input className={inputCls} placeholder="Title (optional)" value={editPortfolioForm.title} onChange={e => setEditPortfolioForm(f => ({ ...f, title: e.target.value }))} />
+                    <textarea className={inputCls} rows={2} placeholder="Description (optional)" value={editPortfolioForm.description} onChange={e => setEditPortfolioForm(f => ({ ...f, description: e.target.value }))} />
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Image URL</label>
+                      <div className="flex gap-2">
+                        <input className={inputCls} placeholder="https://…" value={editPortfolioForm.imageUrl} onChange={e => setEditPortfolioForm(f => ({ ...f, imageUrl: e.target.value }))} />
+                        <label className="flex items-center gap-1 cursor-pointer bg-slate-700 hover:bg-slate-600 px-2 rounded-xl text-xs text-slate-300 shrink-0">
+                          <Upload className="w-3 h-3" />
+                          <input type="file" accept="image/*" className="hidden" onChange={async e => {
+                            const f = e.target.files?.[0];
+                            if (!f) return;
+                            const url = await uploadPortfolioImage(f, item.id);
+                            if (url) setEditPortfolioForm(prev => ({ ...prev, imageUrl: url }));
+                            e.target.value = '';
+                          }} />
+                        </label>
+                      </div>
+                      {portfolioUploadProgress[item.id] != null && (
+                        <div className="mt-1 h-1 bg-slate-700 rounded-full overflow-hidden">
+                          <div className="h-full bg-orange-500 transition-all" style={{ width: `${portfolioUploadProgress[item.id]}%` }} />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Video URL (YouTube/Vimeo)</label>
+                      <input className={inputCls} placeholder="https://youtube.com/…" value={editPortfolioForm.videoUrl} onChange={e => setEditPortfolioForm(f => ({ ...f, videoUrl: e.target.value }))} />
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => saveEditPortfolio(item.id)} className="flex-1 bg-orange-500 hover:bg-orange-400 text-slate-900 font-semibold py-1.5 rounded-xl text-xs transition-colors">Save</button>
+                      <button onClick={() => setEditingPortfolio(null)} className="px-3 py-1.5 border border-white/10 rounded-xl text-xs text-slate-400 hover:text-white transition-colors">Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {item.imageUrl ? (
+                      <div className="aspect-video">
+                        <img src={item.imageUrl} alt={item.title ?? 'Portfolio'} className="w-full h-full object-cover" />
+                      </div>
+                    ) : item.videoUrl ? (
+                      <div className="aspect-video bg-slate-800 flex items-center justify-center">
+                        <Video className="h-8 w-8 text-slate-500" />
+                      </div>
+                    ) : (
+                      <div className="aspect-video bg-slate-800 flex items-center justify-center">
+                        <Image className="h-8 w-8 text-slate-600" />
+                      </div>
+                    )}
+                    <div className="p-2.5">
+                      {item.title && <p className="text-xs font-medium text-white truncate">{item.title}</p>}
+                      {item.description && <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{item.description}</p>}
+                      <div className="flex gap-1.5 mt-2">
+                        <button onClick={() => { setEditingPortfolio(item.id); setEditPortfolioForm({ title: item.title ?? '', description: item.description ?? '', imageUrl: item.imageUrl ?? '', videoUrl: item.videoUrl ?? '' }); }}
+                          className="flex-1 flex items-center justify-center gap-1 py-1 text-xs text-slate-400 hover:text-orange-400 border border-white/8 hover:border-orange-500/30 rounded-lg transition-colors">
+                          <Pencil className="h-3 w-3" /> Edit
+                        </button>
+                        <button onClick={() => deletePortfolioItem(item.id)}
+                          className="flex items-center justify-center gap-1 px-2 py-1 text-xs text-slate-500 hover:text-red-400 border border-white/8 hover:border-red-500/20 rounded-lg transition-colors">
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {addingPortfolio && (
+          <div className="bg-slate-900/50 border border-orange-500/20 rounded-xl p-4 space-y-3">
+            <input className={inputCls} placeholder="Title (optional)" value={newPortfolio.title} onChange={e => setNewPortfolio(f => ({ ...f, title: e.target.value }))} autoFocus />
+            <textarea className={inputCls} rows={2} placeholder="Description (optional)" value={newPortfolio.description} onChange={e => setNewPortfolio(f => ({ ...f, description: e.target.value }))} />
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Image</label>
+              <div className="flex gap-2">
+                <input className={inputCls} placeholder="Paste URL or upload →" value={newPortfolio.imageUrl} onChange={e => setNewPortfolio(f => ({ ...f, imageUrl: e.target.value }))} />
+                <label className="flex items-center gap-1 cursor-pointer bg-slate-700 hover:bg-slate-600 px-3 rounded-xl text-xs text-slate-300 shrink-0">
+                  <Upload className="w-3.5 h-3.5" /> Upload
+                  <input type="file" accept="image/*" className="hidden" onChange={async e => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    const url = await uploadPortfolioImage(f, 'new');
+                    if (url) setNewPortfolio(prev => ({ ...prev, imageUrl: url }));
+                    e.target.value = '';
+                  }} />
+                </label>
+              </div>
+              {portfolioUploadProgress['new'] != null && (
+                <div className="mt-1 h-1 bg-slate-700 rounded-full overflow-hidden">
+                  <div className="h-full bg-orange-500 transition-all" style={{ width: `${portfolioUploadProgress['new']}%` }} />
+                </div>
+              )}
+              {newPortfolio.imageUrl && (
+                <img src={newPortfolio.imageUrl} alt="preview" className="mt-2 w-full h-24 object-cover rounded-lg border border-white/10" />
+              )}
+            </div>
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Video URL (YouTube / Vimeo)</label>
+              <input className={inputCls} placeholder="https://youtube.com/watch?v=…" value={newPortfolio.videoUrl} onChange={e => setNewPortfolio(f => ({ ...f, videoUrl: e.target.value }))} />
+            </div>
+            <div className="flex gap-2">
+              <button onClick={addPortfolioItem} disabled={portfolioSaving || (!newPortfolio.imageUrl && !newPortfolio.videoUrl && !newPortfolio.title)}
+                className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-slate-900 font-semibold py-2 rounded-xl text-sm transition-colors">
+                {portfolioSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                Add to Portfolio
+              </button>
+              <button onClick={() => { setAddingPortfolio(false); setNewPortfolio({ title: '', description: '', imageUrl: '', videoUrl: '' }); }}
+                className="px-4 py-2 border border-white/10 rounded-xl text-sm text-slate-400 hover:text-white transition-colors">
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {portfolio.length === 0 && !addingPortfolio && (
+          <p className="text-sm text-slate-500 text-center py-4">No portfolio items yet. Add images or videos to showcase your work.</p>
+        )}
+      </div>
 
       {/* Save footer */}
       <div className="flex justify-end pb-10">

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { Star, MapPin, Phone, Globe, Mail, CheckCircle, Award, Crown, MessageCircle, Pencil } from "lucide-react";
+import { Star, MapPin, Phone, Globe, Mail, CheckCircle, Award, Crown, MessageCircle, Pencil, Linkedin, Instagram, Twitter, Facebook } from "lucide-react";
 import type { Metadata } from "next";
 import ExpertMap, { MapExpert } from "@/components/ExpertMap";
 import BookingWidget from "@/components/BookingWidget";
 import MessageButton from "@/components/MessageButton";
+import PortfolioLightbox from "@/components/PortfolioLightbox";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
 
@@ -38,8 +39,8 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
       where: { profileLink: slug, countryCode },
       include: {
         categories: { include: { category: true } },
-        services: { include: { category: true } },
-        portfolio: true,
+        services: { include: { category: true }, orderBy: { sortOrder: 'asc' } },
+        portfolio: { orderBy: { sortOrder: 'asc' } },
         reviews: {
           include: { client: { select: { id: true, name: true } } },
           orderBy: { createdAt: "desc" },
@@ -56,7 +57,6 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
     const isOwner = session.authenticated && session.email === expert.email;
     const displayName = expert.businessName || expert.name;
 
-    // Rating distribution
     const ratingDist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
     for (const r of expert.reviews) ratingDist[r.rating] = (ratingDist[r.rating] || 0) + 1;
     const avgRating =
@@ -80,10 +80,7 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
       },
       orderBy: [{ mapFeatured: "desc" }, { featured: "desc" }],
       take: 20,
-    }).catch((err) => {
-      console.error("[ExpertPage] nearby query error:", err);
-      return [];
-    });
+    }).catch(() => []);
 
     const currentExpertPin: MapExpert | null = (expert.latitude && expert.longitude) ? {
       id:          expert.id,
@@ -114,6 +111,13 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
       })),
     ];
 
+    const socialLinks = [
+      { url: (expert as unknown as { linkedinUrl?: string | null }).linkedinUrl, icon: Linkedin, label: 'LinkedIn', color: 'text-blue-400' },
+      { url: (expert as unknown as { instagramUrl?: string | null }).instagramUrl, icon: Instagram, label: 'Instagram', color: 'text-pink-400' },
+      { url: (expert as unknown as { twitterUrl?: string | null }).twitterUrl, icon: Twitter, label: 'Twitter', color: 'text-sky-400' },
+      { url: (expert as unknown as { facebookUrl?: string | null }).facebookUrl, icon: Facebook, label: 'Facebook', color: 'text-blue-500' },
+    ].filter(s => s.url);
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
         {/* Back nav */}
@@ -126,6 +130,11 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
         {/* Hero */}
         <section className="max-w-6xl mx-auto px-6 pb-10">
           <div className="rounded-2xl bg-slate-800/60 border border-white/8 overflow-hidden">
+            {expert.coverPhoto && (
+              <div className="w-full h-40 sm:h-52 overflow-hidden">
+                <img src={expert.coverPhoto} alt="Cover" className="w-full h-full object-cover" />
+              </div>
+            )}
             <div className="h-1.5 w-full bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500" />
 
             <div className="p-8 md:p-10 flex flex-col md:flex-row gap-8">
@@ -174,7 +183,7 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                   <p className="text-slate-300 text-sm leading-relaxed mb-4">{expert.shortDesc}</p>
                 )}
 
-                <div className="flex flex-wrap items-center gap-5 text-sm text-slate-400">
+                <div className="flex flex-wrap items-center gap-5 text-sm text-slate-400 mb-4">
                   {avgRating !== null && (
                     <span className="flex items-center gap-1.5">
                       <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
@@ -189,51 +198,50 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                     </span>
                   )}
                 </div>
+
+                {/* Social links */}
+                {socialLinks.length > 0 && (
+                  <div className="flex items-center gap-3">
+                    {socialLinks.map(({ url, icon: Icon, label, color }) => (
+                      <a key={label} href={url!} target="_blank" rel="noopener noreferrer"
+                        className={`${color} hover:opacity-80 transition-opacity`} title={label}>
+                        <Icon className="w-5 h-5" />
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Contact sidebar */}
               <div className="shrink-0 flex flex-col gap-3 min-w-[160px]">
                 {expert.phone && (
-                  <a
-                    href={`tel:${expert.phone}`}
-                    className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold px-5 py-2.5 rounded-xl transition-colors text-sm"
-                  >
+                  <a href={`tel:${expert.phone}`}
+                    className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold px-5 py-2.5 rounded-xl transition-colors text-sm">
                     <Phone className="w-4 h-4" /> Call Now
                   </a>
                 )}
                 {expert.whatsapp && (
-                  <a
-                    href={`https://wa.me/${expert.whatsapp.replace(/\D/g, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition-colors text-sm"
-                  >
+                  <a href={`https://wa.me/${expert.whatsapp.replace(/\D/g, "")}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition-colors text-sm">
                     <MessageCircle className="w-4 h-4" /> WhatsApp
                   </a>
                 )}
                 {expert.email && (
-                  <a
-                    href={`mailto:${expert.email}`}
-                    className="flex items-center justify-center gap-2 border border-white/15 hover:border-orange-500/40 text-slate-300 hover:text-white font-medium px-5 py-2.5 rounded-xl transition-colors text-sm"
-                  >
+                  <a href={`mailto:${expert.email}`}
+                    className="flex items-center justify-center gap-2 border border-white/15 hover:border-orange-500/40 text-slate-300 hover:text-white font-medium px-5 py-2.5 rounded-xl transition-colors text-sm">
                     <Mail className="w-4 h-4" /> Email
                   </a>
                 )}
                 {expert.webAddress && (
-                  <a
-                    href={expert.webAddress}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 border border-white/15 hover:border-orange-500/40 text-slate-300 hover:text-white font-medium px-5 py-2.5 rounded-xl transition-colors text-sm"
-                  >
+                  <a href={expert.webAddress} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 border border-white/15 hover:border-orange-500/40 text-slate-300 hover:text-white font-medium px-5 py-2.5 rounded-xl transition-colors text-sm">
                     <Globe className="w-4 h-4" /> Website
                   </a>
                 )}
                 {isOwner ? (
-                  <Link
-                    href="/dashboard/profile"
-                    className="flex items-center justify-center gap-2 border border-orange-500/40 hover:border-orange-500/70 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 font-medium px-5 py-2.5 rounded-xl transition-colors text-sm"
-                  >
+                  <Link href="/dashboard/profile"
+                    className="flex items-center justify-center gap-2 border border-orange-500/40 hover:border-orange-500/70 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 font-medium px-5 py-2.5 rounded-xl transition-colors text-sm">
                     <Pencil className="w-4 h-4" /> Edit Profile
                   </Link>
                 ) : (
@@ -259,22 +267,26 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
           <section className="max-w-6xl mx-auto px-6 pb-10">
             <h2 className="text-xl font-bold text-white mb-5">Services</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {expert.services.map((service) => (
-                <div key={service.id} className="rounded-2xl bg-slate-800/50 border border-white/8 hover:border-orange-500/30 transition-colors p-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Award className="w-4 h-4 text-orange-400" />
-                    <h3 className="font-semibold text-white">{service.name}</h3>
+              {expert.services.map((service) => {
+                const servicePrice = (service as unknown as { price?: number | null }).price;
+                return (
+                  <div key={service.id} className="rounded-2xl bg-slate-800/50 border border-white/8 hover:border-orange-500/30 transition-colors p-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Award className="w-4 h-4 text-orange-400 shrink-0" />
+                      <h3 className="font-semibold text-white">{service.name}</h3>
+                    </div>
+                    {service.description && (
+                      <p className="text-slate-400 text-sm leading-relaxed mb-4">{service.description}</p>
+                    )}
+                    {(servicePrice != null || service.rateUnit) && (
+                      <p className="text-orange-400 font-bold text-sm">
+                        {servicePrice != null ? `$${servicePrice.toLocaleString()}` : ''}
+                        {service.rateUnit ? ` ${service.rateUnit}` : ''}
+                      </p>
+                    )}
                   </div>
-                  {service.description && (
-                    <p className="text-slate-400 text-sm leading-relaxed mb-4">{service.description}</p>
-                  )}
-                  {service.rateUnit && (
-                    <p className="text-orange-400 font-bold text-sm">
-                      Billed {service.rateUnit}
-                    </p>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
@@ -286,30 +298,17 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
           </section>
         )}
 
-        {/* Portfolio */}
+        {/* Portfolio — client component for lightbox */}
         {expert.portfolio.length > 0 && (
           <section className="max-w-6xl mx-auto px-6 pb-10">
             <h2 className="text-xl font-bold text-white mb-5">Portfolio</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {expert.portfolio.map((item) => (
-                <div key={item.id} className="rounded-2xl bg-slate-800/50 border border-white/8 overflow-hidden hover:border-orange-500/30 transition-colors group">
-                  {item.imageUrl && (
-                    <div className="aspect-video overflow-hidden">
-                      <img
-                        src={item.imageUrl}
-                        alt="Portfolio"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  )}
-                  {item.videoUrl && !item.imageUrl && (
-                    <div className="aspect-video bg-slate-700 flex items-center justify-center">
-                      <span className="text-slate-400 text-sm">Video</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+            <PortfolioLightbox items={expert.portfolio.map(item => ({
+              id: item.id,
+              title: item.title,
+              description: item.description,
+              imageUrl: item.imageUrl,
+              videoUrl: item.videoUrl,
+            }))} />
           </section>
         )}
 
@@ -325,7 +324,6 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
             </div>
           ) : (
             <>
-              {/* Rating summary */}
               <div className="rounded-2xl bg-slate-800/50 border border-white/8 p-6 mb-6 flex flex-col sm:flex-row gap-6 items-center">
                 <div className="text-center shrink-0">
                   <p className="text-5xl font-bold text-orange-400">{avgRating!.toFixed(1)}</p>
@@ -342,10 +340,8 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                       <span className="text-xs text-slate-400 w-3">{star}</span>
                       <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                       <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-yellow-400 rounded-full"
-                          style={{ width: `${expert.reviews.length ? (ratingDist[star] / expert.reviews.length) * 100 : 0}%` }}
-                        />
+                        <div className="h-full bg-yellow-400 rounded-full"
+                          style={{ width: `${expert.reviews.length ? (ratingDist[star] / expert.reviews.length) * 100 : 0}%` }} />
                       </div>
                       <span className="text-xs text-slate-500 w-4">{ratingDist[star]}</span>
                     </div>
@@ -353,7 +349,6 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                 </div>
               </div>
 
-              {/* Review cards */}
               <div className="grid sm:grid-cols-2 gap-5">
                 {expert.reviews.map((review) => (
                   <div key={review.id} className="rounded-2xl bg-slate-800/50 border border-white/8 p-5">
@@ -402,7 +397,6 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
           </section>
         )}
 
-        {/* Footer */}
         <footer className="border-t border-white/5 bg-slate-950/50">
           <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
             <span>
