@@ -376,7 +376,9 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}
           className="flex flex-wrap items-center justify-center gap-6 mt-10 text-sm text-slate-400">
           <span className="flex items-center gap-2"><Shield className="h-4 w-4 text-green-400" />30-day money-back guarantee</span>
-          <span className="flex items-center gap-2"><Zap className="h-4 w-4 text-orange-400" />$999 = less than 11 months of Pro</span>
+          {lifetimePlans[0] && monthlyPlans[0] && (
+            <span className="flex items-center gap-2"><Zap className="h-4 w-4 text-orange-400" />${lifetimePlans[0].price} = less than {Math.ceil(lifetimePlans[0].price / monthlyPlans[0].price)} months of Pro</span>
+          )}
           <span className="flex items-center gap-2"><Star className="h-4 w-4 text-amber-400" />Founding Expert badge, yours forever</span>
         </motion.div>
 
