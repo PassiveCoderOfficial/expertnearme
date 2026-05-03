@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { MdSettings, MdSave, MdImage } from "react-icons/md";
 import dynamic from "next/dynamic";
+import BookingFeeSettings from "@/components/admin/BookingFeeSettings";
 
 const MediaBrowser = dynamic(() => import("@/components/media/MediaBrowser"), { ssr: false });
 
@@ -193,6 +194,9 @@ export default function SettingsPage() {
           description="Show the 'Continue with Google' button on auth pages (OAuth must be configured)."
         />
       </div>
+
+      {/* Booking Fee & Commissions */}
+      <BookingFeeSettings />
 
       {/* Note pointing to Payment Config */}
       <div className="rounded-2xl border border-blue-500/15 bg-blue-500/5 px-5 py-4 text-xs text-blue-300">

@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { LogoMark } from './Logo';
 import { setStoredCountry } from './CountryPickerModal';
 import FlagIcon from './FlagIcon';
+import { ThemeToggle } from './ThemeToggle';
 
 type CountryOption = { code: string; name: string; flagEmoji?: string };
 
@@ -185,6 +186,7 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="hidden md:flex items-center gap-3">
+          <ThemeToggle />
           <div className="w-56">
             <SearchBar currentCountry={currentCode || 'bd'} />
           </div>

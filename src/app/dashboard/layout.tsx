@@ -9,6 +9,7 @@ import {
   MdCurrencyExchange, MdEdit, MdClose, MdLogout,
   MdStar, MdMap, MdPayment, MdAdminPanelSettings, MdBarChart,
   MdFavorite, MdSearch, MdCampaign, MdSupportAgent, MdMessage, MdAccessTime,
+  MdArticle, MdHandshake,
 } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
 import { LogoMark } from "@/components/Logo";
@@ -29,6 +30,8 @@ const ADMIN_NAV: NavItem[] = [
   { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
   { name: "Messages",       href: "/dashboard/messages",            icon: <MdMessage /> },
   { name: "Reviews",        href: "/dashboard/reviews",             icon: <MdRateReview /> },
+  { name: "Blog",           href: "/dashboard/blog",                icon: <MdArticle /> },
+  { name: "Agents",         href: "/dashboard/agents",              icon: <MdHandshake /> },
   { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
   { name: "Media",          href: "/dashboard/media",               icon: <MdPhotoLibrary /> },
   { name: "Settings",       href: "/dashboard/settings",            icon: <MdSettings /> },
@@ -51,6 +54,7 @@ const MARKETER_NAV: NavItem[] = [
   { name: "Featured",       href: "/dashboard/featured",            icon: <MdStar /> },
   { name: "Categories",     href: "/dashboard/categories",          icon: <MdCategory /> },
   { name: "Pricing",        href: "/dashboard/pricing",             icon: <MdBarChart /> },
+  { name: "Blog",           href: "/dashboard/blog",                icon: <MdArticle /> },
   { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdCampaign /> },
   { name: "Media",          href: "/dashboard/media",               icon: <MdPhotoLibrary /> },
 ];
@@ -59,6 +63,7 @@ const SEO_NAV: NavItem[] = [
   { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
   { name: "Experts",        href: "/dashboard/experts",             icon: <MdPerson /> },
   { name: "Categories",     href: "/dashboard/categories",          icon: <MdCategory /> },
+  { name: "Blog",           href: "/dashboard/blog",                icon: <MdArticle /> },
   { name: "Settings",       href: "/dashboard/settings",            icon: <MdSettings /> },
 ];
 
@@ -79,6 +84,7 @@ const EXPERT_NAV: NavItem[] = [
   { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
   { name: "Messages",       href: "/dashboard/messages",            icon: <MdMessage /> },
   { name: "Reviews",        href: "/dashboard/reviews",             icon: <MdRateReview /> },
+  { name: "My Referrals",   href: "/dashboard/agents",              icon: <MdHandshake /> },
   { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
 ];
 
@@ -88,6 +94,7 @@ const BUYER_NAV: NavItem[] = [
   { name: "My Bookings",    href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
   { name: "Messages",       href: "/dashboard/messages",            icon: <MdMessage /> },
   { name: "My Reviews",     href: "/dashboard/reviews",             icon: <MdRateReview /> },
+  { name: "My Referrals",   href: "/dashboard/agents",              icon: <MdHandshake /> },
   { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
 ];
 
@@ -95,6 +102,7 @@ const USER_NAV: NavItem[] = [
   { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
   { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
   { name: "Reviews",        href: "/dashboard/reviews",             icon: <MdRateReview /> },
+  { name: "My Referrals",   href: "/dashboard/agents",              icon: <MdHandshake /> },
   { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
 ];
 
