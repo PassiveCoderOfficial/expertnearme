@@ -26,6 +26,7 @@ const ADMIN_NAV: NavItem[] = [
   { name: "Categories",     href: "/dashboard/categories",          icon: <MdCategory /> },
   { name: "Subscriptions",  href: "/dashboard/subscriptions",       icon: <MdCurrencyExchange /> },
   { name: "Pricing",        href: "/dashboard/pricing",             icon: <MdBarChart /> },
+  { name: "Ads & Featured", href: "/dashboard/ads",                 icon: <MdCampaign /> },
   { name: "Payment Config", href: "/dashboard/payment-config",      icon: <MdPayment /> },
   { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
   { name: "Messages",       href: "/dashboard/messages",            icon: <MdMessage /> },

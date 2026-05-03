@@ -6,6 +6,7 @@ import CountryPickerModal from "@/components/CountryPickerModal";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import AdBanner from "@/components/ads/AdBanner";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <ToastProvider>
             <AuthProvider>
               <Navbar />
+              <AdBanner />
               <CountryPickerModal />
               {children}
             </AuthProvider>

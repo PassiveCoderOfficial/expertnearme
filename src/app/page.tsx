@@ -3,6 +3,7 @@ import { ArrowRight, Shield, MapPin, Star, Users, CheckCircle, ChevronRight } fr
 import { prisma } from "@/lib/db";
 import { LogoMark } from "@/components/Logo";
 import FlagIcon from "@/components/FlagIcon";
+import AdFeaturedExperts from "@/components/ads/AdFeaturedExperts";
 
 export const dynamic = "force-dynamic";
 
@@ -206,6 +207,15 @@ export default async function GlobalHomePage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* ─── Sponsored Featured Experts ───────────────────────────── */}
+      <section className="max-w-6xl mx-auto px-6 py-12">
+        <AdFeaturedExperts
+          spot="HOME_FEATURED"
+          title="Featured Experts"
+          layout="grid"
+        />
       </section>
 
       {/* ─── For Experts CTA ──────────────────────────────────────── */}

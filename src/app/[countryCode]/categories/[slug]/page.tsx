@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { Star, Shield, Crown } from "lucide-react";
 import ExpertMap, { MapExpert } from "@/components/ExpertMap";
+import AdFeaturedExperts from "@/components/ads/AdFeaturedExperts";
 
 type Props = { params: Promise<{ countryCode: string; slug: string }> };
 
@@ -110,6 +111,15 @@ export default async function CountryCategoryPage({ params }: Props) {
               </Link>
             </div>
           ) : (
+            <>
+              <AdFeaturedExperts
+                spot="CATEGORY_FEATURED"
+                country={countryCode}
+                category={slug}
+                title="Sponsored in this Category"
+                layout="list"
+                className="mb-6"
+              />
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {experts.map((expert) => (
                 <Link
@@ -156,6 +166,7 @@ export default async function CountryCategoryPage({ params }: Props) {
                 </Link>
               ))}
             </div>
+            </>
           )}
         </div>
       </div>

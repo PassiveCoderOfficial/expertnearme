@@ -119,13 +119,16 @@ model Expert {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  categories    ExpertCategory[]
-  services      Service[]
-  portfolio     Portfolio[]
-  reviews       Review[]
-  bookings      Booking[]
-  savedBy       SavedExpert[]
-  availability  ExpertAvailability[]
+  categories         ExpertCategory[]
+  services           Service[]
+  portfolio          Portfolio[]
+  reviews            Review[]
+  bookings           Booking[]
+  savedBy            SavedExpert[]
+  availability       ExpertAvailability[]
+  adCampaigns        AdCampaign[]
+  credits            ExpertCredits?
+  creditTransactions CreditTransaction[]
 
   @@unique([countryCode, profileLink])
   @@index([countryCode])
@@ -551,4 +554,111 @@ enum BookingFeeStatus {
   PAID
   REFUNDED
   FAILED
+}
+
+// ===== Ads & Featured Placement System =====
+
+enum AdSpot {
+  BANNER_TOP       // spot 1 — exclusive sitewide banner
+  SEARCH_SPONSOR   // spot 2 — search results #1 sponsored
+  HOME_FEATURED    // spot 3 — global homepage featured experts
+  COUNTRY_FEATURED // spot 4 — country homepage featured
+  CATEGORY_FEATURED // spot 5 — category/listing page featured
+  PROFILE_SIDEBAR  // spot 6 — "similar experts" on profile page
+  MAP_FEATURED     // spot 7 — highlighted map pin
+}
+
+enum AdCampaignStatus {
+  PENDING   // awaiting admin approval
+  ACTIVE
+  PAUSED
+  EXPIRED
+  CANCELLED
+}
+
+enum AdBillingCycle {
+  WEEKLY
+  MONTHLY
+}
+
+// Config per spot — one row per AdSpot, editable from admin
+model AdPlacement {
+  id              Int      @id @default(autoincrement())
+  spot            AdSpot   @unique
+  label           String   // human-readable name
+  description     String?
+  weeklyPrice     Float    // USD
+  monthlyPrice    Float    // USD
+  maxSlots        Int      @default(5)  // max simultaneous buyers (0 = unlimited)
+  active          Boolean  @default(true)
+  requiresApproval Boolean @default(false) // banner needs manual approval
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  campaigns       AdCampaign[]
+}
+
+// An expert's booking of a placement spot
+model AdCampaign {
+  id            Int               @id @default(autoincrement())
+  expertId      Int
+  placementId   Int
+  billingCycle  AdBillingCycle
+  status        AdCampaignStatus  @default(PENDING)
+  startsAt      DateTime
+  endsAt        DateTime
+  amountPaid    Float
+  currency      String            @default("USD")
+  // For banner (spot 1): store the ad creative
+  bannerImageUrl String?
+  bannerLinkUrl  String?
+  bannerAltText  String?
+  // Targeting (spots 4 & 5)
+  targetCountry  String?           // ISO code — null = all countries
+  targetCategory String?           // category slug — null = all categories
+  // Metrics
+  impressions   Int               @default(0)
+  clicks        Int               @default(0)
+  // Payment
+  gatewayRef    String?
+  paymentMethod String?           // 'card' | 'credits'
+  creditsUsed   Int               @default(0)
+  // Admin notes
+  adminNote     String?
+  approvedBy    Int?
+  approvedAt    DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  expert        Expert            @relation(fields: [expertId], references: [id])
+  placement     AdPlacement       @relation(fields: [placementId], references: [id])
+
+  @@index([expertId])
+  @@index([placementId, status])
+  @@index([startsAt, endsAt])
+  @@index([targetCountry])
+}
+
+// Credit balance per expert (one row per expert, balance updated in place)
+model ExpertCredits {
+  id        Int      @id @default(autoincrement())
+  expertId  Int      @unique
+  balance   Int      @default(0)  // in credits (1 credit = $0.10)
+  updatedAt DateTime @updatedAt
+  expert    Expert   @relation(fields: [expertId], references: [id])
+}
+
+// Ledger — every credit earn/spend event
+model CreditTransaction {
+  id          Int      @id @default(autoincrement())
+  expertId    Int
+  amount      Int      // positive = credit, negative = debit
+  balanceAfter Int
+  type        String   // 'purchase' | 'campaign_spend' | 'refund' | 'promo'
+  description String?
+  campaignId  Int?
+  gatewayRef  String?
+  createdAt   DateTime @default(now())
+  expert      Expert   @relation(fields: [expertId], references: [id])
+
+  @@index([expertId])
+  @@index([createdAt])
 }

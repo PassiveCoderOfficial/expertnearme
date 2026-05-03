@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { Star, MapPin, Phone, Globe, Mail, CheckCircle, Award, Crown, MessageCircle, Pencil, Linkedin, Instagram, Twitter, Facebook } from "lucide-react";
 import type { Metadata } from "next";
 import ExpertMap, { MapExpert } from "@/components/ExpertMap";
+import AdFeaturedExperts from "@/components/ads/AdFeaturedExperts";
 import BookingWidget from "@/components/BookingWidget";
 import MessageButton from "@/components/MessageButton";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
@@ -372,6 +373,16 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
               </div>
             </>
           )}
+        </section>
+
+        {/* Sponsored similar experts */}
+        <section className="max-w-6xl mx-auto px-6 pb-6">
+          <AdFeaturedExperts
+            spot="PROFILE_SIDEBAR"
+            country={countryCode}
+            title="Sponsored Experts"
+            layout="list"
+          />
         </section>
 
         {/* Nearby Experts Map */}

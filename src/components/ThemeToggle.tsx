@@ -4,6 +4,24 @@ import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import { Sun, Moon, Monitor } from 'lucide-react';
 
+const OPTIONS = [
+  { value: 'light', icon: Sun, label: 'Light' },
+  { value: 'system', icon: Monitor, label: 'System' },
+  { value: 'dark', icon: Moon, label: 'Dark' },
+] as const;
+
+type ThemeValue = (typeof OPTIONS)[number]['value'];
+
+function themeStyles(value: ThemeValue): string {
+  if (value === 'light') {
+    return 'bg-white border-slate-200 text-orange-500 shadow-sm';
+  }
+  if (value === 'dark') {
+    return 'bg-slate-800 border-orange-500/60 text-white shadow-sm';
+  }
+  return 'bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-500 text-slate-600 dark:text-slate-300';
+}
+
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -12,26 +30,19 @@ export function ThemeToggle() {
 
   if (!mounted) return <div className="w-9 h-9" />;
 
-  const options = [
-    { value: 'light', icon: Sun, label: 'Light' },
-    { value: 'system', icon: Monitor, label: 'System' },
-    { value: 'dark', icon: Moon, label: 'Dark' },
-  ] as const;
-
-  const current = options.find((o) => o.value === theme) ?? options[2];
+  const current = OPTIONS.find((o) => o.value === theme) ?? OPTIONS[0];
   const Icon = current.icon;
 
   const cycleTheme = () => {
-    const idx = options.findIndex((o) => o.value === theme);
-    const next = options[(idx + 1) % options.length];
-    setTheme(next.value);
+    const idx = OPTIONS.findIndex((o) => o.value === theme);
+    setTheme(OPTIONS[(idx + 1) % OPTIONS.length].value);
   };
 
   return (
     <button
       onClick={cycleTheme}
-      title={`Theme: ${current.label}`}
-      className="flex items-center justify-center w-9 h-9 rounded-lg border border-white/15 bg-white/6 text-slate-300 hover:text-white hover:border-orange-500/40 transition-colors"
+      title={`Theme: ${current.label} — click to cycle`}
+      className={`flex items-center justify-center w-9 h-9 rounded-lg border-2 transition-all duration-200 hover:scale-105 ${themeStyles(current.value)}`}
     >
       <Icon className="w-4 h-4" />
     </button>

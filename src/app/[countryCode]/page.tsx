@@ -4,6 +4,7 @@ import { MapPin, Star, Users, Shield, Crown, ChevronRight, ArrowRight } from "lu
 import SearchBar from "@/components/SearchBar";
 import ExpertMap, { MapExpert } from "@/components/ExpertMap";
 import { prisma } from "@/lib/db";
+import AdFeaturedExperts from "@/components/ads/AdFeaturedExperts";
 
 interface Props {
   params: Promise<{ countryCode: string }>;
@@ -146,7 +147,12 @@ export default async function CountryPage({ params }: Props) {
         </section>
       )}
 
-      {/* Featured */}
+      {/* Paid sponsored featured experts */}
+      <section className="max-w-6xl mx-auto px-6 pb-6">
+        <AdFeaturedExperts spot="COUNTRY_FEATURED" country={code} title="Sponsored Experts" layout="list" />
+      </section>
+
+      {/* Organically featured */}
       {featured.length > 0 && (
         <section className="max-w-6xl mx-auto px-6 pb-14">
           <div className="flex items-center gap-3 mb-5">
