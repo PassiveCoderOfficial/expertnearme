@@ -2,7 +2,7 @@ name: Daily Backup
 
 on:
   schedule:
-    - cron: '0 * * * *'   # hourly — retention logic keeps only last N per day
+    - cron: '0 * * * *'
   workflow_dispatch:
     inputs:
       run_code:
@@ -33,7 +33,7 @@ jobs:
       - name: Fetch config from app
         id: cfg
         run: |
-          CFG=$(curl -s "${{ secrets.NEXT_PUBLIC_APP_URL }}/api/admin/backup/config" || echo '{}')
+          CFG=$(curl -sf "${{ secrets.NEXT_PUBLIC_APP_URL }}/api/admin/backup/config" || echo '{}')
           echo "enabled=$(echo $CFG | jq -r '.backup_enabled // "true"')" >> $GITHUB_OUTPUT
           echo "include_code=$(echo $CFG | jq -r '.backup_include_code // "true"')" >> $GITHUB_OUTPUT
           echo "include_db=$(echo $CFG | jq -r '.backup_include_db // "true"')" >> $GITHUB_OUTPUT
@@ -59,7 +59,7 @@ jobs:
         run: |
           mkdir -p ~/.config/rclone
           echo '${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}' > /tmp/gdrive-sa.json
-          printf '[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /tmp/gdrive-sa.json\n' > ~/.config/rclone/rclone.conf
+          printf '[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /tmp/gdrive-sa.json\nroot_folder_id = ${{ secrets.GDRIVE_FOLDER_ID }}\n' > ~/.config/rclone/rclone.conf
 
       - name: Run code backup
         env:
@@ -93,7 +93,7 @@ jobs:
         run: |
           mkdir -p ~/.config/rclone
           echo '${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}' > /tmp/gdrive-sa.json
-          printf '[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /tmp/gdrive-sa.json\n' > ~/.config/rclone/rclone.conf
+          printf '[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /tmp/gdrive-sa.json\nroot_folder_id = ${{ secrets.GDRIVE_FOLDER_ID }}\n' > ~/.config/rclone/rclone.conf
 
       - name: Run database backup
         env:
@@ -127,7 +127,7 @@ jobs:
         run: |
           mkdir -p ~/.config/rclone
           echo '${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}' > /tmp/gdrive-sa.json
-          printf '[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /tmp/gdrive-sa.json\n' > ~/.config/rclone/rclone.conf
+          printf '[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /tmp/gdrive-sa.json\nroot_folder_id = ${{ secrets.GDRIVE_FOLDER_ID }}\n' > ~/.config/rclone/rclone.conf
 
       - name: Run storage backup
         env:
@@ -159,7 +159,7 @@ jobs:
         run: |
           mkdir -p ~/.config/rclone
           echo '${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}' > /tmp/gdrive-sa.json
-          printf '[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /tmp/gdrive-sa.json\n' > ~/.config/rclone/rclone.conf
+          printf '[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /tmp/gdrive-sa.json\nroot_folder_id = ${{ secrets.GDRIVE_FOLDER_ID }}\n' > ~/.config/rclone/rclone.conf
 
       - name: Prune based on retention config
         env:

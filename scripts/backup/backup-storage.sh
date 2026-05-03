@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-# Downloads Supabase Storage bucket assets, tars them, uploads to Google Drive + FTP.
-# Env vars required:
-#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
-#   GDRIVE_FOLDER_ID, FTP_HOST, FTP_USER, FTP_PASS, FTP_DIR
+# Env vars: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, GDRIVE_FOLDER_ID, FTP_HOST, FTP_USER, FTP_PASS, FTP_DIR
 # Optional: APP_URL, CRON_SECRET
 set -euo pipefail
 
@@ -14,14 +11,22 @@ TMPFILE="/tmp/${FILENAME}"
 mkdir -p "$TMPDIR"
 
 echo "==> Listing Supabase storage buckets..."
-BUCKETS=$(curl -s \
+BUCKETS_JSON=$(curl -sf \
   -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
   -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
-  "${SUPABASE_URL}/storage/v1/bucket" | jq -r '.[].name')
+  "${SUPABASE_URL}/storage/v1/bucket" || echo "[]")
+
+BUCKETS=$(echo "$BUCKETS_JSON" | jq -r '.[].name // empty' || true)
+
+if [ -z "$BUCKETS" ]; then
+  echo "    No buckets found or API error — skipping storage backup"
+  exit 0
+fi
 
 echo "    Buckets: $(echo "$BUCKETS" | tr '\n' ' ')"
 
-for BUCKET in $BUCKETS; do
+while IFS= read -r BUCKET; do
+  [ -z "$BUCKET" ] && continue
   echo "==> Downloading bucket: $BUCKET"
   BUCKET_DIR="${TMPDIR}/${BUCKET}"
   mkdir -p "$BUCKET_DIR"
@@ -29,13 +34,14 @@ for BUCKET in $BUCKETS; do
   OFFSET=0
   LIMIT=1000
   while true; do
-    OBJECTS=$(curl -s \
+    OBJECTS=$(curl -sf \
       -X POST \
       -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
       -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
       -H "Content-Type: application/json" \
       -d "{\"prefix\":\"\",\"limit\":${LIMIT},\"offset\":${OFFSET}}" \
-      "${SUPABASE_URL}/storage/v1/object/list/${BUCKET}" | jq -r '.[].name // empty')
+      "${SUPABASE_URL}/storage/v1/object/list/${BUCKET}" \
+      | jq -r '.[].name // empty' || true)
 
     [ -z "$OBJECTS" ] && break
 
@@ -43,7 +49,7 @@ for BUCKET in $BUCKETS; do
       [ -z "$OBJECT" ] && continue
       DEST="${BUCKET_DIR}/${OBJECT}"
       mkdir -p "$(dirname "$DEST")"
-      curl -s \
+      curl -sf \
         -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
         -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
         "${SUPABASE_URL}/storage/v1/object/${BUCKET}/${OBJECT}" \
@@ -54,7 +60,7 @@ for BUCKET in $BUCKETS; do
     [ "$COUNT" -lt "$LIMIT" ] && break
     OFFSET=$((OFFSET + LIMIT))
   done
-done
+done <<< "$BUCKETS"
 
 echo "==> Compressing..."
 tar -czf "$TMPFILE" -C "$TMPDIR" .
@@ -63,10 +69,7 @@ echo "    Size: $STORAGE_SIZE"
 rm -rf "$TMPDIR"
 
 echo "==> Uploading to Google Drive..."
-rclone copy "$TMPFILE" "gdrive:expertnearme-backups/storage/" \
-  --drive-root-folder-id "$GDRIVE_FOLDER_ID" \
-  --transfers 1 \
-  --retries 3
+rclone copy "$TMPFILE" "gdrive:storage/" --retries 3
 echo "    Google Drive: done"
 
 echo "==> Uploading to FTP..."
@@ -80,7 +83,7 @@ echo "    FTP: done"
 rm -f "$TMPFILE"
 
 if [ -n "${APP_URL:-}" ] && [ -n "${CRON_SECRET:-}" ]; then
-  curl -s -X POST "${APP_URL}/api/admin/backup/status" \
+  curl -sf -X POST "${APP_URL}/api/admin/backup/status" \
     -H "Authorization: Bearer ${CRON_SECRET}" \
     -H "Content-Type: application/json" \
     -d "{\"status\":\"success\",\"storage_size\":\"${STORAGE_SIZE}\"}" || true

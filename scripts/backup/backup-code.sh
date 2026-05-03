@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Zips repo snapshot (excluding node_modules/.next), uploads to Google Drive + FTP.
-# Env vars required: GDRIVE_FOLDER_ID, FTP_HOST, FTP_USER, FTP_PASS, FTP_DIR
+# Env vars: GDRIVE_FOLDER_ID, FTP_HOST, FTP_USER, FTP_PASS, FTP_DIR
 # Optional: APP_URL, CRON_SECRET
 set -euo pipefail
 
@@ -20,10 +19,7 @@ CODE_SIZE=$(du -sh "$TMPFILE" | cut -f1)
 echo "    Size: $CODE_SIZE"
 
 echo "==> Uploading to Google Drive..."
-rclone copy "$TMPFILE" "gdrive:expertnearme-backups/code/" \
-  --drive-root-folder-id "$GDRIVE_FOLDER_ID" \
-  --transfers 1 \
-  --retries 3
+rclone copy "$TMPFILE" "gdrive:code/" --retries 3
 echo "    Google Drive: done"
 
 echo "==> Uploading to FTP..."
@@ -37,7 +33,7 @@ echo "    FTP: done"
 rm -f "$TMPFILE"
 
 if [ -n "${APP_URL:-}" ] && [ -n "${CRON_SECRET:-}" ]; then
-  curl -s -X POST "${APP_URL}/api/admin/backup/status" \
+  curl -sf -X POST "${APP_URL}/api/admin/backup/status" \
     -H "Authorization: Bearer ${CRON_SECRET}" \
     -H "Content-Type: application/json" \
     -d "{\"status\":\"success\",\"code_size\":\"${CODE_SIZE}\"}" || true
