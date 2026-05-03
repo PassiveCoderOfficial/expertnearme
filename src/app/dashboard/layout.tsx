@@ -9,7 +9,7 @@ import {
   MdCurrencyExchange, MdEdit, MdClose, MdLogout,
   MdStar, MdMap, MdPayment, MdAdminPanelSettings, MdBarChart,
   MdFavorite, MdSearch, MdCampaign, MdSupportAgent, MdMessage, MdAccessTime,
-  MdArticle, MdHandshake,
+  MdArticle, MdHandshake, MdBackup,
 } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
 import { LogoMark } from "@/components/Logo";
@@ -36,6 +36,7 @@ const ADMIN_NAV: NavItem[] = [
   { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
   { name: "Media",          href: "/dashboard/media",               icon: <MdPhotoLibrary /> },
   { name: "Settings",       href: "/dashboard/settings",            icon: <MdSettings /> },
+  { name: "Backup",         href: "/dashboard/backup",              icon: <MdBackup /> },
 ];
 
 const MANAGER_NAV: NavItem[] = [

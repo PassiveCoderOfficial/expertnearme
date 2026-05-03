@@ -1,0 +1,173 @@
+name: Daily Backup
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # hourly — retention logic keeps only last N per day
+  workflow_dispatch:
+    inputs:
+      run_code:
+        description: 'Backup code'
+        type: boolean
+        default: true
+      run_db:
+        description: 'Backup database'
+        type: boolean
+        default: true
+      run_storage:
+        description: 'Backup storage'
+        type: boolean
+        default: true
+
+jobs:
+  load-config:
+    name: Load Backup Config
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.cfg.outputs.enabled }}
+      include_code: ${{ steps.cfg.outputs.include_code }}
+      include_db: ${{ steps.cfg.outputs.include_db }}
+      include_storage: ${{ steps.cfg.outputs.include_storage }}
+      keep_hourly: ${{ steps.cfg.outputs.keep_hourly }}
+      keep_daily: ${{ steps.cfg.outputs.keep_daily }}
+    steps:
+      - name: Fetch config from app
+        id: cfg
+        run: |
+          CFG=$(curl -s "${{ secrets.NEXT_PUBLIC_APP_URL }}/api/admin/backup/config" || echo '{}')
+          echo "enabled=$(echo $CFG | jq -r '.backup_enabled // "true"')" >> $GITHUB_OUTPUT
+          echo "include_code=$(echo $CFG | jq -r '.backup_include_code // "true"')" >> $GITHUB_OUTPUT
+          echo "include_db=$(echo $CFG | jq -r '.backup_include_db // "true"')" >> $GITHUB_OUTPUT
+          echo "include_storage=$(echo $CFG | jq -r '.backup_include_storage // "true"')" >> $GITHUB_OUTPUT
+          echo "keep_hourly=$(echo $CFG | jq -r '.backup_hourly_keep // "4"')" >> $GITHUB_OUTPUT
+          echo "keep_daily=$(echo $CFG | jq -r '.backup_daily_keep // "6"')" >> $GITHUB_OUTPUT
+
+  backup-code:
+    name: Code Backup
+    runs-on: ubuntu-latest
+    needs: load-config
+    if: |
+      needs.load-config.outputs.enabled == 'true' &&
+      needs.load-config.outputs.include_code == 'true' &&
+      (github.event_name == 'schedule' || inputs.run_code == true)
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install rclone
+        run: curl -fsSL https://rclone.org/install.sh | sudo bash
+
+      - name: Configure rclone
+        run: |
+          mkdir -p ~/.config/rclone
+          echo '${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}' > /tmp/gdrive-sa.json
+          printf '[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /tmp/gdrive-sa.json\n' > ~/.config/rclone/rclone.conf
+
+      - name: Run code backup
+        env:
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
+          FTP_DIR: ${{ secrets.FTP_DIR }}
+          APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: bash scripts/backup/backup-code.sh
+
+  backup-database:
+    name: Database Backup
+    runs-on: ubuntu-latest
+    needs: load-config
+    if: |
+      needs.load-config.outputs.enabled == 'true' &&
+      needs.load-config.outputs.include_db == 'true' &&
+      (github.event_name == 'schedule' || inputs.run_db == true)
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install deps
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Install rclone
+        run: curl -fsSL https://rclone.org/install.sh | sudo bash
+
+      - name: Configure rclone
+        run: |
+          mkdir -p ~/.config/rclone
+          echo '${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}' > /tmp/gdrive-sa.json
+          printf '[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /tmp/gdrive-sa.json\n' > ~/.config/rclone/rclone.conf
+
+      - name: Run database backup
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
+          FTP_DIR: ${{ secrets.FTP_DIR }}
+          APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: bash scripts/backup/backup-db.sh
+
+  backup-storage:
+    name: Storage Backup
+    runs-on: ubuntu-latest
+    needs: load-config
+    if: |
+      needs.load-config.outputs.enabled == 'true' &&
+      needs.load-config.outputs.include_storage == 'true' &&
+      (github.event_name == 'schedule' || inputs.run_storage == true)
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get install -y jq
+          curl -fsSL https://rclone.org/install.sh | sudo bash
+
+      - name: Configure rclone
+        run: |
+          mkdir -p ~/.config/rclone
+          echo '${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}' > /tmp/gdrive-sa.json
+          printf '[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /tmp/gdrive-sa.json\n' > ~/.config/rclone/rclone.conf
+
+      - name: Run storage backup
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
+          FTP_DIR: ${{ secrets.FTP_DIR }}
+          APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: bash scripts/backup/backup-storage.sh
+
+  prune-old-backups:
+    name: Prune Old Backups
+    runs-on: ubuntu-latest
+    needs: [load-config, backup-code, backup-database, backup-storage]
+    if: always() && needs.load-config.outputs.enabled == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get install -y lftp
+          curl -fsSL https://rclone.org/install.sh | sudo bash
+
+      - name: Configure rclone
+        run: |
+          mkdir -p ~/.config/rclone
+          echo '${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}' > /tmp/gdrive-sa.json
+          printf '[gdrive]\ntype = drive\nscope = drive\nservice_account_file = /tmp/gdrive-sa.json\n' > ~/.config/rclone/rclone.conf
+
+      - name: Prune based on retention config
+        env:
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
+          FTP_DIR: ${{ secrets.FTP_DIR }}
+          KEEP_HOURLY: ${{ needs.load-config.outputs.keep_hourly }}
+          KEEP_DAILY: ${{ needs.load-config.outputs.keep_daily }}
+        run: bash scripts/backup/prune-old-backups.sh
