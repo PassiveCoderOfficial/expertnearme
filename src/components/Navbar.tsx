@@ -192,29 +192,31 @@ export default function Navbar() {
           </div>
           {session?.authenticated ? (
             <>
-              <Link href="/dashboard" className="text-sm font-medium text-white/90 hover:text-white transition-colors">
+              <Link href="/dashboard" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
                 Dashboard
               </Link>
               <button
                 onClick={logout}
-                className="text-sm font-medium text-white/90 hover:text-white transition-colors"
+                className="text-sm font-medium text-slate-400 hover:text-white transition-colors"
               >
                 Log Out
               </button>
             </>
           ) : (
             <>
-              <Link href="/login" className="text-sm font-medium text-white/90 hover:text-white transition-colors">
+              <Link href="/login" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
                 Login
               </Link>
-              <Link href="/signup" className="text-sm font-medium text-white/90 hover:text-white transition-colors">
-                Signup
+              <Link
+                href="/signup"
+                className="text-sm font-semibold bg-orange-500 hover:bg-orange-400 text-slate-900 px-4 py-1.5 rounded-lg transition-colors"
+              >
+                Sign Up
               </Link>
             </>
           )}
         </div>
 
-        {/* Mobile Nav */}
         <div className="md:hidden">
           <MobileNav />
         </div>

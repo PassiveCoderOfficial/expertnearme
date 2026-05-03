@@ -9,6 +9,7 @@ interface FeaturedExpert {
   name: string;
   slug: string;
   category: string;
+  shortDesc: string;
   rating: number;
   reviewCount: number;
   location: string;
@@ -22,6 +23,7 @@ const featuredExperts: FeaturedExpert[] = [
     name: "Exquisite Designs",
     slug: "exquisite-designs",
     category: "Carpentry",
+    shortDesc: "Custom carpentry and interior fit-out work for homes, offices, and commercial spaces.",
     rating: 5.0,
     reviewCount: 24,
     location: "Selangor, Malaysia",
@@ -33,6 +35,7 @@ const featuredExperts: FeaturedExpert[] = [
     name: "Anamika Global SDN BHD",
     slug: "anamika-global",
     category: "Metal Works",
+    shortDesc: "Metal fabrication and engineering support for residential and industrial projects.",
     rating: 4.9,
     reviewCount: 31,
     location: "Dengkil, Selangor",
@@ -44,6 +47,7 @@ const featuredExperts: FeaturedExpert[] = [
     name: "Al Chishty Engineering Work",
     slug: "chishty-engineering",
     category: "CNC Machining",
+    shortDesc: "Precision machining, fabrication, and custom engineering services in the UAE.",
     rating: 5.0,
     reviewCount: 47,
     location: "Ras Al Khaimah, UAE",
@@ -55,6 +59,7 @@ const featuredExperts: FeaturedExpert[] = [
     name: "Bagdad Curtains and Decorations",
     slug: "bagdad-curtains",
     category: "Home Decor",
+    shortDesc: "Curtains, blinds, and decorative finishing tailored to modern interiors.",
     rating: 4.8,
     reviewCount: 19,
     location: "Baghdad, Iraq",
@@ -66,6 +71,7 @@ const featuredExperts: FeaturedExpert[] = [
     name: "Qatar Furniture Market",
     slug: "qatar-furniture",
     category: "Furniture",
+    shortDesc: "Furniture sourcing and home furnishing solutions for residential and office clients.",
     rating: 4.7,
     reviewCount: 28,
     location: "Qatar",
@@ -267,7 +273,7 @@ export default function HomePage() {
 
                 {/* Short Description */}
                 <p className="text-gray-700 mb-6 leading-relaxed">
-                  {featuredExperts.find(e => e.id === expert.id)?.shortDesc}
+                  {expert.shortDesc}
                 </p>
 
                 {/* Contact Actions */}
@@ -342,7 +348,7 @@ export default function HomePage() {
               <h4 className="font-bold text-lg mb-4 text-orange-400">Contact</h4>
               <ul className="space-y-2 text-sm text-gray-300">
                 <li><Link href="/support" className="hover:text-white transition-colors">Support</Link></li>
-                <li><a href="mailto:info@expertnear.me" className="hover:text-white transition-colors">Email Us</Link></li>
+                <li><a href="mailto:info@expertnear.me" className="hover:text-white transition-colors">Email Us</a></li>
               </ul>
             </div>
           </div>

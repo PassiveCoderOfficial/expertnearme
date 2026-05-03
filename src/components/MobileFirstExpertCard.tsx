@@ -1,13 +1,14 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, type ReactElement } from 'react';
 import { Heart, MapPin, StarIcon, CheckCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
 
 interface Expert {
   id: string;
   name: string;
+  profileLink?: string;
   avatar?: string;
   rating: number;
   reviewCount: number;
@@ -45,7 +46,7 @@ export default function MobileFirstExpertCard({
   const handleAction = (action: 'view' | 'message') => {
     if (action === 'view') {
       // Navigate to expert detail page
-      window.location.href = `/${countryCode}/experts/${expert.id}`;
+      window.location.href = `/${countryCode}/expert/${expert.profileLink || expert.id}`;
     } else if (action === 'message') {
       // Open messaging interface
       console.log('Opening message interface for:', expert.name);
@@ -81,7 +82,7 @@ export default function MobileFirstExpertCard({
     return expert.responseTime || 'N/A';
   };
 
-  const iconMap: Record<string, JSX.Element> = {
+  const iconMap: Record<string, ReactElement> = {
     'Technology': <StarIcon className="w-4 h-4" />,
     'Health': <StarIcon className="w-4 h-4" />,
     'Transport': <StarIcon className="w-4 h-4" />,
@@ -231,7 +232,7 @@ export default function MobileFirstExpertCard({
                 {/* Quick actions */}
                 <div className="flex gap-1 mt-3">
                   <Link
-                    href={`/${countryCode}/experts/${expert.id}`}
+                    href={`/${countryCode}/expert/${expert.profileLink || expert.id}`}
                     className="flex-1 px-3 py-1.5 bg-blue-500 text-white text-xs font-medium rounded-lg hover:bg-blue-600 transition-colors text-center"
                   >
                     View
@@ -367,7 +368,7 @@ export default function MobileFirstExpertCard({
             {/* Contact buttons */}
             <div className="flex gap-3">
               <Link
-                href={`/${countryCode}/experts/${expert.id}`}
+                href={`/${countryCode}/expert/${expert.profileLink || expert.id}`}
                 className="flex-1 px-4 py-3 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors text-center"
               >
                 View Profile

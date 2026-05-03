@@ -1,4 +1,3 @@
-// src/app/dashboard/users/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -19,15 +18,16 @@ const inputCls = "w-full bg-slate-900/60 border border-white/10 rounded-xl px-3 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "USER" });
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
+  const flash = (text: string, ok = true) => { setMessage({ text, ok }); setTimeout(() => setMessage(null), 3000); };
+
+  useEffect(() => { loadUsers(); }, []);
 
   async function loadUsers() {
     setLoading(true);
@@ -40,108 +40,52 @@ export default function UsersPage() {
   }
 
   async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    setCreating(true);
-    setMessage(null);
+    e.preventDefault(); setSaving(true);
     try {
-      const res = await fetch("/api/admin/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        setMessage("User created");
-        setForm({ name: "", email: "", password: "", role: "USER" });
-        await loadUsers();
-      } else {
-        setMessage(data.error || "Create failed");
-      }
-    } catch (err) {
-      console.error(err);
-      setMessage("Create failed");
-    } finally {
-      setCreating(false);
-      setTimeout(() => setMessage(null), 3000);
-    }
+      const res = await fetch("/api/admin/users", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      const d = await res.json();
+      if (d.ok) { flash("User created"); setForm({ name: "", email: "", password: "", role: "USER" }); loadUsers(); }
+      else flash(d.error || "Create failed", false);
+    } catch { flash("Create failed", false); }
+    finally { setSaving(false); }
+  }
+
+  async function handleUpdate(e: React.FormEvent) {
+    e.preventDefault(); if (!editingId) return; setSaving(true);
+    try {
+      const res = await fetch("/api/admin/users", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: editingId, name: form.name, email: form.email, role: form.role }) });
+      const d = await res.json();
+      if (d.ok) { flash("Updated"); cancelEdit(); loadUsers(); }
+      else flash(d.error || "Update failed", false);
+    } catch { flash("Update failed", false); }
+    finally { setSaving(false); }
   }
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this user?")) return;
     try {
-      const res = await fetch("/api/admin/users", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        setMessage("Deleted");
-        await loadUsers();
-      } else {
-        setMessage(data.error || "Delete failed");
-      }
-    } catch (err) {
-      console.error(err);
-      setMessage("Delete failed");
-    } finally {
-      setTimeout(() => setMessage(null), 3000);
-    }
+      const res = await fetch("/api/admin/users", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+      const d = await res.json();
+      if (d.ok) { flash("Deleted"); loadUsers(); } else flash(d.error || "Delete failed", false);
+    } catch { flash("Delete failed", false); }
   }
 
-  async function handleRoleSwitch(id: string, newRole: string) {
+  async function handleRoleSwitch(id: string, role: string) {
     try {
-      const res = await fetch("/api/admin/users", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, role: newRole }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        setMessage("Role updated");
-        await loadUsers();
-      } else {
-        setMessage(data.error || "Update failed");
-      }
-    } catch (err) {
-      console.error(err);
-      setMessage("Update failed");
-    } finally {
-      setTimeout(() => setMessage(null), 3000);
-    }
+      const res = await fetch("/api/admin/users", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, role }) });
+      const d = await res.json();
+      if (d.ok) { flash("Role updated"); loadUsers(); } else flash(d.error || "Failed", false);
+    } catch { flash("Failed", false); }
   }
 
-  async function startEdit(user: User) {
-    setEditingId(user.id);
-    setForm({ name: user.name || "", email: user.email, password: "", role: user.role });
+  function startEdit(u: User) {
+    setEditingId(u.id);
+    setForm({ name: u.name || "", email: u.email, password: "", role: u.role });
   }
 
-  async function handleUpdate(e: React.FormEvent) {
-    e.preventDefault();
-    if (!editingId) return;
-    setCreating(true);
-    try {
-      const res = await fetch("/api/admin/users", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: editingId, name: form.name, email: form.email, role: form.role }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        setMessage("Updated");
-        setEditingId(null);
-        setForm({ name: "", email: "", password: "", role: "USER" });
-        await loadUsers();
-      } else {
-        setMessage(data.error || "Update failed");
-      }
-    } catch (err) {
-      console.error(err);
-      setMessage("Update failed");
-    } finally {
-      setCreating(false);
-      setTimeout(() => setMessage(null), 3000);
-    }
+  function cancelEdit() {
+    setEditingId(null);
+    setForm({ name: "", email: "", password: "", role: "USER" });
   }
 
   const filtered = users.filter((u) => {
@@ -194,18 +138,16 @@ export default function UsersPage() {
             <input value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} placeholder="Name" className={inputCls} />
             <input value={form.email} onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))} placeholder="Email" type="email" className={inputCls} required />
             {!editingId && (
-              <input
-                value={form.password}
-                onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
-                placeholder="Password"
-                type="password"
-                className="w-full border rounded px-3 py-2"
-                required
-              />
+              <input value={form.password} onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))} placeholder="Password" type="password" className={inputCls} required />
             )}
             <select value={form.role} onChange={(e) => setForm((s) => ({ ...s, role: e.target.value }))} className={inputCls}>
               {CUSTOMER_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
+            <button type="submit" disabled={saving} className="w-full bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold py-2 rounded-xl text-sm transition-colors disabled:opacity-50">
+              {saving ? "Saving…" : editingId ? "Update" : "Create"}
+            </button>
+          </form>
+        </div>
 
         {/* Table */}
         <div className="md:col-span-2 space-y-3">
@@ -265,6 +207,6 @@ export default function UsersPage() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

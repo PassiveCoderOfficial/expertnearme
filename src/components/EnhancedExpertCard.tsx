@@ -13,7 +13,7 @@ interface Expert {
   avatar?: string;
   rating: number;
   reviewCount: number;
-  categories?: Array<{ id: number; name: string; color?: string }>;
+  categories?: Array<{ id: number; name: string; color?: string; icon?: string }>;
   bio?: string;
   shortDesc?: string;
   verified: boolean;

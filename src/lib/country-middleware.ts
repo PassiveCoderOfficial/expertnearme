@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export const runtime = 'edge';
 
-const COUNTRIES = [
+export const COUNTRIES = [
   { code: "bd", name: "Bangladesh", currency: "BDT", timezone: "Asia/Dhaka", flag: "🇧🇩" },
   { code: "ae", name: "UAE", currency: "AED", timezone: "Asia/Dubai", flag: "🇦🇪" },
   { code: "qa", name: "Qatar", currency: "QAR", timezone: "Asia/Qatar", flag: "🇶🇦" },

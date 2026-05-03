@@ -1,5 +1,4 @@
-// src/app/search/page.tsx
-'use client';
+"use client";
 
 import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
@@ -78,80 +77,13 @@ function SearchPageContent() {
       finally { setIsLoading(false); }
     })();
 
-  const fetchInitialData = async () => {
-    try {
-      const [categoriesData, providersData] = await Promise.all([
-        prisma.category.findMany({
-          where: { active: true },
-          orderBy: { name: "asc" }
-        }),
-        prisma.expert.findMany({
-          where: { verified: true },
-          include: {
-            categories: {
-              include: {
-                category: true
-              }
-            },
-            reviews: {
-              select: {
-                rating: true
-              }
-            }
-          },
-          orderBy: { createdAt: "desc" }
-        })
-      ]);
-
-      setCategories(categoriesData);
-      
-      const transformedProviders = providersData.map(expert => {
-        const category = expert.categories[0]?.category;
-        const averageRating = expert.reviews.length > 0 
-          ? expert.reviews.reduce((sum, review) => sum + review.rating, 0) / expert.reviews.length 
-          : 0;
-        
-        return {
-          id: expert.id,
-          name: expert.name,
-          phone: expert.phone,
-          shortDesc: expert.shortDesc,
-          officeAddress: expert.officeAddress,
-          latitude: expert.latitude,
-          longitude: expert.longitude,
-          category: category || {
-            id: 0,
-            name: 'Uncategorized',
-            slug: 'uncategorized',
-            color: '#666666'
-          },
-          reviews: expert.reviews.map(r => ({ rating: r.rating }))
-        };
-      });
-
-      setProviders(transformedProviders);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-        }
+        (p) => setUserLocation({ lat: p.coords.latitude, lng: p.coords.longitude }),
+        () => {}
       );
     }
-  };
+  }, [countryCode]);
 
   // Fetch sponsored expert from search API whenever query changes
   const fetchSponsored = useCallback(async (q: string) => {
@@ -194,31 +126,30 @@ function SearchPageContent() {
   const primaryCat = (e: Expert) => e.categories?.[0]?.category;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Search Header */}
-      <div className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white pt-16">
+      {/* Sticky search bar */}
+      <div className="sticky top-16 z-30 bg-slate-950/90 backdrop-blur-md border-b border-white/8">
+        <div className="max-w-5xl mx-auto px-6 py-3">
+          <div className="flex gap-3 items-center">
             <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <input
                 type="text"
-                placeholder="Search experts, services, or locations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search experts, services…"
+                className="w-full bg-slate-800/60 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-orange-500/40 transition-colors"
               />
-              <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
             <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              onClick={() => setShowFilters((v) => !v)}
+              className={`flex items-center gap-2 border px-4 py-2 rounded-xl text-sm transition-colors ${showFilters ? "border-orange-500/50 bg-orange-500/10 text-orange-300" : "border-white/10 text-slate-400 hover:text-white"}`}
             >
-              <Filter className="h-4 w-4" />
-              Filters
+              <Filter className="w-4 h-4" /> Filters
+              {(selectedCat || userLocation) && <span className="w-1.5 h-1.5 rounded-full bg-orange-400 ml-1" />}
             </button>
           </div>
-          
-          {/* Filters */}
+
           {showFilters && (
             <div className="flex flex-wrap gap-3 pt-3 pb-1">
               <select value={selectedCat} onChange={(e) => setSelectedCat(e.target.value)}
@@ -260,9 +191,8 @@ function SearchPageContent() {
         </p>
 
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="text-gray-600 mt-4">Loading...</p>
+          <div className="flex items-center justify-center h-40">
+            <div className="w-8 h-8 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
           </div>
         ) : (
           <>
@@ -357,5 +287,13 @@ function SearchPageContent() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800" />}>
+      <SearchPageContent />
+    </Suspense>
   );
 }

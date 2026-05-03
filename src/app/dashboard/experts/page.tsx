@@ -453,21 +453,25 @@ export default function ExpertsPage() {
     : `${origin}/[country]/expert/...`;
 
   return (
-    <div className="p-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <h2 className="text-2xl font-bold">Manage Experts</h2>
+    <div className="space-y-6 max-w-6xl">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={openCreateWizard} className="bg-[#b84c4c] text-white px-4 py-2 rounded">
-            Add Expert
-          </button>
+          <div className="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400 text-xl">👤</div>
+          <div>
+            <h2 className="text-xl font-bold text-white">Manage Experts</h2>
+            <p className="text-xs text-slate-400">{experts.length} total</p>
+          </div>
         </div>
+        <button onClick={openCreateWizard} className="bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold px-4 py-2 rounded-xl text-sm transition-colors">
+          + Add Expert
+        </button>
       </div>
 
-      {error && <div className="mb-4 text-red-500">{error}</div>}
-      {success && <div className="mb-4 text-green-600">{success}</div>}
+      {error && <div className="bg-red-500/15 border border-red-500/25 text-red-300 text-sm rounded-xl px-4 py-3">{error}</div>}
+      {success && <div className="bg-green-500/15 border border-green-500/25 text-green-300 text-sm rounded-xl px-4 py-3">{success}</div>}
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-200 text-sm">
+      <div className="rounded-2xl border border-white/8 bg-slate-800/40 overflow-x-auto">
+        <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/8 text-slate-500 text-xs uppercase tracking-wider">
               <th className="text-left px-4 py-3">Name</th>
@@ -481,19 +485,11 @@ export default function ExpertsPage() {
           </thead>
           <tbody>
             {loading && (
-              <tr>
-                <td colSpan={7} className="text-center py-6">
-                  Loading...
-                </td>
-              </tr>
+              <tr><td colSpan={6} className="text-center py-10"><div className="w-7 h-7 rounded-full border-2 border-orange-500 border-t-transparent animate-spin mx-auto" /></td></tr>
             )}
 
             {!loading && experts.length === 0 && (
-              <tr>
-                <td colSpan={7} className="text-center py-6 text-sm text-gray-500">
-                  No experts yet.
-                </td>
-              </tr>
+              <tr><td colSpan={6} className="text-center py-10 text-slate-500 text-sm">No experts yet.</td></tr>
             )}
 
             {experts.map((expert) => (
@@ -539,16 +535,14 @@ export default function ExpertsPage() {
 
       {/* Wizard Modal */}
       {isWizardOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setWizardOpen(false)} />
-          <div className="relative w-full max-w-4xl bg-white rounded shadow-lg overflow-auto max-h-[90vh]">
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <h3 className="text-lg font-semibold">{isEditing ? "Edit Expert" : "Add Expert"}</h3>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">Step {step} / 4</span>
-                <button onClick={() => setWizardOpen(false)} className="text-gray-600 hover:text-gray-900">
-                  Close
-                </button>
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-8 px-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setWizardOpen(false)} />
+          <div className="relative w-full max-w-4xl bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-auto max-h-[90vh]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
+              <h3 className="text-base font-semibold text-white">{isEditing ? "Edit Expert" : "Add Expert"}</h3>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-slate-500">Step {step} / 4</span>
+                <button onClick={() => setWizardOpen(false)} className="text-slate-500 hover:text-white transition-colors text-sm">Close</button>
               </div>
             </div>
 
@@ -825,18 +819,16 @@ export default function ExpertsPage() {
               )}
 
               {/* Footer */}
-              <div className="flex flex-col sm:flex-row items-center justify-between mt-6 border-t pt-4 gap-3">
+              <div className="flex flex-col sm:flex-row items-center justify-between mt-6 border-t border-white/8 pt-4 gap-3">
                 <div className="flex gap-2">
-                  {step > 1 && <button onClick={() => setStep((s) => Math.max(1, s - 1))} className="px-3 py-2 border rounded">Back</button>}
-                  {step < 4 && <button onClick={() => setStep((s) => Math.min(4, s + 1))} className="px-3 py-2 bg-gray-200 rounded">Next</button>}
+                  {step > 1 && <button onClick={() => setStep((s) => Math.max(1, s - 1))} className="px-4 py-2 border border-white/10 text-slate-300 hover:text-white rounded-xl text-sm transition-colors">Back</button>}
                 </div>
-
                 <div className="flex items-center gap-3">
-                  <button onClick={() => setWizardOpen(false)} className="px-3 py-2 border rounded">Cancel</button>
+                  <button onClick={() => setWizardOpen(false)} className="px-4 py-2 border border-white/10 text-slate-400 hover:text-white rounded-xl text-sm transition-colors">Cancel</button>
                   {step === 4 ? (
-                    <button onClick={submitWizard} className="px-4 py-2 bg-[#b84c4c] text-white rounded">{isEditing ? "Save Changes" : "Create Expert"}</button>
+                    <button onClick={submitWizard} className="px-5 py-2 bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold rounded-xl text-sm transition-colors">{isEditing ? "Save Changes" : "Create Expert"}</button>
                   ) : (
-                    <button onClick={() => setStep((s) => Math.min(4, s + 1))} className="px-4 py-2 bg-[#b84c4c] text-white rounded">Continue</button>
+                    <button onClick={() => setStep((s) => Math.min(4, s + 1))} className="px-5 py-2 bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold rounded-xl text-sm transition-colors">Continue →</button>
                   )}
                 </div>
               </div>

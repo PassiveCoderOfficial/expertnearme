@@ -1,7 +1,6 @@
-// src/app/dashboard/layout.tsx
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -13,6 +12,7 @@ import {
   MdArticle, MdHandshake,
 } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
+import { LogoMark } from "@/components/Logo";
 
 type NavItem = { name: string; href: string; icon: React.ReactNode };
 
@@ -170,22 +170,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   useEffect(() => {
-    if (!loading && (!session || session.authenticated === false)) {
-      router.push("/login");
-    }
+    if (!loading && (!session || !session.authenticated)) router.push("/login");
   }, [session, loading, router]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#b84c4c]"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="w-10 h-10 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
       </div>
     );
   }
 
-  if (!session?.authenticated) {
-    return null;
-  }
+  if (!session?.authenticated) return null;
 
   const role = session.role || "USER";
   const navItems = NAV_BY_ROLE[role] || USER_NAV;
@@ -225,10 +221,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-2 px-3 py-2 rounded transition-colors ${
-                pathname === item.href
-                  ? "bg-[#b84c4c] text-white"
-                  : "hover:bg-gray-800 hover:text-white"
+              onClick={() => setSidebarOpen(false)}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                active
+                  ? "bg-orange-500/20 text-orange-300 border border-orange-500/20"
+                  : "text-slate-400 hover:text-white hover:bg-white/5"
               }`}
             >
               <span className={`text-lg ${active ? "text-orange-400" : "text-slate-500"}`}>{item.icon}</span>
@@ -239,8 +236,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </span>
               )}
             </Link>
-          ))}
-        </nav>
+          );
+        })}
+      </nav>
 
       {/* Logout */}
       <div className="px-3 py-4 border-t border-white/8">

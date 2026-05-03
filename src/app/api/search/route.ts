@@ -1,17 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
 
-export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams;
-    const q = searchParams.get('q')?.toLowerCase().trim();
-    const country = searchParams.get('country')?.toLowerCase().trim();
-    const category = searchParams.get('category')?.toLowerCase().trim();
-    // serviceType parameter is ignored for now (not in schema)
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const q = searchParams.get("q")?.trim() || "";
+  const country = searchParams.get("country")?.toLowerCase() || "";
 
-    const where: any = {
-      verified: true,
-    };
+  if (q.length < 2) {
+    return NextResponse.json({ sponsored: null, providers: [], categories: [] });
+  }
 
   const [expertResults, categoryResults] = await Promise.all([
     prisma.expert.findMany({
@@ -25,64 +22,50 @@ export async function GET(request: NextRequest) {
         ],
       },
       include: {
-        categories: {
-          include: {
-            category: true,
-          },
-        },
-        services: {
-          include: {
-            category: true,
-          },
-        },
-        reviews: {
-          select: {
-            rating: true,
-          },
-        },
+        categories: { include: { category: true } },
+        reviews: { select: { rating: true } },
       },
-      orderBy: {
-        featured: 'desc',
+      orderBy: [{ featured: "desc" }, { foundingExpert: "desc" }],
+      take: 10,
+    }),
+    prisma.category.findMany({
+      where: {
+        active: true,
+        ...(country ? { countryCode: country } : {}),
+        name: { contains: q },
       },
-    });
+      take: 5,
+    }),
+  ]);
 
-    const results = experts.map((expert) => {
-      const ratings = expert.reviews.map((r) => r.rating);
-      const avgRating = ratings.length > 0
-        ? ratings.reduce((a, b) => a + b, 0) / ratings.length
-        : 0;
+  const toItem = (e: (typeof expertResults)[0]) => ({
+    id: e.id,
+    name: e.businessName || e.name,
+    isBusiness: e.isBusiness,
+    featured: e.featured,
+    foundingExpert: e.foundingExpert,
+    profileLink: e.profileLink || String(e.id),
+    categories: e.categories.map((c) => c.category.name),
+    avgRating:
+      e.reviews.length > 0
+        ? e.reviews.reduce((s, r) => s + r.rating, 0) / e.reviews.length
+        : null,
+  });
 
-      return {
-        id: expert.id,
-        name: expert.name,
-        bio: expert.bio,
-        avatar: expert.profilePicture || undefined,
-        email: expert.email,
-        phone: expert.phone || undefined,
-        rating: avgRating,
-        reviewCount: expert.reviews.length,
-        categories: expert.categories.map((ec) => ({
-          id: ec.category.id,
-          name: ec.category.name,
-        })),
-        services: expert.services.map((svc) => ({
-          id: svc.id,
-          name: svc.name,
-          description: svc.description,
-        })),
-      };
-    });
+  const sponsored = expertResults.find((e) => e.featured) ?? null;
+  const providers = expertResults
+    .filter((e) => !e.featured)
+    .slice(0, 6)
+    .map(toItem);
 
-    return NextResponse.json({
-      success: true,
-      count: results.length,
-      data: results,
-    });
-  } catch (error) {
-    console.error('Search error:', error);
-    return NextResponse.json(
-      { error: 'Search failed', success: false },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json({
+    sponsored: sponsored ? toItem(sponsored) : null,
+    providers,
+    categories: categoryResults.map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      icon: c.icon,
+    })),
+  });
 }

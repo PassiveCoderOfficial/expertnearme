@@ -1,9 +1,10 @@
-// src/app/page.tsx
+import Link from "next/link";
+import { ArrowRight, Shield, MapPin, Star, Users, CheckCircle, ChevronRight } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { LogoMark } from "@/components/Logo";
 import FlagIcon from "@/components/FlagIcon";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function GlobalHomePage() {
   let countries: { code: string; name: string; flagEmoji: string | null; metaDesc: string | null }[] = [];
@@ -28,35 +29,68 @@ export default async function GlobalHomePage() {
     console.error("[Homepage] DB error:", err);
   }
 
-    // Transform providers data for the map
-    const mapProviders = providers.map(expert => {
-      const category = expert.categories[0]?.category;
-      return {
-        id: expert.id,
-        name: expert.name,
-        latitude: expert.latitude || 0,
-        longitude: expert.longitude || 0,
-        phone: expert.phone,
-        category: category || {
-          id: 0,
-          name: 'Uncategorized',
-          slug: 'uncategorized',
-          color: '#666666'
-        }
-      };
-    }).filter(provider => provider.latitude && provider.longitude);
+  const stats = [
+    { value: expertCount.toString(), label: "Verified Experts" },
+    { value: countries.length.toString(), label: "Countries" },
+    { value: categoryCount.toString(), label: "Categories" },
+    { value: "Free", label: "To Browse" },
+  ];
 
-    return (
-      <main>
-        <MobileFirstHero onScrollTo="categories" />
+  const howItWorks = [
+    {
+      step: "01",
+      title: "Pick Your Country",
+      desc: "Select the country you're in or looking for experts in. We support multiple markets across Asia and the Middle East.",
+    },
+    {
+      step: "02",
+      title: "Browse or Search",
+      desc: "Explore by category — IT, legal, health, MEP, and more — or search directly by name or service.",
+    },
+    {
+      step: "03",
+      title: "Contact & Hire",
+      desc: "Every listing includes direct contact details. No middleman, no platform fees for buyers.",
+    },
+  ];
 
-        {/* Interactive Map Section */}
-        <section className="max-w-7xl mx-auto px-6 py-16">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Find Experts Near You</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Explore verified professionals in your area. Click on pins to view details, or filter by category.
-            </p>
+  const whyUs = [
+    {
+      icon: <Shield className="w-5 h-5 text-orange-400" />,
+      title: "Manually Verified",
+      desc: "Every expert on the platform is reviewed before going live. No ghost listings.",
+    },
+    {
+      icon: <MapPin className="w-5 h-5 text-orange-400" />,
+      title: "Truly Local",
+      desc: "Country-specific categories and experts. Built for expats and locals who need someone nearby.",
+    },
+    {
+      icon: <Star className="w-5 h-5 text-orange-400" />,
+      title: "Reviewed by Clients",
+      desc: "Real ratings from real bookings. Find the best-rated professionals in your area.",
+    },
+    {
+      icon: <Users className="w-5 h-5 text-orange-400" />,
+      title: "Free to Browse",
+      desc: "Searching and contacting experts is always free. No sign-up required to browse listings.",
+    },
+  ];
+
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
+
+      {/* ─── Hero ─────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden pt-32 pb-20 px-6">
+        {/* Subtle radial glow */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-orange-500/8 rounded-full blur-3xl" />
+        </div>
+
+        <div className="relative max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 text-orange-300 text-xs font-semibold px-4 py-2 rounded-full mb-8 tracking-widest uppercase">
+            <LogoMark size={16} />
+            ExpertNear.Me
           </div>
 
           <h1 className="text-5xl sm:text-6xl font-bold leading-tight mb-6 tracking-tight">
@@ -84,16 +118,18 @@ export default async function GlobalHomePage() {
               List Your Business
             </Link>
           </div>
-        </section>
+        </div>
 
-        {/* Category Showcase */}
-        <section id="categories" className="max-w-6xl mx-auto px-6 py-16">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Popular Categories</h2>
-          <MobileFirstCategoryGrid 
-            categories={categories} 
-            countryCode="bd" 
-          />
-        </section>
+        {/* Stats bar */}
+        <div className="relative max-w-3xl mx-auto mt-16 grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/8 rounded-2xl overflow-hidden border border-white/8">
+          {stats.map((s) => (
+            <div key={s.label} className="bg-slate-900/80 px-6 py-5 text-center">
+              <p className="text-2xl font-bold text-orange-400 mb-1">{s.value}</p>
+              <p className="text-xs text-slate-500 uppercase tracking-widest">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* ─── Countries ────────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-6 py-16">
@@ -129,7 +165,8 @@ export default async function GlobalHomePage() {
               </Link>
             ))}
           </div>
-        </section>
+        )}
+      </section>
 
       {/* ─── How It Works ─────────────────────────────────────────── */}
       <section className="border-t border-white/5 bg-slate-950/40">

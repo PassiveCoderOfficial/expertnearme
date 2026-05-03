@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+"use client";
 
 import { useEffect, useState } from "react";
 import { MdStar, MdDelete, MdEdit, MdClose, MdCheck, MdRateReview, MdRefresh } from "react-icons/md";
@@ -443,16 +443,8 @@ function BuyerReviews() {
           </div>
         )}
       </div>
-    );
-  } catch (e) {
-    console.error("ReviewsPage error:", e);
-    return (
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Manage Reviews</h2>
-        <p className="text-red-500">Failed to load reviews: {String(e)}</p>
-      </div>
-    );
-  }
+    </div>
+  );
 }
 
 /* ─── Main page ─────────────────────────────────────────────────── */

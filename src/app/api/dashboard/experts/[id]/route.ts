@@ -95,12 +95,12 @@ export async function PATCH(req: NextRequest, context: ParamsContext) {
     if (Array.isArray(body.categoryIds)) {
       // Replace categories: delete existing links then create new ones
       await prisma.expertCategory.deleteMany({ where: { expertId: id } });
-      const catPayload = body.categoryIds
+      const uniqueCategoryIds = [...new Set<number>(body.categoryIds
         .map((c: any) => Number(c))
-        .filter((c: number) => Number.isFinite(c))
-        .map((categoryId: number) => ({ expertId: id, categoryId }));
+        .filter((c: number) => Number.isFinite(c)))];
+      const catPayload = uniqueCategoryIds.map((categoryId: number) => ({ expertId: id, categoryId }));
       if (catPayload.length > 0) {
-        await prisma.expertCategory.createMany({ data: catPayload, skipDuplicates: true });
+        await prisma.expertCategory.createMany({ data: catPayload });
       }
     }
 

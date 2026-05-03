@@ -1,0 +1,17 @@
+name: Publish Scheduled Blog Posts
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # every hour
+  workflow_dispatch:      # manual trigger from GitHub UI
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger publish endpoint
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.NEXT_PUBLIC_APP_URL }}/api/admin/blog/publish-scheduled"

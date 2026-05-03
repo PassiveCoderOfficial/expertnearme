@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
         slug, 
         parentId: parent, 
         showOnHomepage: Boolean(showOnHomepage),
-        countryCode: countryCode || "us",
+        countryCode: countryCode || null,
       },
     });
 

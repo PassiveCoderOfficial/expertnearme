@@ -332,5 +332,3 @@ export default function BookingsPage() {
     </div>
   );
 }
-
-export const dynamic = 'force-dynamic';

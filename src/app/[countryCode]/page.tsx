@@ -73,8 +73,7 @@ export default async function CountryPage({ params }: Props) {
     }));
 
   return (
-    <>
-      <MobileFirstHero onScrollTo="experts" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
 
       {/* Hero */}
       <section className="relative overflow-hidden pt-28 pb-16 px-6">
@@ -220,12 +219,6 @@ export default async function CountryPage({ params }: Props) {
                 <p className="text-xs text-slate-600 mt-1">{cat._count.experts} experts</p>
               </Link>
             ))}
-            
-            {categories.length === 0 && (
-              <div className="col-span-full text-center py-12">
-                <p className="text-gray-600">Categories coming soon for {countryName}.</p>
-              </div>
-            )}
           </div>
         </section>
       )}
@@ -238,16 +231,14 @@ export default async function CountryPage({ params }: Props) {
             <span className="text-slate-500 font-normal text-sm ml-2">({regular.length})</span>
           </h2>
         </div>
-      </section>
 
-      {/* Search Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Find the Right Expert</h2>
-            <p className="text-lg text-gray-600">
-              Search by name, service, or specialty
-            </p>
+        {regular.length === 0 && featured.length === 0 ? (
+          <div className="rounded-2xl border border-white/8 bg-slate-800/40 p-14 text-center">
+            <Users className="w-10 h-10 text-slate-600 mx-auto mb-4" />
+            <p className="text-slate-400 mb-3">No experts listed in {countryName} yet.</p>
+            <Link href="/for-experts" className="text-sm text-orange-400 hover:text-orange-300 transition-colors">
+              Be the first to list here →
+            </Link>
           </div>
         ) : regular.length === 0 ? null : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -259,18 +250,10 @@ export default async function CountryPage({ params }: Props) {
                   className="group rounded-2xl border border-white/8 bg-slate-800/50 hover:border-orange-500/30 hover:bg-slate-800/70 transition-colors overflow-hidden block touch-manipulation">
                   <div className="h-20 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center relative">
                     {expert.profilePicture ? (
-                      <img 
-                        src={expert.profilePicture} 
-                        alt={expert.name} 
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={expert.profilePicture} alt={displayName} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                          <span className="text-3xl font-bold text-white">
-                            {expert.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-slate-900 font-bold">
+                        {initials(displayName)}
                       </div>
                     )}
                     {expert.verified && (
@@ -299,31 +282,8 @@ export default async function CountryPage({ params }: Props) {
                         <span className="flex items-center gap-1 text-xs text-slate-400">
                           <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" /> {avg.toFixed(1)} ({expert.reviews.length})
                         </span>
-                      ))}
-                      {expert.categories?.length! > 3 && (
-                        <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full">
-                          +{expert.categories!.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Description */}
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {expert.shortDesc || "Professional service provider with expertise in various fields."}
-                    </p>
-                    
-                    {/* Contact Info */}
-                    <div className="flex items-center justify-between text-sm text-gray-500">
-                      {expert.phone && (
-                        <div className="flex items-center gap-1">
-                          <span>📞 Available</span>
-                        </div>
-                      )}
-                      {expert.email && (
-                        <div className="flex items-center gap-1">
-                          <span>📧 Contact</span>
-                        </div>
-                      )}
+                      ) : <span />}
+                      <span className="text-xs text-orange-400 group-hover:text-orange-300 transition-colors">View →</span>
                     </div>
                   </div>
                 </Link>
@@ -345,32 +305,6 @@ export default async function CountryPage({ params }: Props) {
           </Link>
         </div>
       </section>
-
-      {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-orange-600 to-orange-700 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Can't Find What You're Looking For?
-          </h2>
-          <p className="text-xl mb-8 text-orange-100">
-            We're constantly adding new experts to our platform. If you don't see what you need, contact us or become a verified expert yourself.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link 
-              href="/create-expert-account"
-              className="px-10 py-4 bg-white text-orange-600 font-bold rounded-xl text-lg hover:bg-gray-100 transition-colors shadow-2xl"
-            >
-              Join as Expert
-            </Link>
-            <Link 
-              href="/contact"
-              className="px-10 py-4 border-2 border-white/30 text-white font-semibold rounded-xl text-lg hover:bg-white/10 transition-colors"
-            >
-              Contact Us
-            </Link>
-          </div>
-        </div>
-      </section>
-    </>
+    </div>
   );
 }

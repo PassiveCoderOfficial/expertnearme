@@ -7,7 +7,7 @@ import { ChevronDown, MapPin, Star, Users, Clock, Search, Menu, X, Wifi, Shield,
 import { useDebounce } from '@/hooks/use-debounce';
 
 interface HeroProps {
-  onScrollTo?: (section: string) => void;
+  scrollTargetId?: string;
 }
 
 interface BenefitCard {
@@ -19,7 +19,7 @@ interface BenefitCard {
 
 
 
-export default function MobileFirstHero({ onScrollTo }: HeroProps) {
+export default function MobileFirstHero({ scrollTargetId = 'features' }: HeroProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentBenefit, setCurrentBenefit] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -128,70 +128,6 @@ export default function MobileFirstHero({ onScrollTo }: HeroProps) {
         />
       </div>
 
-      {/* Mobile Navigation */}
-      <div className="absolute top-0 left-0 right-0 z-50">
-        <motion.div 
-          className={`backdrop-blur-md border-b ${isScrolled ? 'bg-white/10 border-white/20' : 'bg-transparent'}`}
-          initial={{ y: -100 }}
-          animate={{ y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              {/* Logo */}
-              <Link href="/" className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">EN</span>
-                </div>
-                <span className="text-white font-semibold hidden sm:block">ExpertNear</span>
-              </Link>
-
-              {/* Mobile menu button */}
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
-              >
-                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
-
-            {/* Mobile menu */}
-            <AnimatePresence>
-              {isMenuOpen && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="pb-4 space-y-2">
-                    <Link 
-                      href="/search" 
-                      className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Search Experts
-                    </Link>
-                    <Link 
-                      href="/create-expert-account" 
-                      className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Join as Expert
-                    </Link>
-                    <button 
-                      onClick={() => scrollToSection('features')}
-                      className="block px-3 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors w-full text-left"
-                    >
-                      Explore Features
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
-      </div>
 
       {/* Main content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32 w-full relative z-10">
@@ -357,7 +293,7 @@ export default function MobileFirstHero({ onScrollTo }: HeroProps) {
         className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
       >
         <button
-          onClick={() => scrollToSection('features')}
+          onClick={() => scrollToSection(scrollTargetId)}
           className="bg-white/20 backdrop-blur-sm rounded-full p-4 hover:bg-white/30 transition-colors group"
         >
           <ChevronDown className="w-6 h-6 text-white group-hover:translate-y-1 transform transition-transform" />

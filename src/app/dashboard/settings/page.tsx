@@ -169,6 +169,8 @@ export default function SettingsPage() {
               )}
             </div>
           </div>
+        </div>
+      </div>
 
       {/* Platform Settings */}
       <div className="rounded-2xl border border-white/8 bg-slate-800/50 p-6 space-y-1 divide-y divide-white/5">
@@ -218,5 +220,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-export const dynamic = 'force-dynamic';

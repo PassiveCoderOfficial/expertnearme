@@ -1,9 +1,9 @@
-// File: src/app/dashboard/categories/page.tsx
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/ToastProvider";
+import { MdCategory, MdEdit, MdDelete, MdCheck, MdClose, MdAdd } from "react-icons/md";
 
 type Cat = { id: number; name: string; slug: string; countryCode: string; parentId: number | null; children?: Cat[]; showOnHomepage?: boolean };
 type Country = { code: string; name: string };
@@ -14,13 +14,10 @@ const toSlug = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, ""
 export default function DashboardCategoriesPage() {
   const { session } = useAuth();
   const { toast } = useToast();
-
   const [tree, setTree] = useState<Cat[]>([]);
   const [flat, setFlat] = useState<Cat[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Add form state
   const [adding, setAdding] = useState(false);
   const [filterCountry, setFilterCountry] = useState("");
   const [newName, setNewName] = useState("");
@@ -28,55 +25,28 @@ export default function DashboardCategoriesPage() {
   const [newCountryCode, setNewCountryCode] = useState("");
   const [newParentId, setNewParentId] = useState<number | "">("");
   const [newShowOnHomepage, setNewShowOnHomepage] = useState(false);
-
-  // Edit state
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [editSlug, setEditSlug] = useState("");
   const [editParentId, setEditParentId] = useState<number | "">("");
   const [editShowOnHomepage, setEditShowOnHomepage] = useState(false);
-
-  // UI feedback
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // slug helper
-  const toSlug = (s: string) =>
-    s
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-");
-
-  // Fetch categories (admin endpoint)
   const fetchCategories = async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     try {
       const res = await fetch("/api/admin/categories", { credentials: "include" });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || "Failed to fetch categories");
-      }
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Failed");
       const data: Cat[] = await res.json();
       setTree(data);
-
-      // Flatten for parent dropdown (preserve hierarchy with prefix)
       const flatten = (nodes: Cat[], acc: Cat[] = [], depth = 0) => {
-        nodes.forEach((n) => {
-          acc.push({ ...n, name: `${"- ".repeat(depth)}${n.name}` });
-          if (n.children && n.children.length) flatten(n.children, acc, depth + 1);
-        });
+        nodes.forEach((n) => { acc.push({ ...n, name: `${"- ".repeat(depth)}${n.name}` }); if (n.children?.length) flatten(n.children, acc, depth + 1); });
         return acc;
       };
       setFlat(flatten(data));
-    } catch (err: any) {
-      console.error("Failed to fetch categories:", err);
-      setError(err?.message || "Failed to load categories");
-    } finally {
-      setLoading(false);
-    }
+    } catch (e: any) { setError(e?.message || "Failed to load"); }
+    finally { setLoading(false); }
   };
 
   const fetchCountries = async () => {
@@ -92,12 +62,8 @@ export default function DashboardCategoriesPage() {
     else setLoading(false);
   }, [session?.role]);
 
-  // Add category
   const handleAdd = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    setError(null);
-    setSuccess(null);
-    setAdding(true);
+    e?.preventDefault(); setError(null); setSuccess(null); setAdding(true);
     try {
       const res = await fetch("/api/admin/categories", {
         method: "POST",
@@ -120,101 +86,36 @@ export default function DashboardCategoriesPage() {
     finally { setAdding(false); }
   };
 
-  // Start editing
-  const startEdit = (cat: Cat) => {
-    setEditingId(cat.id);
-    setEditName(cat.name);
-    setEditSlug(cat.slug);
-    setEditParentId(cat.parentId ?? "");
-    setEditShowOnHomepage(Boolean(cat.showOnHomepage));
-    setError(null);
-    setSuccess(null);
-  };
+  const startEdit = (cat: Cat) => { setEditingId(cat.id); setEditName(cat.name); setEditSlug(cat.slug); setEditParentId(cat.parentId ?? ""); setEditShowOnHomepage(Boolean(cat.showOnHomepage)); };
+  const cancelEdit = () => { setEditingId(null); setEditName(""); setEditSlug(""); setEditParentId(""); setEditShowOnHomepage(false); };
 
-  // Update category
   const handleUpdate = async () => {
-    if (!editingId) return;
-    setError(null);
-    setSuccess(null);
+    if (!editingId) return; setError(null); setSuccess(null);
     try {
-      const payload = {
-        name: editName.trim(),
-        slug: editSlug.trim() || toSlug(editName),
-        parentId: editParentId === "" ? null : Number(editParentId),
-        showOnHomepage: Boolean(editShowOnHomepage),
-      };
-      const res = await fetch(`/api/admin/categories/${editingId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to update category");
-      setSuccess(`Category "${data.name}" updated`);
-      setEditingId(null);
-      setEditName("");
-      setEditSlug("");
-      setEditParentId("");
-      setEditShowOnHomepage(false);
-      await fetchCategories();
-      toast("Category updated", { type: "success" });
-    } catch (err: any) {
-      console.error("Update category error:", err);
-      setError(err?.message || "Network error");
-      toast("Failed to update category", { type: "error" });
-    }
+      const res = await fetch(`/api/admin/categories/${editingId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ name: editName.trim(), slug: editSlug.trim() || toSlug(editName), parentId: editParentId === "" ? null : Number(editParentId), showOnHomepage: Boolean(editShowOnHomepage) }) });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d?.error || "Failed");
+      setSuccess(`"${d.name}" updated`); cancelEdit(); await fetchCategories(); toast("Updated", { type: "success" });
+    } catch (e: any) { setError(e?.message || "Error"); toast("Failed", { type: "error" }); }
   };
 
-  // Delete category
   const handleDelete = async (id: number) => {
-    if (!confirm("Delete this category?")) return;
-    setError(null);
-    setSuccess(null);
+    if (!confirm("Delete this category?")) return; setError(null);
     try {
-      const res = await fetch(`/api/admin/categories/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to delete category");
-      setSuccess("Category deleted");
-      await fetchCategories();
-      toast("Category deleted", { type: "success" });
-    } catch (err: any) {
-      console.error("Delete category error:", err);
-      setError(err?.message || "Network error");
-      toast("Failed to delete category", { type: "error" });
-    }
+      const res = await fetch(`/api/admin/categories/${id}`, { method: "DELETE", credentials: "include" });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d?.error || "Failed");
+      setSuccess("Deleted"); await fetchCategories(); toast("Deleted", { type: "success" });
+    } catch (e: any) { setError(e?.message || "Error"); toast("Failed", { type: "error" }); }
   };
 
-  // Toggle showOnHomepage
-  const handleToggleShowOnHomepage = async (cat: Cat) => {
-    setError(null);
-    setSuccess(null);
+  const handleToggleHomepage = async (cat: Cat) => {
     try {
-      const payload = {
-        name: cat.name,
-        slug: cat.slug,
-        parentId: cat.parentId,
-        showOnHomepage: !Boolean(cat.showOnHomepage),
-      };
-      const res = await fetch(`/api/admin/categories/${cat.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to update category");
-      setSuccess(`Category "${data.name}" updated`);
-      await fetchCategories();
-      toast("Category updated", { type: "success" });
-    } catch (err: any) {
-      console.error("Toggle showOnHomepage error:", err);
-      setError(err?.message || "Network error");
-      toast("Failed to update category", { type: "error" });
-    }
+      const res = await fetch(`/api/admin/categories/${cat.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ name: cat.name, slug: cat.slug, parentId: cat.parentId, showOnHomepage: !cat.showOnHomepage }) });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d?.error || "Failed");
+      await fetchCategories(); toast("Updated", { type: "success" });
+    } catch (e: any) { setError(e?.message || "Error"); }
   };
 
   // Filter flat list by country for parent dropdown in add form
@@ -288,16 +189,8 @@ export default function DashboardCategoriesPage() {
     return r;
   }, [tree, flat, filteredFlat, filterCountry, editingId, editName, editSlug, editParentId, editShowOnHomepage]);
 
-  // If not admin, show unauthorized
   if (session?.role !== "ADMIN") {
-    return (
-      <main className="p-8 max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold mb-4">Manage Categories</h1>
-        <div className="p-6 bg-yellow-50 border border-yellow-200 rounded">
-          <p className="text-sm text-yellow-800">You are not authorized to view this page.</p>
-        </div>
-      </main>
-    );
+    return <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-6 text-yellow-300 text-sm">Unauthorized.</div>;
   }
 
   return (
@@ -316,17 +209,11 @@ export default function DashboardCategoriesPage() {
         </select>
       </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Slug</label>
-          <input
-            type="text"
-            value={newSlug}
-            onChange={(e) => setNewSlug(toSlug(e.target.value))}
-            placeholder="health / legal / it"
-            className="border p-2 w-full"
-            required
-          />
+      {(error || success) && (
+        <div className={`text-sm rounded-xl px-4 py-3 border ${error ? "bg-red-500/15 border-red-500/25 text-red-300" : "bg-green-500/15 border-green-500/25 text-green-300"}`}>
+          {error || success}
         </div>
+      )}
 
       {/* Add form */}
       <form onSubmit={handleAdd} className="rounded-2xl border border-white/8 bg-slate-800/50 p-5">

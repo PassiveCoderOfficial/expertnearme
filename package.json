@@ -13,6 +13,7 @@
     "@googlemaps/google-maps-services-js": "^3.3.28",
     "@googlemaps/react-wrapper": "^1.1.8",
     "@heroicons/react": "^2.2.0",
+    "@lemonsqueezy/lemonsqueezy.js": "^4.0.0",
     "@prisma/client": "6.19.1",
     "@supabase/supabase-js": "^2.91.1",
     "bcryptjs": "^3.0.3",

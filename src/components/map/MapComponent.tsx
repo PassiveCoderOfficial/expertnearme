@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { loadGoogleMaps } from '@/lib/google-maps';
-// import { GoogleMap, Marker, InfoWindow } from '@googlemaps/react-wrapper';
 
 interface Provider {
   id: number;
@@ -36,13 +34,13 @@ interface MapComponentProps {
 
 export default function MapComponent({ 
   providers, 
-  categories,
+  categories: _categories,
   onProviderSelect, 
   height = '400px' 
 }: MapComponentProps) {
-  const mapRef = useRef<google.maps.Map | null>(null);
-  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
-  const [isClient, setIsClient] = useState(false);
+  const mapRef = useRef<{ panTo: (coords: { lat: number; lng: number }) => void; setZoom: (zoom: number) => void } | null>(null);
+  const [_selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+  const [_isClient, setIsClient] = useState(false);
   const [filteredProviders, setFilteredProviders] = useState<Provider[]>(providers);
 
   // Set up providers for display
@@ -70,7 +68,7 @@ export default function MapComponent({
     }
   };
 
-  const handleCloseInfoWindow = () => {
+  const _handleCloseInfoWindow = () => {
     setSelectedProvider(null);
   };
 
