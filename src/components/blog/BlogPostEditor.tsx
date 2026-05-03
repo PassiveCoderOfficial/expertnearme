@@ -6,6 +6,13 @@ import {
   Save, ArrowLeft, Eye, Globe, Tag, Calendar, Image as ImageIcon,
   Search, Link as LinkIcon, CheckCircle, Clock, FileText, Loader2,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const RichTextEditor = dynamic(() => import('./RichTextEditor'), { ssr: false, loading: () => (
+  <div className="rounded-xl border border-slate-700 bg-slate-900 min-h-[400px] flex items-center justify-center">
+    <Loader2 className="w-6 h-6 text-orange-400 animate-spin" />
+  </div>
+) });
 
 interface BlogPostData {
   title: string;
@@ -69,6 +76,7 @@ export default function BlogPostEditor({ postId }: { postId?: number }) {
   const [data, setData] = useState<BlogPostData>(EMPTY);
   const [tab, setTab] = useState('content');
   const [saving, setSaving] = useState(false);
+  const [savingAction, setSavingAction] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(!!postId);
   const [autoSlug, setAutoSlug] = useState(!postId);
@@ -118,6 +126,7 @@ export default function BlogPostEditor({ postId }: { postId?: number }) {
 
   const handleSave = async (statusOverride?: string) => {
     setSaving(true);
+    setSavingAction(statusOverride ?? 'save');
     const payload = {
       ...data,
       status: statusOverride || data.status,
@@ -140,6 +149,7 @@ export default function BlogPostEditor({ postId }: { postId?: number }) {
         });
 
     setSaving(false);
+    setSavingAction(null);
     if (res.ok) {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -272,15 +282,13 @@ export default function BlogPostEditor({ postId }: { postId?: number }) {
           {/* Content */}
           <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Content (HTML)</label>
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Content</label>
               <span className="text-xs text-slate-500">{data.readingTimeMins} min read</span>
             </div>
-            <textarea
+            <RichTextEditor
               value={data.content}
-              onChange={(e) => set('content', e.target.value)}
-              placeholder="Write your blog post content here. HTML is supported. Use <h2>, <p>, <ul>, <strong> etc."
-              rows={20}
-              className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 font-mono resize-y"
+              onChange={(html) => set('content', html)}
+              placeholder="Write your blog post content here…"
             />
           </div>
 
@@ -534,22 +542,27 @@ export default function BlogPostEditor({ postId }: { postId?: number }) {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleSave('PUBLISHED')}
-                className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-500/30 text-green-300 hover:bg-green-500/30 rounded-xl text-sm transition-colors"
+                disabled={saving}
+                className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-500/30 text-green-300 hover:bg-green-500/30 rounded-xl text-sm transition-colors disabled:opacity-60"
               >
-                <CheckCircle className="w-4 h-4" /> Publish Now
+                {saving && savingAction === 'PUBLISHED' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                {saving && savingAction === 'PUBLISHED' ? 'Publishing…' : 'Publish Now'}
               </button>
               <button
                 onClick={() => handleSave('DRAFT')}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-700 border border-slate-600 text-slate-300 hover:bg-slate-600 rounded-xl text-sm transition-colors"
+                disabled={saving}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-700 border border-slate-600 text-slate-300 hover:bg-slate-600 rounded-xl text-sm transition-colors disabled:opacity-60"
               >
-                <FileText className="w-4 h-4" /> Save as Draft
+                {saving && savingAction === 'DRAFT' ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                {saving && savingAction === 'DRAFT' ? 'Saving…' : 'Save as Draft'}
               </button>
               <button
                 onClick={() => handleSave('SCHEDULED')}
-                disabled={!data.scheduledAt}
+                disabled={!data.scheduledAt || saving}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/30 text-blue-300 hover:bg-blue-500/30 rounded-xl text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <Clock className="w-4 h-4" /> Schedule
+                {saving && savingAction === 'SCHEDULED' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Clock className="w-4 h-4" />}
+                {saving && savingAction === 'SCHEDULED' ? 'Scheduling…' : 'Schedule'}
               </button>
             </div>
           </div>
