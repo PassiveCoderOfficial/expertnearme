@@ -8,7 +8,7 @@ FILENAME="db_backup_${TIMESTAMP}.sql.gz"
 TMPFILE="/tmp/${FILENAME}"
 
 echo "==> Dumping database..."
-pg_dump -d "$DATABASE_URL" | gzip > "$TMPFILE"
+pg_dump --dbname="$DATABASE_URL" | gzip > "$TMPFILE"
 DB_SIZE=$(du -sh "$TMPFILE" | cut -f1)
 echo "    Size: $DB_SIZE"
 
