@@ -13,45 +13,17 @@ export async function GET(request: NextRequest) {
       verified: true,
     };
 
-    if (country) {
-      // Filter experts that belong to categories with the given countryCode
-      where.categories = {
-        some: {
-          category: {
-            countryCode: country,
-          },
-        },
-      };
-    }
-
-    if (category) {
-      where.categories = {
-        ...where.categories,
-        some: {
-          ...where.categories?.some,
-          categoryId: category,
-        },
-      };
-    }
-
-    if (q) {
-      where.OR = [
-        { name: { contains: q } },
-        { bio: { contains: q } },
-        {
-          categories: {
-            some: {
-              category: {
-                name: { contains: q },
-              },
-            },
-          },
-        },
-      ];
-    }
-
-    const experts = await prisma.expert.findMany({
-      where,
+  const [expertResults, categoryResults] = await Promise.all([
+    prisma.expert.findMany({
+      where: {
+        ...(country ? { countryCode: country } : {}),
+        OR: [
+          { name: { contains: q } },
+          { businessName: { contains: q } },
+          { shortDesc: { contains: q } },
+          { categories: { some: { category: { name: { contains: q } } } } },
+        ],
+      },
       include: {
         categories: {
           include: {

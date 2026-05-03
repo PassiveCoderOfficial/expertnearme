@@ -87,7 +87,7 @@ async function main() {
 
   for (const cat of categories) {
     await prisma.category.upsert({
-      where: { slug: cat.slug },
+      where: { countryCode_slug: { countryCode: cat.countryCode, slug: cat.slug } },
       update: {},
       create: cat,
     });
@@ -281,7 +281,7 @@ async function main() {
     // Link expert to appropriate categories
     const categorySlugs = getExpertCategories(expert);
     for (const categorySlug of categorySlugs) {
-      const category = await prisma.category.findUnique({
+      const category = await prisma.category.findFirst({
         where: { slug: categorySlug },
       });
 

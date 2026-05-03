@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -24,6 +25,14 @@ model User {
   profile           UserProfile?
   media             Media[]
   pushSubscriptions PushSubscription[]
+  subscriptions     Subscription[]
+  savedExperts      SavedExpert[]
+  conversations1    Conversation[]     @relation("ConvUser1")
+  conversations2    Conversation[]     @relation("ConvUser2")
+  sentMessages      Message[]
+  agentReferrals    AgentReferral[]    @relation("AgentReferrals")
+  referredBy        AgentReferral[]    @relation("ReferredBy")
+  agentCommissions  AgentCommission[]  @relation("AgentCommissions")
 }
 
 model UserProfile {
@@ -78,57 +87,84 @@ model Expert {
   name           String
   email          String   @unique
   phone          String?
-  whatsapp       String? // separate WhatsApp if different
+  whatsapp       String?
   isBusiness     Boolean  @default(false)
-  businessName   String? // for business accounts
-  contactPerson  String? // if business
+  businessName   String?
+  contactPerson  String?
   officeAddress  String?
-  webAddress     String? // badge if verified
-  mapLocation    String? // lat/lng or Google Maps link
-  latitude       Float?  // for precise location searches
-  longitude      Float?  // for precise location searches
-  countryCode    String? // ISO country code
+  webAddress     String?
+  mapLocation    String?
+  latitude       Float?
+  longitude      Float?
+  countryCode    String?
   profilePicture String?
   coverPhoto     String?
-  bio            String? // long biography
+  bio            String?
   shortDesc      String?
-  verified       Boolean  @default(false) // verification status
-  featured       Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  linkedinUrl    String?
+  instagramUrl   String?
+  twitterUrl     String?
+  facebookUrl    String?
+  verified            Boolean   @default(false)
+  featured            Boolean   @default(false)
+  homeFeatured        Boolean   @default(false)
+  mapFeatured         Boolean   @default(false)
+  foundingExpert      Boolean   @default(false)
+  foundingExpertSince DateTime?
+  // Booking settings
+  allowBooking          Boolean @default(false)
+  blockSlotAfterBooking Boolean @default(true)
+  urgentBooking         Boolean @default(false)
+  urgentFeePercent      Float   @default(50)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  categories ExpertCategory[]
-  services   Service[]
-  portfolio  Portfolio[]
-  reviews    Review[]
-  bookings   Booking[]
+  categories    ExpertCategory[]
+  services      Service[]
+  portfolio     Portfolio[]
+  reviews       Review[]
+  bookings      Booking[]
+  savedBy       SavedExpert[]
+  availability  ExpertAvailability[]
+
+  @@unique([countryCode, profileLink])
+  @@index([countryCode])
 }
 
 model Service {
-  id          Int     @id @default(autoincrement())
-  expertId    Int
-  categoryId  Int?
-  name        String
-  image       String?
-  description String?
-  rateUnit    String? // optional toggle
-  expert      Expert  @relation(fields: [expertId], references: [id])
+  id                 Int     @id @default(autoincrement())
+  expertId           Int
+  categoryId         Int?
+  name               String
+  image              String?
+  description        String?
+  rateUnit           String?
+  price              Float?
+  sortOrder          Int     @default(0)
+  availableForBooking Boolean @default(false)
+  duration            Int     @default(60)
+  rateType            String  @default("fixed")
+  expert      Expert    @relation(fields: [expertId], references: [id])
   category    Category? @relation(fields: [categoryId], references: [id])
+  bookings    Booking[]
 }
 
 model Portfolio {
-  id        Int     @id @default(autoincrement())
-  expertId  Int
-  imageUrl  String?
-  videoUrl  String?
-  socialUrl String?
-  expert    Expert  @relation(fields: [expertId], references: [id])
+  id          Int     @id @default(autoincrement())
+  expertId    Int
+  title       String?
+  description String?
+  imageUrl    String?
+  videoUrl    String?
+  socialUrl   String?
+  sortOrder   Int     @default(0)
+  expert      Expert  @relation(fields: [expertId], references: [id])
 }
 
 model Category {
   id             Int              @id @default(autoincrement())
   name           String
-  slug           String           @unique
+  slug           String
   countryCode    String           // ISO country code
   active         Boolean          @default(true)
   updatedAt      DateTime         @updatedAt
@@ -144,6 +180,7 @@ model Category {
   experts        ExpertCategory[]
   services       Service[]
 
+  @@unique([countryCode, slug])
   @@index([parentId])
   @@index([slug])
   @@index([countryCode])
@@ -159,17 +196,64 @@ model ExpertCategory {
   @@id([expertId, categoryId])
 }
 
+model ExpertAvailability {
+  id        Int    @id @default(autoincrement())
+  expertId  Int
+  dayOfWeek Int    // 0=Sun … 6=Sat
+  startTime String // "09:00"
+  endTime   String // "17:00"
+  expert    Expert @relation(fields: [expertId], references: [id])
+
+  @@index([expertId])
+}
+
 model Booking {
   id          Int           @id @default(autoincrement())
   expertId    Int
   clientId    Int
+  serviceId   Int?
   status      BookingStatus @default(PENDING)
   scheduledAt DateTime
+  endsAt      DateTime?
+  notes       String?
+  isUrgent    Boolean       @default(false)
+  urgentFee   Float?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   client      User          @relation(fields: [clientId], references: [id])
   expert      Expert        @relation(fields: [expertId], references: [id])
+  service     Service?      @relation(fields: [serviceId], references: [id])
   reviews     Review[]
+  feeTransaction BookingFeeTransaction?
+}
+
+model Conversation {
+  id           Int       @id @default(autoincrement())
+  participant1 Int       // always the lower userId
+  participant2 Int       // always the higher userId
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user1        User      @relation("ConvUser1", fields: [participant1], references: [id])
+  user2        User      @relation("ConvUser2", fields: [participant2], references: [id])
+  messages     Message[]
+
+  @@unique([participant1, participant2])
+  @@index([participant1])
+  @@index([participant2])
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  senderId       Int
+  content        String
+  read           Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId])
+  @@index([senderId])
 }
 
 model Review {
@@ -203,9 +287,13 @@ model Notification {
   userId    Int
   title     String
   message   String
+  type      String   @default("system") // "booking" | "message" | "system"
+  link      String?
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, read])
 }
 
 model Country {
@@ -236,23 +324,75 @@ model AuditLog {
 }
 
 model Pricing {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  price       Float
-  currency    String   @default("USD")
-  duration    Int      // duration in days
-  features    String   // JSON string of features
-  active      Boolean  @default(true)
-  featured    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            Int            @id @default(autoincrement())
+  name          String
+  description   String?
+  price         Float
+  currency      String         @default("USD")
+  duration      Int            // duration in days; -1 = lifetime
+  features      String         // JSON string of features
+  active        Boolean        @default(true)
+  featured      Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subscriptions Subscription[]
+}
+
+model SavedExpert {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  expertId  Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  expert    Expert   @relation(fields: [expertId], references: [id])
+
+  @@unique([userId, expertId])
+  @@index([userId])
+}
+
+model Waitlist {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  source    String   @default("pricing")
+  createdAt DateTime @default(now())
+}
+
+model Subscription {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  planId     Int
+  status     SubStatus @default(ACTIVE)
+  isLifetime Boolean   @default(false)
+  startsAt   DateTime  @default(now())
+  endsAt     DateTime?
+  paymentRef String?
+  gateway    String?   // 'paddle' | 'lemonsqueezy' | 'surjopay'
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       User      @relation(fields: [userId], references: [id])
+  plan       Pricing   @relation(fields: [planId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+enum SubStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PAUSED
 }
 
 enum Role {
   USER
+  BUYER
   EXPERT
+  SALES_AGENT
+  MARKETER
+  SEO_EXPERT
+  MANAGER
   ADMIN
+  SUPER_ADMIN
 }
 
 enum TokenType {
@@ -267,4 +407,148 @@ enum BookingStatus {
   DECLINED
   RESCHEDULED
   DONE
+}
+
+// ===== Blog System =====
+
+model BlogPost {
+  id             Int            @id @default(autoincrement())
+  title          String
+  slug           String         @unique
+  excerpt        String?
+  content        String         // HTML/MDX content
+  coverImage     String?
+  altText        String?        // image alt for SEO
+  authorName     String         @default("ExpertNear.Me Team")
+  authorAvatar   String?
+  status         BlogStatus     @default(DRAFT)
+  publishedAt    DateTime?
+  scheduledAt    DateTime?      // when to auto-publish
+  countryCode    String?        // null = global
+  categoryTag    String?        // e.g. "interior-design", "cleaning"
+  tags           String?        // comma-separated
+  // SEO fields
+  metaTitle      String?
+  metaDesc       String?
+  focusKeyword   String?
+  canonicalUrl   String?
+  ogImage        String?
+  ogTitle        String?
+  ogDesc         String?
+  noIndex        Boolean        @default(false)
+  // Stats
+  viewCount      Int            @default(0)
+  readingTimeMins Int           @default(5)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([status, scheduledAt])
+  @@index([countryCode])
+  @@index([categoryTag])
+  @@index([slug])
+}
+
+enum BlogStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+// ===== Agent / Referral System =====
+
+model AgentReferral {
+  id                 Int               @id @default(autoincrement())
+  referrerId         Int               // User who referred
+  referralCode       String            @unique
+  // What was referred
+  referredUserId     Int?              // the referred user (after signup)
+  referredExpertId   Int?              // expert they onboarded (if applicable)
+  referralType       ReferralType      @default(EXPERT)
+  status             ReferralStatus    @default(PENDING)
+  // Commission config snapshot (at time of referral)
+  commissionPct      Float             @default(20)
+  // Relations
+  referrer           User              @relation("AgentReferrals", fields: [referrerId], references: [id])
+  referredUser       User?             @relation("ReferredBy", fields: [referredUserId], references: [id])
+  commissions        AgentCommission[]
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@index([referrerId])
+  @@index([referralCode])
+}
+
+model AgentCommission {
+  id            Int             @id @default(autoincrement())
+  referralId    Int
+  referrerId    Int
+  amount        Float           // amount earned by agent
+  grossAmount   Float           // total transaction amount
+  commissionPct Float
+  type          CommissionType
+  status        CommissionStatus @default(PENDING)
+  paidAt        DateTime?
+  gatewayRef    String?
+  description   String?
+  createdAt     DateTime        @default(now())
+  referral      AgentReferral   @relation(fields: [referralId], references: [id])
+  referrer      User            @relation("AgentCommissions", fields: [referrerId], references: [id])
+
+  @@index([referrerId])
+  @@index([status])
+}
+
+enum ReferralType {
+  EXPERT
+  BUYER
+}
+
+enum ReferralStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+}
+
+enum CommissionType {
+  SUBSCRIPTION
+  BOOKING_FEE
+  ONE_TIME
+}
+
+enum CommissionStatus {
+  PENDING
+  APPROVED
+  PAID
+  CANCELLED
+}
+
+// ===== Booking Fee Transactions =====
+
+model BookingFeeTransaction {
+  id                Int      @id @default(autoincrement())
+  bookingId         Int      @unique
+  expertId          Int
+  clientId          Int
+  feeAmount         Float    // total booking token fee charged
+  platformAmount    Float    // platform's cut (e.g. 50% of fee)
+  agentAmount       Float    @default(0) // agent commission from platform cut
+  agentReferralId   Int?
+  currency          String   @default("USD")
+  gatewayRef        String?
+  status            BookingFeeStatus @default(PENDING)
+  paidAt            DateTime?
+  createdAt         DateTime @default(now())
+  booking           Booking  @relation(fields: [bookingId], references: [id])
+
+  @@index([expertId])
+  @@index([clientId])
+  @@index([status])
+}
+
+enum BookingFeeStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
 }

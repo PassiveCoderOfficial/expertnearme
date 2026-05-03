@@ -1,52 +1,82 @@
 // src/app/search/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
-import { prisma } from "@/lib/db";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { MapPin, Star, Filter } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Crown, MapPin, Star, Filter, X, Search } from "lucide-react";
 
-interface Provider {
+interface Expert {
   id: number;
   name: string;
-  phone?: string;
+  businessName?: string;
+  profileLink?: string;
   shortDesc?: string;
   officeAddress?: string;
   latitude?: number;
   longitude?: number;
   distance?: number;
-  category: {
-    id: number;
-    name: string;
-    slug: string;
-    color?: string;
-  };
-  reviews: {
-    rating: number;
-  }[];
+  featured?: boolean;
+  foundingExpert?: boolean;
+  avgRating?: number | null;
+  categories: { category: { id: number; name: string; slug: string } }[];
+  reviews: { rating: number }[];
 }
 
-interface Category {
+interface Category { id: number; name: string; slug: string }
+
+interface SponsoredItem {
   id: number;
   name: string;
-  slug: string;
-  color?: string;
+  foundingExpert: boolean;
+  profileLink: string;
+  categories: string[];
+  avgRating: number | null;
 }
 
-export default function SearchPage() {
-  const [providers, setProviders] = useState<Provider[]>([]);
+function initials(name: string) {
+  return name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+}
+
+function calcDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function avgRating(reviews: { rating: number }[]) {
+  return reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
+}
+
+function SearchPageContent() {
+  const searchParams = useSearchParams();
+  const countryCode = searchParams.get("country") || "bd";
+  const initialQ = searchParams.get("q") || "";
+
+  const [allExperts, setAllExperts] = useState<Expert[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [radius, setRadius] = useState(10); // km
+  const [query, setQuery] = useState(initialQ);
+  const [selectedCat, setSelectedCat] = useState("");
+  const [radius, setRadius] = useState(50);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [sponsored, setSponsored] = useState<SponsoredItem | null>(null);
 
+  // Fetch all experts + categories for the country on mount
   useEffect(() => {
-    fetchInitialData();
-    getUserLocation();
-  }, []);
+    (async () => {
+      try {
+        const [cr, pr] = await Promise.all([
+          fetch(`/api/country/${countryCode}/categories`),
+          fetch(`/api/country/${countryCode}/experts`),
+        ]);
+        const [cd, pd] = await Promise.all([cr.json(), pr.json()]);
+        setCategories(cd.categories || []);
+        setAllExperts(pd.experts || []);
+      } catch { /* ignore */ }
+      finally { setIsLoading(false); }
+    })();
 
   const fetchInitialData = async () => {
     try {
@@ -123,71 +153,45 @@ export default function SearchPage() {
     }
   };
 
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371; // Radius of the earth in km
-    const dLat = deg2rad(lat2 - lat1);
-    const dLon = deg2rad(lon2 - lon1);
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
+  // Fetch sponsored expert from search API whenever query changes
+  const fetchSponsored = useCallback(async (q: string) => {
+    if (q.trim().length < 2) { setSponsored(null); return; }
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}&country=${countryCode}`);
+      const data = await res.json();
+      setSponsored(data.sponsored ?? null);
+    } catch { setSponsored(null); }
+  }, [countryCode]);
 
-  const deg2rad = (deg: number) => {
-    return deg * (Math.PI/180);
-  };
+  useEffect(() => {
+    const t = setTimeout(() => fetchSponsored(query), 300);
+    return () => clearTimeout(t);
+  }, [query, fetchSponsored]);
 
-  const filterProviders = () => {
-    let filtered = providers;
-
-    // Apply search query
-    if (searchQuery) {
-      filtered = filtered.filter(provider => 
-        provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        provider.shortDesc?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        provider.officeAddress?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  // Client-side filter of full expert list
+  const filtered = allExperts.filter((e) => {
+    const displayName = e.businessName || e.name;
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      const matchName = displayName.toLowerCase().includes(q);
+      const matchDesc = e.shortDesc?.toLowerCase().includes(q);
+      const matchCat = e.categories?.some(c => c.category.name.toLowerCase().includes(q));
+      if (!matchName && !matchDesc && !matchCat) return false;
     }
-
-    // Apply category filter
-    if (selectedCategory) {
-      filtered = filtered.filter(provider => 
-        provider.category.slug === selectedCategory
-      );
+    if (selectedCat) {
+      if (!e.categories?.some(c => c.category.slug === selectedCat)) return false;
     }
-
-    // Apply distance filter
-    if (userLocation && (provider.latitude && provider.longitude)) {
-      filtered = filtered.filter(provider => {
-        if (!provider.latitude || !provider.longitude) return false;
-        const distance = calculateDistance(
-          userLocation.lat,
-          userLocation.lng,
-          provider.latitude,
-          provider.longitude
-        );
-        provider.distance = distance;
-        return distance <= radius;
-      });
+    if (userLocation && e.latitude && e.longitude) {
+      const d = calcDistance(userLocation.lat, userLocation.lng, e.latitude, e.longitude);
+      e.distance = d;
+      if (d > radius) return false;
     }
+    // Exclude sponsored from regular results
+    if (sponsored && e.id === sponsored.id) return false;
+    return true;
+  }).sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
 
-    // Sort by distance if location is available
-    if (userLocation) {
-      filtered.sort((a, b) => (a.distance || 0) - (b.distance || 0));
-    }
-
-    return filtered;
-  };
-
-  const filteredProviders = filterProviders();
-
-  const getAverageRating = (reviews: { rating: number }[]) => {
-    if (reviews.length === 0) return 0;
-    const sum = reviews.reduce((total, review) => total + review.rating, 0);
-    return sum / reviews.length;
-  };
+  const primaryCat = (e: Expert) => e.categories?.[0]?.category;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -216,140 +220,140 @@ export default function SearchPage() {
           
           {/* Filters */}
           {showFilters && (
-            <div className="mt-4 flex flex-col md:flex-row gap-4 items-start md:items-center">
-              <div className="flex flex-wrap gap-2">
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg"
-                >
-                  <option value="">All Categories</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.slug}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-                
-                <select
-                  value={radius}
-                  onChange={(e) => setRadius(Number(e.target.value))}
-                  className="px-3 py-2 border border-gray-300 rounded-lg"
-                >
-                  <option value={5}>Within 5km</option>
-                  <option value={10}>Within 10km</option>
-                  <option value={20}>Within 20km</option>
-                  <option value={50}>Within 50km</option>
-                </select>
-              </div>
-              
+            <div className="flex flex-wrap gap-3 pt-3 pb-1">
+              <select value={selectedCat} onChange={(e) => setSelectedCat(e.target.value)}
+                className="bg-slate-800/60 border border-white/10 text-sm text-white rounded-xl px-3 py-1.5 outline-none">
+                <option value="">All Categories</option>
+                {categories.map((c) => <option key={c.id} value={c.slug}>{c.name}</option>)}
+              </select>
               {userLocation && (
-                <div className="text-sm text-gray-600">
-                  <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>
-                  Location detected
-                </div>
+                <>
+                  <select value={radius} onChange={(e) => setRadius(Number(e.target.value))}
+                    className="bg-slate-800/60 border border-white/10 text-sm text-white rounded-xl px-3 py-1.5 outline-none">
+                    <option value={5}>Within 5km</option>
+                    <option value={10}>Within 10km</option>
+                    <option value={20}>Within 20km</option>
+                    <option value={50}>Within 50km</option>
+                    <option value={200}>Within 200km</option>
+                  </select>
+                  <span className="flex items-center gap-1.5 text-xs text-green-400 bg-green-500/10 border border-green-500/20 px-3 py-1.5 rounded-xl">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400" /> Location active
+                  </span>
+                </>
+              )}
+              {(query || selectedCat) && (
+                <button onClick={() => { setQuery(""); setSelectedCat(""); setSponsored(null); }} className="flex items-center gap-1 text-xs text-slate-400 hover:text-white border border-white/10 px-3 py-1.5 rounded-xl transition-colors">
+                  <X className="w-3 h-3" /> Clear
+                </button>
               )}
             </div>
           )}
         </div>
       </div>
-      
-      {/* Results */}
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Search Results
-            <span className="text-gray-500 text-lg ml-2">
-              ({filteredProviders.length} found)
-            </span>
-          </h1>
-        </div>
-        
+
+      <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">
+        <p className="text-sm text-slate-400">
+          {isLoading
+            ? "Searching…"
+            : <><strong className="text-white">{filtered.length + (sponsored ? 1 : 0)}</strong> result{(filtered.length + (sponsored ? 1 : 0)) !== 1 ? "s" : ""} in <strong className="text-orange-400">{countryCode.toUpperCase()}</strong></>
+          }
+        </p>
+
         {isLoading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
             <p className="text-gray-600 mt-4">Loading...</p>
           </div>
-        ) : filteredProviders.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600">No providers found matching your criteria.</p>
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedCategory('');
-                setRadius(10);
-              }}
-              className="mt-4 text-blue-500 hover:text-blue-600"
-            >
-              Clear all filters
-            </button>
-          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProviders.map((provider) => {
-              const averageRating = getAverageRating(provider.reviews);
-              
-              return (
-                <div key={provider.id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                      {provider.name.charAt(0)}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 mb-1">{provider.name}</h3>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-medium" style={{ color: provider.category.color || '#666666' }}>
-                          {provider.category.name}
-                        </span>
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                          <span className="text-sm text-gray-600 ml-1">
-                            {averageRating.toFixed(1)}
-                          </span>
-                        </div>
-                      </div>
-                      {provider.distance && (
-                        <div className="text-sm text-gray-600 flex items-center gap-1">
-                          <MapPin className="h-4 w-4" />
-                          {provider.distance.toFixed(1)} km away
-                        </div>
-                      )}
-                    </div>
+          <>
+            {/* Sponsored result */}
+            {sponsored && (
+              <div>
+                <p className="text-xs font-semibold text-amber-400 uppercase tracking-widest mb-2">Sponsored</p>
+                <Link
+                  href={`/${countryCode}/expert/${sponsored.profileLink}`}
+                  className="group flex items-center gap-4 rounded-2xl border-2 border-amber-500/40 bg-gradient-to-r from-amber-950/30 to-slate-900/60 hover:border-amber-500/60 p-5 transition-colors"
+                >
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-slate-900 font-bold text-base shrink-0">
+                    {initials(sponsored.name)}
                   </div>
-                  
-                  {provider.shortDesc && (
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {provider.shortDesc}
-                    </p>
-                  )}
-                  
-                  {provider.officeAddress && (
-                    <p className="text-gray-600 text-sm mb-4 flex items-start gap-1">
-                      <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                      <span className="line-clamp-2">{provider.officeAddress}</span>
-                    </p>
-                  )}
-                  
-                  <div className="flex gap-2">
-                    <Link
-                      href={`/provider/${provider.id}`}
-                      className="flex-1 bg-blue-500 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-center"
-                    >
-                      View Profile
-                    </Link>
-                    {provider.phone && (
-                      <a
-                        href={`tel:${provider.phone}`}
-                        className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        📞
-                      </a>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-bold text-white group-hover:text-amber-300 transition-colors truncate">{sponsored.name}</p>
+                      {sponsored.foundingExpert && <Crown className="w-4 h-4 text-amber-400 shrink-0" />}
+                    </div>
+                    {sponsored.categories[0] && (
+                      <p className="text-sm text-slate-400 truncate">{sponsored.categories[0]}</p>
+                    )}
+                    {sponsored.avgRating !== null && sponsored.avgRating !== undefined && (
+                      <span className="flex items-center gap-1 text-xs text-slate-400 mt-1">
+                        <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                        {sponsored.avgRating.toFixed(1)}
+                      </span>
                     )}
                   </div>
+                  <span className="shrink-0 text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-full font-medium">
+                    Sponsored
+                  </span>
+                </Link>
+              </div>
+            )}
+
+            {/* Regular results */}
+            {filtered.length === 0 && !sponsored ? (
+              <div className="rounded-2xl border border-white/8 bg-slate-800/40 p-14 text-center">
+                <p className="text-slate-400 text-sm mb-3">No experts found matching your search.</p>
+                <button onClick={() => { setQuery(""); setSelectedCat(""); }} className="text-orange-400 hover:text-orange-300 text-sm transition-colors">
+                  Clear filters
+                </button>
+              </div>
+            ) : filtered.length > 0 ? (
+              <div>
+                {sponsored && <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Results</p>}
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {filtered.map((e) => {
+                    const displayName = e.businessName || e.name;
+                    const rating = avgRating(e.reviews);
+                    const cat = primaryCat(e);
+                    return (
+                      <Link
+                        key={e.id}
+                        href={`/${countryCode}/expert/${e.profileLink || e.id}`}
+                        className="group rounded-2xl border border-white/8 bg-slate-800/50 hover:border-orange-500/30 transition-colors p-5 block"
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-slate-900 font-bold text-sm shrink-0">
+                            {initials(displayName)}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-white group-hover:text-orange-300 transition-colors text-sm truncate">{displayName}</p>
+                            {cat && <p className="text-xs text-orange-300 truncate">{cat.name}</p>}
+                          </div>
+                        </div>
+
+                        {e.shortDesc && <p className="text-slate-400 text-xs line-clamp-2 mb-3">{e.shortDesc}</p>}
+
+                        <div className="flex items-center justify-between text-xs text-slate-500">
+                          {rating > 0 ? (
+                            <span className="flex items-center gap-1">
+                              <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                              {rating.toFixed(1)} ({e.reviews.length})
+                            </span>
+                          ) : <span />}
+                          {e.distance != null && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {e.distance.toFixed(1)}km
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            ) : null}
+          </>
         )}
       </div>
     </div>

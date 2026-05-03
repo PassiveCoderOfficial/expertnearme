@@ -10,13 +10,14 @@ interface CategoryNode {
   id: number;
   name: string;
   slug: string;
+  countryCode: string;
   parentId: number | null;
   showOnHomepage: boolean;
   children: CategoryNode[];
 }
 
 // Build tree helper
-function buildTree(items: Array<{ id: number; name: string; slug: string; parentId: number | null; showOnHomepage: boolean }>): CategoryNode[] {
+function buildTree(items: Array<{ id: number; name: string; slug: string; countryCode: string; parentId: number | null; showOnHomepage: boolean }>): CategoryNode[] {
   const byId: Record<number, CategoryNode> = {};
   items.forEach((c) => (byId[c.id] = { ...c, children: [] }));
   const roots: CategoryNode[] = [];
@@ -34,7 +35,7 @@ export async function GET() {
   try {
     const rows = await prisma.category.findMany({
       orderBy: [{ parentId: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, slug: true, parentId: true, showOnHomepage: true },
+      select: { id: true, name: true, slug: true, countryCode: true, parentId: true, showOnHomepage: true },
     });
     const tree = buildTree(rows);
     return NextResponse.json(tree);
@@ -52,13 +53,13 @@ export async function POST(req: NextRequest) {
     }
 
     const { name, slug, parentId, showOnHomepage, countryCode } = await req.json();
-    if (!name || !slug) {
-      return NextResponse.json({ error: "Name and slug required" }, { status: 400 });
+    if (!name || !slug || !countryCode) {
+      return NextResponse.json({ error: "Name, slug, and country are required" }, { status: 400 });
     }
 
-    const exists = await prisma.category.findUnique({ where: { slug } });
+    const exists = await prisma.category.findUnique({ where: { countryCode_slug: { countryCode, slug } } });
     if (exists) {
-      return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
+      return NextResponse.json({ error: "Slug already exists in this country" }, { status: 409 });
     }
 
     let parent: number | null = null;

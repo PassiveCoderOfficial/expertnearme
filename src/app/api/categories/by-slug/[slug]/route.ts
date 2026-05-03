@@ -14,7 +14,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ slu
       throw new Error("Invalid slug");
     }
 
-    const category = await prisma.category.findUnique({
+    const category = await prisma.category.findFirst({
       where: { slug },
       select: { id: true, name: true, slug: true, parentId: true, showOnHomepage: true },
     });

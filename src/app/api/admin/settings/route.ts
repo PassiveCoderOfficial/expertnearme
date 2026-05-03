@@ -6,14 +6,13 @@ import { getBoolean, setSetting } from "@/lib/settings";
 
 export async function GET() {
   try {
-    // booleans
-    const emailVerificationRequired = await getBoolean("emailVerificationRequired", true);
-    const allowGoogleLogin = await getBoolean("allowGoogleLogin", true);
-    const allowSignup = await getBoolean("allowSignup", true);
-
-    // logo + favicon
-    const logo = await prisma.setting.findUnique({ where: { key: "site_logo" } });
-    const favicon = await prisma.setting.findUnique({ where: { key: "site_favicon" } });
+    const [emailVerificationRequired, allowGoogleLogin, allowSignup, logo, favicon] = await Promise.all([
+      getBoolean("emailVerificationRequired", true),
+      getBoolean("allowGoogleLogin", true),
+      getBoolean("allowSignup", true),
+      prisma.setting.findUnique({ where: { key: "site_logo" } }),
+      prisma.setting.findUnique({ where: { key: "site_favicon" } }),
+    ]);
 
     return NextResponse.json({
       emailVerificationRequired,
@@ -42,33 +41,27 @@ export async function PATCH(req: NextRequest) {
       await setSetting("allowSignup", String(body.allowSignup));
     }
 
-    // update logo/favicon if provided
-    if (body.logo) {
-      await prisma.setting.upsert({
-        where: { key: "site_logo" },
-        update: { value: body.logo },
-        create: { key: "site_logo", value: body.logo },
-      });
+    const upserts: Promise<unknown>[] = [];
+
+    if (body.logo !== undefined) {
+      upserts.push(prisma.setting.upsert({ where: { key: "site_logo" }, update: { value: body.logo || "" }, create: { key: "site_logo", value: body.logo || "" } }));
     }
-    if (body.favicon) {
-      await prisma.setting.upsert({
-        where: { key: "site_favicon" },
-        update: { value: body.favicon },
-        create: { key: "site_favicon", value: body.favicon },
-      });
+    if (body.favicon !== undefined) {
+      upserts.push(prisma.setting.upsert({ where: { key: "site_favicon" }, update: { value: body.favicon || "" }, create: { key: "site_favicon", value: body.favicon || "" } }));
     }
 
-    // return updated values
-    const emailVerificationRequired = await getBoolean("emailVerificationRequired", true);
-    const allowGoogleLogin = await getBoolean("allowGoogleLogin", true);
-    const allowSignup = await getBoolean("allowSignup", true);
-    const logo = await prisma.setting.findUnique({ where: { key: "site_logo" } });
-    const favicon = await prisma.setting.findUnique({ where: { key: "site_favicon" } });
+    await Promise.all(upserts);
+
+    const [emailVerificationRequired, allowGoogleLogin, allowSignup, logo, favicon] = await Promise.all([
+      getBoolean("emailVerificationRequired", true),
+      getBoolean("allowGoogleLogin", true),
+      getBoolean("allowSignup", true),
+      prisma.setting.findUnique({ where: { key: "site_logo" } }),
+      prisma.setting.findUnique({ where: { key: "site_favicon" } }),
+    ]);
 
     return NextResponse.json({
-      emailVerificationRequired,
-      allowGoogleLogin,
-      allowSignup,
+      emailVerificationRequired, allowGoogleLogin, allowSignup,
       logo: logo?.value || null,
       favicon: favicon?.value || null,
     });

@@ -1,16 +1,146 @@
 // src/app/pricing/page.tsx
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import {
+  Crown, User, Building2, MapPin, Phone, Globe, ChevronRight,
+  ChevronLeft, Check, Eye, EyeOff, Loader2, ArrowRight, Star
+} from 'lucide-react';
+import MapPicker, { LatLng } from '@/components/MapPicker';
 
 export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
 
-  const proMonthly = 39;
-  const proAnnual = 195; // limited-time annual price
-  const vipMonthly = 89;
-  const vipAnnual = 445; // <-- updated yearly VIP price
+const STEPS = ['Account', 'Business', 'Categories', 'Done'];
+
+function OnboardingForm() {
+  const router     = useRouter();
+  const params     = useSearchParams();
+  const isFounder  = params.get('founding') === '1';
+
+  const [step, setStep]           = useState(0);
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState('');
+  const [showPass, setShowPass]   = useState(false);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  // Form state
+  const [form, setForm] = useState({
+    name:         '',
+    email:        params.get('email') ?? '',
+    password:     '',
+    confirmPass:  '',
+    isBusiness:   false,
+    businessName: '',
+    countryCode:  '',
+    phone:        '',
+    whatsapp:     '',
+    shortDesc:    '',
+    bio:          '',
+    webAddress:   '',
+    categoryIds:  [] as number[],
+    latitude:     null as number | null,
+    longitude:    null as number | null,
+    mapAddress:   '',
+  });
+
+  const [result, setResult] = useState<{ slug: string; countryCode: string } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/dashboard/countries')
+      .then(r => r.json())
+      .then(d => {
+        const active = (d.countries ?? d ?? []).filter((c: Country & { active?: boolean }) => c.active !== false);
+        setCountries(active);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!form.countryCode) return;
+    setCategories([]);
+    setForm(f => ({ ...f, categoryIds: [] }));
+    fetch(`/api/country/${form.countryCode}/categories`)
+      .then(r => r.json())
+      .then(d => setCategories(d.categories ?? []))
+      .catch(() => {});
+  }, [form.countryCode]);
+
+  const set = (k: string, v: unknown) => setForm(f => ({ ...f, [k]: v }));
+
+  const toggleCategory = (id: number) => {
+    setForm(f => {
+      const ids = f.categoryIds.includes(id)
+        ? f.categoryIds.filter(x => x !== id)
+        : f.categoryIds.length < 5 ? [...f.categoryIds, id] : f.categoryIds;
+      return { ...f, categoryIds: ids };
+    });
+  };
+
+  const validateStep = () => {
+    setError('');
+    if (step === 0) {
+      if (!form.name.trim())  return setError('Full name is required.'), false;
+      if (!form.email.trim()) return setError('Email is required.'), false;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return setError('Invalid email.'), false;
+      if (form.password.length < 8)  return setError('Password must be at least 8 characters.'), false;
+      if (form.password !== form.confirmPass) return setError('Passwords do not match.'), false;
+    }
+    if (step === 1) {
+      if (!form.countryCode) return setError('Please select a country.'), false;
+      if (!form.shortDesc.trim()) return setError('A short description is required.'), false;
+    }
+    if (step === 2) {
+      if (form.categoryIds.length === 0) return setError('Please select at least one category.'), false;
+    }
+    return true;
+  };
+
+  const next = () => { if (validateStep()) setStep(s => s + 1); };
+  const back = () => { setError(''); setStep(s => s - 1); };
+
+  const submit = async () => {
+    if (!validateStep()) return;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/experts/onboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name:        form.name,
+          email:       form.email,
+          password:    form.password,
+          isBusiness:  form.isBusiness,
+          businessName: form.businessName,
+          countryCode: form.countryCode,
+          phone:       form.phone,
+          whatsapp:    form.whatsapp,
+          shortDesc:   form.shortDesc,
+          bio:         form.bio,
+          webAddress:  form.webAddress,
+          categoryIds: form.categoryIds,
+          latitude:    form.latitude,
+          longitude:   form.longitude,
+          mapLocation: form.mapAddress,
+          claimFoundingSpot: isFounder,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? 'Something went wrong.'); return; }
+      setResult({ slug: data.slug, countryCode: data.countryCode });
+      setStep(3);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inputCls = 'w-full bg-slate-800 border border-slate-700 focus:border-orange-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none transition-colors text-sm';
+  const labelCls = 'block text-sm font-medium text-slate-300 mb-1.5';
 
   return (
     <main className="min-h-screen bg-white text-gray-900">
@@ -177,8 +307,135 @@ export default function PricingPage() {
                   /{billingCycle === "monthly" ? "month" : "year"}
                 </div>
               </div>
-              <p className="mt-2 text-sm text-gray-200">
-                Website builder, sponsored placement, CRM & accounting tools
+            </motion.div>
+          )}
+
+          {/* ── Step 1: Business / Profile ── */}
+          {step === 1 && (
+            <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <h1 className="text-2xl font-bold mb-1">Your profile</h1>
+              <p className="text-slate-400 text-sm mb-7">Tell clients who you are and what you do.</p>
+              <div className="space-y-4">
+                {/* Business toggle */}
+                <div className="flex items-center gap-4 bg-slate-800/60 border border-slate-700 rounded-xl p-4">
+                  <button
+                    onClick={() => set('isBusiness', false)}
+                    className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${!form.isBusiness ? 'bg-orange-500 text-slate-900' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    <User className="h-4 w-4" /> Individual
+                  </button>
+                  <button
+                    onClick={() => set('isBusiness', true)}
+                    className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${form.isBusiness ? 'bg-orange-500 text-slate-900' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    <Building2 className="h-4 w-4" /> Business
+                  </button>
+                </div>
+
+                {form.isBusiness && (
+                  <div>
+                    <label className={labelCls}>Business name *</label>
+                    <input className={inputCls} placeholder="Karim Interiors LLC" value={form.businessName} onChange={e => set('businessName', e.target.value)} />
+                  </div>
+                )}
+
+                <div>
+                  <label className={labelCls}>Country *</label>
+                  <select className={inputCls} value={form.countryCode} onChange={e => set('countryCode', e.target.value)}>
+                    <option value="">— Select your country —</option>
+                    {countries.map(c => (
+                      <option key={c.code} value={c.code}>{c.flagEmoji} {c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}><Phone className="inline h-3.5 w-3.5 mr-1" />Phone</label>
+                    <input className={inputCls} placeholder="+65 9123 4567" value={form.phone} onChange={e => set('phone', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className={labelCls}><Phone className="inline h-3.5 w-3.5 mr-1 text-green-400" />WhatsApp</label>
+                    <input className={inputCls} placeholder="+65 9123 4567" value={form.whatsapp} onChange={e => set('whatsapp', e.target.value)} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className={labelCls}>Short description * <span className="text-slate-500">({form.shortDesc.length}/160)</span></label>
+                  <textarea className={inputCls} rows={2} maxLength={160} placeholder="One or two sentences about what you do." value={form.shortDesc} onChange={e => set('shortDesc', e.target.value)} />
+                </div>
+
+                <div>
+                  <label className={labelCls}>Full bio <span className="text-slate-500">(optional)</span></label>
+                  <textarea className={inputCls} rows={3} placeholder="Your background, experience, specialisations..." value={form.bio} onChange={e => set('bio', e.target.value)} />
+                </div>
+
+                <div>
+                  <label className={labelCls}><Globe className="inline h-3.5 w-3.5 mr-1" />Website <span className="text-slate-500">(optional)</span></label>
+                  <input className={inputCls} placeholder="https://yourwebsite.com" value={form.webAddress} onChange={e => set('webAddress', e.target.value)} />
+                </div>
+
+                {/* Map location picker */}
+                <MapPicker
+                  label="Location on map (optional — helps buyers find you)"
+                  value={form.latitude && form.longitude ? { lat: form.latitude, lng: form.longitude } : null}
+                  onChange={(coords: LatLng, address?: string) => {
+                    set('latitude', coords.lat);
+                    set('longitude', coords.lng);
+                    if (address) set('mapAddress', address);
+                  }}
+                  defaultCenter={form.countryCode === 'bd' ? { lat: 23.8, lng: 90.4 } : form.countryCode === 'ae' ? { lat: 25.2, lng: 55.3 } : form.countryCode === 'sg' ? { lat: 1.35, lng: 103.82 } : undefined}
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── Step 2: Categories ── */}
+          {step === 2 && (
+            <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <h1 className="text-2xl font-bold mb-1">Your categories</h1>
+              <p className="text-slate-400 text-sm mb-7">Pick up to 5 categories that describe your work.</p>
+              {categories.length === 0 ? (
+                <div className="text-center py-10 text-slate-500 text-sm">Loading categories…</div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {categories.map(cat => {
+                    const selected = form.categoryIds.includes(cat.id);
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => toggleCategory(cat.id)}
+                        className={`rounded-xl border p-3 text-left transition-all ${
+                          selected
+                            ? 'border-orange-500 bg-orange-500/15 text-white'
+                            : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-500'
+                        }`}
+                      >
+                        <span className="text-xl block mb-1">{cat.icon ?? '📌'}</span>
+                        <span className="text-xs font-medium">{cat.name}</span>
+                        {selected && <Check className="h-3.5 w-3.5 text-orange-400 float-right mt-0.5" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              <p className="text-xs text-slate-500 mt-4">{form.categoryIds.length} / 5 selected</p>
+            </motion.div>
+          )}
+
+          {/* ── Step 3: Done ── */}
+          {step === 3 && result && (
+            <motion.div key="s3" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8">
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 ${isFounder ? 'bg-gradient-to-br from-orange-500 to-amber-400' : 'bg-green-500/20 border border-green-500/30'}`}>
+                {isFounder ? <Crown className="h-8 w-8 text-slate-900" /> : <Check className="h-8 w-8 text-green-400" />}
+              </div>
+              <h1 className="text-3xl font-bold mb-3">
+                {isFounder ? "You're a Founding Expert!" : "Profile created!"}
+              </h1>
+              <p className="text-slate-300 mb-8 max-w-sm mx-auto">
+                {isFounder
+                  ? "Your Founding Expert profile is live. You're permanently listed on our Hall of Fame page."
+                  : "Your expert profile is live. Add photos and services from your dashboard to attract more clients."}
               </p>
             </div>
 

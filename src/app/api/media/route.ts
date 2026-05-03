@@ -17,10 +17,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
+  const ADMIN_ROLES = new Set(["SUPER_ADMIN", "ADMIN", "MANAGER", "MARKETER"]);
   let where: any = {};
   if (scope === "self") {
     where = { uploadedById: session.userId };
-  } else if (scope === "all" && session.role === "ADMIN") {
+  } else if (scope === "all" && ADMIN_ROLES.has(session.role)) {
     where = {};
   } else {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -48,6 +49,15 @@ export async function POST(req: NextRequest) {
   const file = formData.get("file") as File | null;
   if (!file) {
     return NextResponse.json({ error: "No file" }, { status: 400 });
+  }
+
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+  const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    return NextResponse.json({ error: 'Only image files are allowed (JPEG, PNG, WebP, GIF, SVG)' }, { status: 400 });
+  }
+  if (file.size > MAX_SIZE) {
+    return NextResponse.json({ error: 'File too large. Maximum size is 10MB.' }, { status: 400 });
   }
 
   const tags = (formData.get("tags") as string) || null;

@@ -31,20 +31,56 @@ type CreateBody = {
   coverPhoto?: string | null;
   shortDesc?: string | null;
   featured?: boolean;
+  countryCode?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   services?: IncomingService[] | unknown;
   portfolio?: IncomingPortfolio[] | unknown;
   categoryIds?: (string | number)[] | unknown;
 };
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get("search")?.trim() || "";
+    const limit  = Math.min(parseInt(searchParams.get("limit") || "200"), 200);
+
+    const where = search ? {
+      OR: [
+        { name:         { contains: search, mode: "insensitive" as const } },
+        { businessName: { contains: search, mode: "insensitive" as const } },
+        { email:        { contains: search, mode: "insensitive" as const } },
+        { phone:        { contains: search, mode: "insensitive" as const } },
+        { whatsapp:     { contains: search, mode: "insensitive" as const } },
+      ],
+    } : {};
+
+    // When searching return a lightweight payload; full payload otherwise
+    if (search) {
+      const experts = await prisma.expert.findMany({
+        where,
+        select: {
+          id: true, name: true, businessName: true, email: true, phone: true,
+          profileLink: true, countryCode: true, createdAt: true,
+          categories: { include: { category: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: limit,
+      });
+      // Resolve User.id for each expert (subscriptions are linked to User, not Expert)
+      const emailToUserId = new Map(
+        (await prisma.user.findMany({
+          where: { email: { in: experts.map(e => e.email) } },
+          select: { id: true, email: true },
+        })).map(u => [u.email, u.id])
+      );
+      return NextResponse.json(experts.map(e => ({ ...e, userId: emailToUserId.get(e.email) ?? null })));
+    }
+
     const experts = await prisma.expert.findMany({
-      include: {
-        categories: { include: { category: true } },
-        services: true,
-        portfolio: true,
-      },
+      include: { categories: { include: { category: true } }, services: true, portfolio: true },
       orderBy: { createdAt: "desc" },
+      take: limit,
     });
     return NextResponse.json(experts);
   } catch (err: any) {
@@ -58,9 +94,15 @@ export async function POST(req: Request) {
     const raw = (await req.json()) as CreateBody;
 
     // Basic validation
-    if (!raw?.name || !raw?.email) {
-      return NextResponse.json({ error: "Name and email are required." }, { status: 400 });
+    if (!raw?.email) {
+      return NextResponse.json({ error: "Email is required." }, { status: 400 });
     }
+    if (!raw?.businessName && !raw?.name) {
+      return NextResponse.json({ error: "Business name or name is required." }, { status: 400 });
+    }
+
+    // Derive the name field (required in DB) from businessName or explicit name
+    const derivedName = (raw.businessName || raw.name || raw.email.split("@")[0]).trim();
 
     // Normalize nested arrays safely
     const services = Array.isArray(raw.services) ? (raw.services as IncomingService[]) : [];
@@ -92,7 +134,7 @@ export async function POST(req: Request) {
     // Create expert with nested services and portfolio
     const created = await prisma.expert.create({
       data: {
-        name: raw.name,
+        name: derivedName,
         email: raw.email,
         phone: raw.phone ?? null,
         whatsapp: raw.whatsapp ?? null,
@@ -106,6 +148,9 @@ export async function POST(req: Request) {
         coverPhoto: raw.coverPhoto ?? null,
         shortDesc: raw.shortDesc ?? null,
         featured: !!raw.featured,
+        countryCode: raw.countryCode ?? null,
+        latitude: raw.latitude ?? null,
+        longitude: raw.longitude ?? null,
         profileLink,
         services: {
           create: services.map((s) => ({

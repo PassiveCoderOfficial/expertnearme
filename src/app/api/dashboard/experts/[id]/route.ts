@@ -47,20 +47,12 @@ export async function PATCH(req: NextRequest, context: ParamsContext) {
     // Prepare update payload (only allow certain fields)
     const payload: any = {};
     const allowed = [
-      "name",
-      "email",
-      "phone",
-      "whatsapp",
-      "isBusiness",
-      "businessName",
-      "contactPerson",
-      "officeAddress",
-      "webAddress",
-      "mapLocation",
-      "profilePicture",
-      "coverPhoto",
-      "shortDesc",
-      "featured",
+      "name", "email", "phone", "whatsapp", "isBusiness", "businessName",
+      "contactPerson", "officeAddress", "webAddress", "mapLocation",
+      "profilePicture", "coverPhoto", "shortDesc", "bio",
+      "featured", "homeFeatured", "mapFeatured", "foundingExpert",
+      "verified", "countryCode", "latitude", "longitude",
+      "allowBooking", "blockSlotAfterBooking", "urgentBooking", "urgentFeePercent",
     ];
     for (const k of allowed) {
       if (Object.prototype.hasOwnProperty.call(body, k)) payload[k] = body[k];
@@ -121,6 +113,9 @@ export async function PATCH(req: NextRequest, context: ParamsContext) {
         image: s.image ?? null,
         description: s.description ?? null,
         rateUnit: s.rateUnit ?? null,
+        availableForBooking: !!s.availableForBooking,
+        duration: s.duration ? Number(s.duration) : 60,
+        rateType: s.rateType || "fixed",
       }));
       if (svcPayload.length > 0) await prisma.service.createMany({ data: svcPayload });
     }

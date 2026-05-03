@@ -8,16 +8,17 @@ export default function MediaPage() {
   const role = session?.role || "USER";
 
   return (
-    <main className="p-8 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Media Manager</h1>
-
-      {/* Inline MediaBrowser */}
+    <div className="max-w-5xl space-y-4">
+      <div>
+        <h1 className="text-xl font-bold text-white">Media</h1>
+        <p className="text-xs text-slate-400 mt-0.5">Upload and manage images and files used across the platform.</p>
+      </div>
       <MediaBrowser
-        open={true} // always visible inline
+        open={true}
         onClose={() => {}}
-        allowAllMedia={role === "ADMIN"}
+        allowAllMedia={["ADMIN", "SUPER_ADMIN", "MANAGER", "MARKETER"].includes(role)}
         mode="page"
       />
-    </main>
+    </div>
   );
 }

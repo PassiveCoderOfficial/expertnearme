@@ -1,11 +1,12 @@
+import { prisma } from "@/lib/db";
 // File: src/app/api/auth/login/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const prisma = new PrismaClient();
+
 const JWT_SECRET = process.env.JWT_SECRET || "change_this_secret";
 
 export async function POST(req: NextRequest): Promise<Response> {
