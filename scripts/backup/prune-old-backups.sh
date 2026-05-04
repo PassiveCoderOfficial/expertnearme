@@ -105,7 +105,7 @@ prune_ftp_type() {
   local TYPE="$1"
   local REMOTE_DIR="${FTP_DIR}/${TYPE}/"
 
-  mapfile -t FILES < <(curl -s \
+  mapfile -t FILES < <(curl -s --ssl-reqd --insecure \
     --user "${FTP_USER}:${FTP_PASS}" \
     "ftp://${FTP_HOST}/${REMOTE_DIR}" \
     --list-only 2>/dev/null | sort || true)
@@ -130,7 +130,7 @@ prune_ftp_type() {
     if [ "$DAYS_KEPT" -ge "$KEEP_DAILY" ]; then
       for f in "${DAY_LIST[@]}"; do
         [ -z "$f" ] && continue
-        curl -s --user "${FTP_USER}:${FTP_PASS}" "ftp://${FTP_HOST}" \
+        curl -s --ssl-reqd --insecure --user "${FTP_USER}:${FTP_PASS}" "ftp://${FTP_HOST}" \
           -Q "DELE /${REMOTE_DIR}${f}" || echo "  WARN: ftp delete failed $f"
       done
     else

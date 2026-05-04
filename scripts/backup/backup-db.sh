@@ -17,11 +17,11 @@ bash "$(dirname "$0")/gdrive-upload.sh" "$TMPFILE" "database"
 echo "    Google Drive: done"
 
 echo "==> Uploading to FTP..."
-curl --retry 3 --ftp-create-dirs \
+curl --retry 3 --ftp-create-dirs --ssl-reqd \
   -T "$TMPFILE" \
   "ftp://${FTP_HOST}/${FTP_DIR}/database/${FILENAME}" \
   --user "${FTP_USER}:${FTP_PASS}" \
-  --silent --show-error
+  --insecure --silent --show-error
 echo "    FTP: done"
 
 rm -f "$TMPFILE"
