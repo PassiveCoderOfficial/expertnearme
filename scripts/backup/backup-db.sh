@@ -8,7 +8,11 @@ FILENAME="db_backup_${TIMESTAMP}.sql.gz"
 TMPFILE="/tmp/${FILENAME}"
 
 echo "==> Dumping database..."
-pg_dump --dbname="$DATABASE_URL" | gzip > "$TMPFILE"
+# Pooler URL required — Supabase blocks direct connections from CI IPs
+# Append sslmode=require if not present
+DB_URL="${DATABASE_URL}"
+[[ "$DB_URL" != *"sslmode"* ]] && DB_URL="${DB_URL}?sslmode=require"
+pg_dump --dbname="$DB_URL" --no-privileges --no-owner | gzip > "$TMPFILE"
 DB_SIZE=$(du -sh "$TMPFILE" | cut -f1)
 echo "    Size: $DB_SIZE"
 
