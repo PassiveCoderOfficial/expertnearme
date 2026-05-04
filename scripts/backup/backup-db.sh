@@ -13,7 +13,7 @@ DB_SIZE=$(du -sh "$TMPFILE" | cut -f1)
 echo "    Size: $DB_SIZE"
 
 echo "==> Uploading to Google Drive..."
-rclone copy "$TMPFILE" "gdrive:database/" --retries 3
+bash "$(dirname "$0")/gdrive-upload.sh" "$TMPFILE" "database"
 echo "    Google Drive: done"
 
 echo "==> Uploading to FTP..."

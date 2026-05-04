@@ -69,7 +69,7 @@ echo "    Size: $STORAGE_SIZE"
 rm -rf "$TMPDIR"
 
 echo "==> Uploading to Google Drive..."
-rclone copy "$TMPFILE" "gdrive:storage/" --retries 3
+bash "$(dirname "$0")/gdrive-upload.sh" "$TMPFILE" "storage"
 echo "    Google Drive: done"
 
 echo "==> Uploading to FTP..."

@@ -51,17 +51,11 @@ jobs:
       (github.event_name == 'schedule' || inputs.run_code == true)
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install rclone
-        run: curl -fsSL https://rclone.org/install.sh | sudo bash
-
-      - name: Configure rclone
-        run: |
-          mkdir -p ~/.config/rclone
-          printf '[gdrive]\ntype = drive\nscope = drive\nclient_id = ${{ secrets.GDRIVE_CLIENT_ID }}\nclient_secret = ${{ secrets.GDRIVE_CLIENT_SECRET }}\ntoken = ${{ secrets.RCLONE_GDRIVE_TOKEN }}\nroot_folder_id = ${{ secrets.GDRIVE_FOLDER_ID }}\n' > ~/.config/rclone/rclone.conf
-
       - name: Run code backup
         env:
+          GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USER: ${{ secrets.FTP_USER }}
@@ -81,21 +75,14 @@ jobs:
       (github.event_name == 'schedule' || inputs.run_db == true)
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install deps
+      - name: Install postgresql-client
         run: sudo apt-get install -y postgresql-client
-
-      - name: Install rclone
-        run: curl -fsSL https://rclone.org/install.sh | sudo bash
-
-      - name: Configure rclone
-        run: |
-          mkdir -p ~/.config/rclone
-          printf '[gdrive]\ntype = drive\nscope = drive\nclient_id = ${{ secrets.GDRIVE_CLIENT_ID }}\nclient_secret = ${{ secrets.GDRIVE_CLIENT_SECRET }}\ntoken = ${{ secrets.RCLONE_GDRIVE_TOKEN }}\nroot_folder_id = ${{ secrets.GDRIVE_FOLDER_ID }}\n' > ~/.config/rclone/rclone.conf
-
       - name: Run database backup
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USER: ${{ secrets.FTP_USER }}
@@ -115,21 +102,15 @@ jobs:
       (github.event_name == 'schedule' || inputs.run_storage == true)
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install deps
-        run: |
-          sudo apt-get install -y jq
-          curl -fsSL https://rclone.org/install.sh | sudo bash
-
-      - name: Configure rclone
-        run: |
-          mkdir -p ~/.config/rclone
-          printf '[gdrive]\ntype = drive\nscope = drive\nclient_id = ${{ secrets.GDRIVE_CLIENT_ID }}\nclient_secret = ${{ secrets.GDRIVE_CLIENT_SECRET }}\ntoken = ${{ secrets.RCLONE_GDRIVE_TOKEN }}\nroot_folder_id = ${{ secrets.GDRIVE_FOLDER_ID }}\n' > ~/.config/rclone/rclone.conf
-
+      - name: Install jq
+        run: sudo apt-get install -y jq
       - name: Run storage backup
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USER: ${{ secrets.FTP_USER }}
@@ -146,19 +127,13 @@ jobs:
     if: always() && needs.load-config.outputs.enabled == 'true'
     steps:
       - uses: actions/checkout@v4
-
       - name: Install deps
-        run: |
-          sudo apt-get install -y lftp
-          curl -fsSL https://rclone.org/install.sh | sudo bash
-
-      - name: Configure rclone
-        run: |
-          mkdir -p ~/.config/rclone
-          printf '[gdrive]\ntype = drive\nscope = drive\nclient_id = ${{ secrets.GDRIVE_CLIENT_ID }}\nclient_secret = ${{ secrets.GDRIVE_CLIENT_SECRET }}\ntoken = ${{ secrets.RCLONE_GDRIVE_TOKEN }}\nroot_folder_id = ${{ secrets.GDRIVE_FOLDER_ID }}\n' > ~/.config/rclone/rclone.conf
-
+        run: sudo apt-get install -y jq lftp
       - name: Prune based on retention config
         env:
+          GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USER: ${{ secrets.FTP_USER }}

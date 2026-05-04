@@ -19,7 +19,7 @@ CODE_SIZE=$(du -sh "$TMPFILE" | cut -f1)
 echo "    Size: $CODE_SIZE"
 
 echo "==> Uploading to Google Drive..."
-rclone copy "$TMPFILE" "gdrive:code/" --retries 3
+bash "$(dirname "$0")/gdrive-upload.sh" "$TMPFILE" "code"
 echo "    Google Drive: done"
 
 echo "==> Uploading to FTP..."
