@@ -119,7 +119,7 @@ export default function SearchBar({
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl dark:shadow-2xl z-50 overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl dark:shadow-2xl z-[60] overflow-hidden">
           {loading && (
             <div className="px-4 py-3 flex items-center gap-2 text-slate-400 dark:text-slate-500 text-sm">
               <div className="w-3.5 h-3.5 rounded-full border border-orange-500 border-t-transparent animate-spin" />

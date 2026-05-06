@@ -533,10 +533,11 @@ export default function AdsPage() {
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="bg-slate-900/60 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-orange-500/50"
+                style={{ colorScheme: "dark" }}
               >
-                <option value="">All Statuses</option>
+                <option value="" style={{ background: "#1e293b", color: "#fff" }}>All Statuses</option>
                 {["PENDING", "ACTIVE", "PAUSED", "EXPIRED", "CANCELLED"].map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s} style={{ background: "#1e293b", color: "#fff" }}>{s}</option>
                 ))}
               </select>
             </div>
@@ -708,10 +709,11 @@ export default function AdsPage() {
                   value={createForm.placementId}
                   onChange={(e) => setCreateForm((f) => ({ ...f, placementId: e.target.value }))}
                   className={inputCls}
+                  style={{ colorScheme: "dark" }}
                 >
-                  <option value="">Select a spot…</option>
+                  <option value="" style={{ background: "#1e293b", color: "#fff" }}>Select a spot…</option>
                   {placements.map((p) => (
-                    <option key={p.id} value={p.id}>
+                    <option key={p.id} value={p.id} style={{ background: "#1e293b", color: "#fff" }}>
                       {p.label} — ${p.weeklyPrice}/wk · ${p.monthlyPrice}/mo
                     </option>
                   ))}
