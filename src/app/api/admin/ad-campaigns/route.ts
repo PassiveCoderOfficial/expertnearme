@@ -68,6 +68,9 @@ export async function POST(req: NextRequest) {
       bannerLinkUrl,
       bannerAltText,
       paymentMethod,
+      expertId: bodyExpertId,
+      adminNote,
+      skipApproval,
     } = body;
 
     if (!placementId || !billingCycle || !startsAt) {
@@ -81,6 +84,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "billingCycle must be WEEKLY or MONTHLY" }, { status: 400 });
     }
 
+    const isAdmin = ADMIN_ROLES.has(session.role);
+
     const placement = await prisma.adPlacement.findUnique({
       where: { id: Number(placementId) },
     });
@@ -91,7 +96,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "This ad spot is not currently available" }, { status: 400 });
     }
 
-    const expert = await prisma.expert.findFirst({ where: { email: session.email } });
+    let expert;
+    if (isAdmin && bodyExpertId) {
+      expert = await prisma.expert.findUnique({ where: { id: Number(bodyExpertId) } });
+    } else {
+      expert = await prisma.expert.findFirst({ where: { email: session.email } });
+    }
     if (!expert) {
       return NextResponse.json({ error: "Expert profile not found" }, { status: 404 });
     }
@@ -102,7 +112,7 @@ export async function POST(req: NextRequest) {
     endsAt.setDate(endsAt.getDate() + daysToAdd);
 
     const amountPaid = billingCycle === "WEEKLY" ? placement.weeklyPrice : placement.monthlyPrice;
-    const status = placement.requiresApproval ? "PENDING" : "ACTIVE";
+    const status = (isAdmin && skipApproval) ? "ACTIVE" : placement.requiresApproval ? "PENDING" : "ACTIVE";
 
     const campaign = await prisma.adCampaign.create({
       data: {
@@ -120,6 +130,8 @@ export async function POST(req: NextRequest) {
         targetCountry: targetCountry || null,
         targetCategory: targetCategory || null,
         paymentMethod: paymentMethod || null,
+        adminNote: adminNote || null,
+        ...(isAdmin && skipApproval ? { approvedBy: session.userId, approvedAt: new Date() } : {}),
       },
     });
 

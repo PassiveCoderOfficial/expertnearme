@@ -82,6 +82,7 @@ const EXPERT_NAV: NavItem[] = [
   { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
   { name: "My Profile",     href: "/dashboard/profile",             icon: <MdEdit /> },
   { name: "My Plan",        href: "/dashboard/my-subscription",     icon: <MdCurrencyExchange /> },
+  { name: "Promote",        href: "/dashboard/promote",             icon: <MdCampaign /> },
   { name: "Availability",   href: "/dashboard/availability",        icon: <MdAccessTime /> },
   { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
   { name: "Messages",       href: "/dashboard/messages",            icon: <MdMessage /> },

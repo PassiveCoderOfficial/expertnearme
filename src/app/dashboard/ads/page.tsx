@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
   MdCampaign, MdEdit, MdCheck, MdClose, MdRefresh,
-  MdToggleOn, MdToggleOff, MdFilterList, MdCreditCard,
+  MdToggleOn, MdToggleOff, MdFilterList, MdCreditCard, MdAdd, MdSearch,
 } from "react-icons/md";
 
 type AdSpot =
@@ -95,6 +95,27 @@ export default function AdsPage() {
   const [savingPlacement, setSavingPlacement] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [flash, setFlash] = useState<{ text: string; ok: boolean } | null>(null);
+
+  // Admin create campaign
+  const [createModal, setCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    expertQuery: "",
+    selectedExpertId: null as number | null,
+    selectedExpertName: "",
+    placementId: "",
+    billingCycle: "MONTHLY" as "WEEKLY" | "MONTHLY",
+    startsAt: new Date().toISOString().slice(0, 10),
+    targetCountry: "",
+    targetCategory: "",
+    bannerImageUrl: "",
+    bannerLinkUrl: "",
+    bannerAltText: "",
+    adminNote: "",
+  });
+  const [expertResults, setExpertResults] = useState<{ id: number; name: string; email: string }[]>([]);
+  const [searchingExperts, setSearchingExperts] = useState(false);
+  const [creatingCampaign, setCreatingCampaign] = useState(false);
+  const expertSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showFlash = (text: string, ok = true) => {
     setFlash({ text, ok });
@@ -214,6 +235,65 @@ export default function AdsPage() {
       showFlash("Action failed", false);
     } finally {
       setActionLoading(null);
+    }
+  }
+
+  function onExpertQueryChange(q: string) {
+    setCreateForm((f) => ({ ...f, expertQuery: q, selectedExpertId: null, selectedExpertName: "" }));
+    if (expertSearchTimer.current) clearTimeout(expertSearchTimer.current);
+    if (q.length < 2) { setExpertResults([]); return; }
+    expertSearchTimer.current = setTimeout(async () => {
+      setSearchingExperts(true);
+      try {
+        const res = await fetch(`/api/dashboard/experts?search=${encodeURIComponent(q)}&limit=8`);
+        const data = await res.json();
+        setExpertResults(data.experts || []);
+      } catch { setExpertResults([]); }
+      finally { setSearchingExperts(false); }
+    }, 300);
+  }
+
+  function selectExpert(e: { id: number; name: string; email: string }) {
+    setCreateForm((f) => ({ ...f, expertQuery: e.name, selectedExpertId: e.id, selectedExpertName: e.name }));
+    setExpertResults([]);
+  }
+
+  async function createCampaign() {
+    if (!createForm.selectedExpertId || !createForm.placementId) {
+      showFlash("Select expert and placement", false); return;
+    }
+    setCreatingCampaign(true);
+    try {
+      const res = await fetch("/api/admin/ad-campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          expertId: createForm.selectedExpertId,
+          placementId: Number(createForm.placementId),
+          billingCycle: createForm.billingCycle,
+          startsAt: createForm.startsAt,
+          targetCountry: createForm.targetCountry || null,
+          targetCategory: createForm.targetCategory || null,
+          bannerImageUrl: createForm.bannerImageUrl || null,
+          bannerLinkUrl: createForm.bannerLinkUrl || null,
+          bannerAltText: createForm.bannerAltText || null,
+          adminNote: createForm.adminNote || null,
+          skipApproval: true,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showFlash("Campaign created");
+        setCreateModal(false);
+        loadCampaigns();
+        setTab("campaigns");
+      } else {
+        showFlash(data.error || "Failed to create", false);
+      }
+    } catch {
+      showFlash("Something went wrong", false);
+    } finally {
+      setCreatingCampaign(false);
     }
   }
 
@@ -437,8 +517,14 @@ export default function AdsPage() {
 
       {tab === "campaigns" && (
         <div className="bg-slate-800/50 border border-white/8 rounded-2xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-white/8 flex items-center gap-3">
+          <div className="px-6 py-4 border-b border-white/8 flex items-center gap-3 flex-wrap">
             <h2 className="font-semibold text-white flex-1">Campaigns</h2>
+            <button
+              onClick={() => setCreateModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-400 text-white text-xs font-semibold transition-colors"
+            >
+              <MdAdd className="text-sm" /> Create Campaign
+            </button>
             <div className="flex items-center gap-2">
               <MdFilterList className="text-slate-400" />
               <select
@@ -558,6 +644,199 @@ export default function AdsPage() {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {createModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCreateModal(false)} />
+          <div className="relative bg-slate-900 border border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="font-bold text-white text-lg">Create Campaign</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Admin — campaign activated immediately</p>
+              </div>
+              <button onClick={() => setCreateModal(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5">
+                <MdClose />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Expert search */}
+              <div className="relative">
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">Expert</label>
+                <div className="relative">
+                  <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input
+                    type="text"
+                    value={createForm.expertQuery}
+                    onChange={(e) => onExpertQueryChange(e.target.value)}
+                    placeholder="Search by name, email…"
+                    className={`${inputCls} pl-9`}
+                  />
+                  {searchingExperts && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border border-orange-500 border-t-transparent animate-spin" />
+                  )}
+                </div>
+                {expertResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-white/10 rounded-xl shadow-xl z-10 overflow-hidden">
+                    {expertResults.map((e) => (
+                      <button
+                        key={e.id}
+                        onClick={() => selectExpert(e)}
+                        className="w-full text-left px-4 py-2.5 hover:bg-white/5 transition-colors"
+                      >
+                        <p className="text-sm text-white font-medium">{e.name}</p>
+                        <p className="text-xs text-slate-500">{e.email}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {createForm.selectedExpertId && (
+                  <p className="text-xs text-green-400 mt-1 flex items-center gap-1">
+                    <MdCheck className="shrink-0" /> Expert ID #{createForm.selectedExpertId} selected
+                  </p>
+                )}
+              </div>
+
+              {/* Placement */}
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">Ad Spot</label>
+                <select
+                  value={createForm.placementId}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, placementId: e.target.value }))}
+                  className={inputCls}
+                >
+                  <option value="">Select a spot…</option>
+                  {placements.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.label} — ${p.weeklyPrice}/wk · ${p.monthlyPrice}/mo
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Billing cycle */}
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">Billing Cycle</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["WEEKLY", "MONTHLY"] as const).map((cycle) => (
+                    <button
+                      key={cycle}
+                      onClick={() => setCreateForm((f) => ({ ...f, billingCycle: cycle }))}
+                      className={`py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                        createForm.billingCycle === cycle
+                          ? "bg-orange-500/20 border-orange-500/50 text-orange-300"
+                          : "bg-slate-800/60 border-white/10 text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      {cycle === "WEEKLY" ? "Weekly" : "Monthly"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Start date */}
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">Start Date</label>
+                <input
+                  type="date"
+                  value={createForm.startsAt}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, startsAt: e.target.value }))}
+                  className={inputCls}
+                />
+              </div>
+
+              {/* Targeting */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Target Country</label>
+                  <input
+                    type="text"
+                    maxLength={3}
+                    value={createForm.targetCountry}
+                    onChange={(e) => setCreateForm((f) => ({ ...f, targetCountry: e.target.value.toLowerCase() }))}
+                    placeholder="bd, ae… (blank = all)"
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Target Category</label>
+                  <input
+                    type="text"
+                    value={createForm.targetCategory}
+                    onChange={(e) => setCreateForm((f) => ({ ...f, targetCategory: e.target.value.toLowerCase() }))}
+                    placeholder="slug (blank = all)"
+                    className={inputCls}
+                  />
+                </div>
+              </div>
+
+              {/* Banner fields */}
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">Banner Image URL <span className="text-slate-600">(BANNER_TOP only)</span></label>
+                <input
+                  type="url"
+                  value={createForm.bannerImageUrl}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, bannerImageUrl: e.target.value }))}
+                  placeholder="https://…"
+                  className={inputCls}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Banner Link URL</label>
+                  <input
+                    type="url"
+                    value={createForm.bannerLinkUrl}
+                    onChange={(e) => setCreateForm((f) => ({ ...f, bannerLinkUrl: e.target.value }))}
+                    placeholder="https://…"
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Alt Text</label>
+                  <input
+                    type="text"
+                    value={createForm.bannerAltText}
+                    onChange={(e) => setCreateForm((f) => ({ ...f, bannerAltText: e.target.value }))}
+                    className={inputCls}
+                  />
+                </div>
+              </div>
+
+              {/* Admin note */}
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">Admin Note <span className="text-slate-600">(internal)</span></label>
+                <input
+                  type="text"
+                  value={createForm.adminNote}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, adminNote: e.target.value }))}
+                  placeholder="Optional internal note"
+                  className={inputCls}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setCreateModal(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-white/8 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={createCampaign}
+                disabled={creatingCampaign || !createForm.selectedExpertId || !createForm.placementId}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-400 text-white transition-colors disabled:opacity-50"
+              >
+                {creatingCampaign ? (
+                  <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                ) : <MdCheck />}
+                Create &amp; Activate
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
