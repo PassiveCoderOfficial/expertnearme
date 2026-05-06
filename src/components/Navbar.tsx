@@ -33,6 +33,7 @@ const FALLBACK_COUNTRIES: CountryOption[] = [
 const GLOBAL_ROUTES = new Set([
   '', 'login', 'signup', 'dashboard', 'create-expert-account',
   'for-experts', 'pricing', 'founding-experts', 'search', 'verify',
+  'completed-work', 'support', 'blog',
 ]);
 
 export default function Navbar() {
@@ -188,6 +189,9 @@ export default function Navbar() {
             </Link>
             <Link href={withCountry('/categories')} className="hover:text-slate-900 dark:hover:text-white transition-colors">
               Categories
+            </Link>
+            <Link href="/completed-work" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+              Completed Work
             </Link>
 
             {/* Blog dropdown */}

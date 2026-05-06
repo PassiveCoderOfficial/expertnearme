@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Shield, MapPin, Star, Users, CheckCircle, ChevronRight } from "lucide-react";
+import { ArrowRight, Shield, MapPin, Star, Users, CheckCircle, ChevronRight, CheckCircle2, ExternalLink } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { LogoMark } from "@/components/Logo";
 import FlagIcon from "@/components/FlagIcon";
@@ -11,9 +11,13 @@ export default async function GlobalHomePage() {
   let countries: { code: string; name: string; flagEmoji: string | null; metaDesc: string | null }[] = [];
   let expertCount = 0;
   let categoryCount = 0;
+  let recentWork: {
+    id: number; title: string; description: string | null; imageUrl: string | null; tags: string | null;
+    expert: { name: string; businessName: string | null; profileLink: string | null; profilePicture: string | null; verified: boolean; countryCode: string | null; categories: { category: { name: string } }[] };
+  }[] = [];
 
   try {
-    const [countriesResult, expertCountResult, categoryCountResult] = await Promise.all([
+    const [countriesResult, expertCountResult, categoryCountResult, recentWorkResult] = await Promise.all([
       prisma.country.findMany({
         where: { active: true },
         orderBy: { name: "asc" },
@@ -21,11 +25,26 @@ export default async function GlobalHomePage() {
       }),
       prisma.expert.count(),
       prisma.category.count({ where: { active: true } }),
+      prisma.completedWork.findMany({
+        where: { published: true },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+        include: {
+          expert: {
+            select: {
+              name: true, businessName: true, profileLink: true,
+              profilePicture: true, verified: true, countryCode: true,
+              categories: { take: 1, include: { category: { select: { name: true } } } },
+            },
+          },
+        },
+      }),
     ]);
 
     countries = countriesResult;
     expertCount = expertCountResult;
     categoryCount = categoryCountResult;
+    recentWork = recentWorkResult;
   } catch (err) {
     console.error("[Homepage] DB error:", err);
   }
@@ -216,6 +235,85 @@ export default async function GlobalHomePage() {
           layout="grid"
         />
       </section>
+
+      {/* ─── Completed Work Feed ──────────────────────────────────── */}
+      {recentWork.length > 0 && (
+        <section className="border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-950/40">
+          <div className="max-w-6xl mx-auto px-6 py-16">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <p className="text-xs uppercase tracking-widest text-orange-500 mb-1 font-semibold">Fresh from Experts</p>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Completed Work</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Real projects, real results — updated as experts complete new work.</p>
+              </div>
+              <Link href="/completed-work" className="hidden sm:flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-400 font-semibold transition-colors">
+                View All <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {recentWork.map((item) => {
+                const displayName = item.expert.businessName || item.expert.name;
+                const category = item.expert.categories[0]?.category.name;
+                const profileHref = item.expert.countryCode && item.expert.profileLink
+                  ? `/${item.expert.countryCode}/expert/${item.expert.profileLink}`
+                  : null;
+
+                return (
+                  <div key={item.id} className="group rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-white/8 overflow-hidden hover:border-orange-200 dark:hover:border-orange-500/30 transition-all shadow-sm dark:shadow-none flex flex-col">
+                    {item.imageUrl ? (
+                      <div className="w-full h-44 overflow-hidden bg-slate-100 dark:bg-slate-700/50">
+                        <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      </div>
+                    ) : (
+                      <div className="w-full h-44 bg-gradient-to-br from-orange-500/10 to-amber-500/5 dark:from-orange-500/15 dark:to-amber-500/8 flex items-center justify-center">
+                        <CheckCircle2 className="w-10 h-10 text-orange-400/30" />
+                      </div>
+                    )}
+                    <div className="p-5 flex flex-col flex-1">
+                      <h3 className="font-semibold text-slate-800 dark:text-white text-sm mb-2 line-clamp-2">{item.title}</h3>
+                      {item.description && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3 flex-1">{item.description}</p>
+                      )}
+                      {item.tags && (
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {item.tags.split(",").slice(0, 3).map((tag) => (
+                            <span key={tag} className="text-xs bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-300 border border-orange-100 dark:border-orange-500/15 px-2 py-0.5 rounded-full">{tag.trim()}</span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="mt-auto pt-3 border-t border-slate-100 dark:border-white/6 flex items-center gap-2.5">
+                        {item.expert.profilePicture ? (
+                          <img src={item.expert.profilePicture} alt={displayName} className="w-7 h-7 rounded-full object-cover shrink-0" />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                            {displayName.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          {profileHref ? (
+                            <Link href={profileHref} className="text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-orange-500 transition-colors truncate block">{displayName}</Link>
+                          ) : (
+                            <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">{displayName}</p>
+                          )}
+                          {category && <p className="text-xs text-slate-400 dark:text-slate-500 truncate">{category}</p>}
+                        </div>
+                        {item.expert.verified && <CheckCircle className="w-3.5 h-3.5 text-green-500 shrink-0" />}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 text-center sm:hidden">
+              <Link href="/completed-work" className="inline-flex items-center gap-2 text-sm text-orange-500 hover:text-orange-400 font-semibold">
+                View All Completed Work <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── For Experts CTA ──────────────────────────────────────── */}
       <section className="border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-950/60">

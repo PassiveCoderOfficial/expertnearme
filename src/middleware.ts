@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 const GLOBAL_ROUTES = new Set([
   '', 'login', 'signup', 'dashboard', 'create-expert-account',
   'for-experts', 'pricing', 'founding-experts', 'search', 'verify',
-  'api', '_next', 'favicon.ico',
+  'api', '_next', 'favicon.ico', 'completed-work', 'support', 'blog',
 ]);
 
 // Mapping from Vercel/Cloudflare geo country codes → our supported country slugs
