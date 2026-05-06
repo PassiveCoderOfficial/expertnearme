@@ -74,6 +74,10 @@ export async function POST(req: NextRequest) {
       referralCode: code,
       commissionPct,
     },
+    include: {
+      referredUser: { select: { id: true, name: true, email: true } },
+      commissions: { orderBy: { createdAt: 'desc' } },
+    },
   });
 
   return NextResponse.json(referral, { status: 201 });

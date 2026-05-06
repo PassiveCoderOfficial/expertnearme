@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronDown, Globe, Menu } from 'lucide-react';
+import { ChevronDown, Globe, Menu, BookOpen, Lightbulb, TrendingUp, Users } from 'lucide-react';
 import SearchBar from './SearchBar';
 import MobileNav from './MobileNav';
 import { useAuth } from '@/context/AuthContext';
@@ -11,6 +11,12 @@ import { LogoMark } from './Logo';
 import { setStoredCountry } from './CountryPickerModal';
 import FlagIcon from './FlagIcon';
 import { ThemeToggle } from './ThemeToggle';
+
+const BLOG_CATEGORIES = [
+  { label: 'Expert Guides', href: '/blog?category=expert-guides', icon: Lightbulb },
+  { label: 'Industry Trends', href: '/blog?category=industry-trends', icon: TrendingUp },
+  { label: 'Success Stories', href: '/blog?category=success-stories', icon: Users },
+];
 
 type CountryOption = { code: string; name: string; flagEmoji?: string };
 
@@ -33,7 +39,9 @@ export default function Navbar() {
   const [customLogo, setCustomLogo] = useState<string | null>(null);
   const [countries, setCountries] = useState<CountryOption[]>(FALLBACK_COUNTRIES);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [blogOpen, setBlogOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const blogRef = useRef<HTMLDivElement>(null);
   const { session, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -64,6 +72,9 @@ export default function Navbar() {
     const onOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
+      }
+      if (blogRef.current && !blogRef.current.contains(e.target as Node)) {
+        setBlogOpen(false);
       }
     };
     document.addEventListener('mousedown', onOutside);
@@ -175,6 +186,47 @@ export default function Navbar() {
             <Link href={withCountry('/categories')} className="hover:text-white transition-colors">
               Categories
             </Link>
+
+            {/* Blog dropdown */}
+            <div ref={blogRef} className="relative">
+              <button
+                onClick={() => setBlogOpen((v) => !v)}
+                onMouseEnter={() => setBlogOpen(true)}
+                className="flex items-center gap-1 hover:text-white transition-colors"
+              >
+                Blog
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-150 ${blogOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {blogOpen && (
+                <div
+                  onMouseLeave={() => setBlogOpen(false)}
+                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-56 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 py-2 overflow-hidden"
+                >
+                  <Link
+                    href="/blog"
+                    onClick={() => setBlogOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/6 transition-colors"
+                  >
+                    <BookOpen className="w-4 h-4 text-orange-400 shrink-0" />
+                    <span>All Articles</span>
+                  </Link>
+                  <div className="h-px bg-white/8 mx-3 my-1" />
+                  {BLOG_CATEGORIES.map(({ label, href, icon: Icon }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={() => setBlogOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-400 hover:text-white hover:bg-white/6 transition-colors"
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span>{label}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <Link
               href="/pricing"
               className="text-orange-400 hover:text-orange-300 transition-colors font-semibold"

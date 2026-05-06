@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import CountryPickerModal from "@/components/CountryPickerModal";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/components/ui/ToastProvider";
@@ -23,10 +24,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ThemeProvider>
           <ToastProvider>
             <AuthProvider>
-              <Navbar />
-              <AdBanner />
-              <CountryPickerModal />
-              {children}
+              <div className="flex flex-col min-h-screen">
+                <Navbar />
+                <AdBanner />
+                <CountryPickerModal />
+                <div className="flex-1">
+                  {children}
+                </div>
+                <Footer />
+              </div>
             </AuthProvider>
           </ToastProvider>
         </ThemeProvider>

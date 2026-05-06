@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, ChevronDown, Globe } from "lucide-react";
+import { Menu, X, ChevronDown, Globe, BookOpen } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import FlagIcon from "./FlagIcon";
 import { setStoredCountry } from "./CountryPickerModal";
@@ -142,6 +142,10 @@ export default function MobileNav() {
             </button>
             <button onClick={() => go(withCountry("/categories"))} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-white/6 transition-colors">
               Categories
+            </button>
+            <button onClick={() => go("/blog")} className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-white/6 transition-colors">
+              <BookOpen className="w-4 h-4 shrink-0" />
+              Blog
             </button>
             <button onClick={() => go("/pricing")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold text-orange-400 hover:text-orange-300 hover:bg-orange-500/8 transition-colors">
               List Your Business
