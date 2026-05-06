@@ -112,7 +112,7 @@ export default function AdsPage() {
     bannerAltText: "",
     adminNote: "",
   });
-  const [expertResults, setExpertResults] = useState<{ id: number; name: string; email: string }[]>([]);
+  const [expertResults, setExpertResults] = useState<{ id: number; name: string; businessName: string | null; email: string }[]>([]);
   const [searchingExperts, setSearchingExperts] = useState(false);
   const [creatingCampaign, setCreatingCampaign] = useState(false);
   const expertSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -247,14 +247,16 @@ export default function AdsPage() {
       try {
         const res = await fetch(`/api/dashboard/experts?search=${encodeURIComponent(q)}&limit=8`);
         const data = await res.json();
-        setExpertResults(data.experts || []);
+        // API returns bare array when searching
+        setExpertResults(Array.isArray(data) ? data : (data.experts || []));
       } catch { setExpertResults([]); }
       finally { setSearchingExperts(false); }
     }, 300);
   }
 
-  function selectExpert(e: { id: number; name: string; email: string }) {
-    setCreateForm((f) => ({ ...f, expertQuery: e.name, selectedExpertId: e.id, selectedExpertName: e.name }));
+  function selectExpert(e: { id: number; name: string; businessName: string | null; email: string }) {
+    const displayName = e.businessName || e.name;
+    setCreateForm((f) => ({ ...f, expertQuery: displayName, selectedExpertId: e.id, selectedExpertName: displayName }));
     setExpertResults([]);
   }
 
@@ -686,7 +688,7 @@ export default function AdsPage() {
                         onClick={() => selectExpert(e)}
                         className="w-full text-left px-4 py-2.5 hover:bg-white/5 transition-colors"
                       >
-                        <p className="text-sm text-white font-medium">{e.name}</p>
+                        <p className="text-sm text-white font-medium">{e.businessName || e.name}</p>
                         <p className="text-xs text-slate-500">{e.email}</p>
                       </button>
                     ))}
