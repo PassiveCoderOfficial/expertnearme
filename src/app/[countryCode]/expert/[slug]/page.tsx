@@ -10,14 +10,34 @@ import PortfolioLightbox from "@/components/PortfolioLightbox";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
 
+export const revalidate = 3600;
+
 interface ExpertProfilePageProps {
   params: Promise<{ slug: string; countryCode: string }>;
+}
+
+export async function generateStaticParams() {
+  try {
+    const experts = await prisma.expert.findMany({
+      where: { verified: true },
+      select: { profileLink: true, id: true, countryCode: true },
+    });
+    return experts.map((e) => ({
+      countryCode: e.countryCode,
+      slug: e.profileLink || String(e.id),
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: ExpertProfilePageProps): Promise<Metadata> {
   try {
     const { slug, countryCode } = await params;
-    const expert = await prisma.expert.findFirst({ where: { profileLink: slug, countryCode } });
+    const expert = await prisma.expert.findFirst({
+      where: { profileLink: slug, countryCode },
+      select: { name: true, businessName: true, shortDesc: true },
+    });
     if (!expert) return { title: "Expert Not Found — ExpertNear.Me" };
     return {
       title: `${expert.businessName || expert.name} — ExpertNear.Me`,

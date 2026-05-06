@@ -5,6 +5,8 @@ import { Star, Shield, Crown, CheckCircle } from "lucide-react";
 import ExpertMap, { MapExpert } from "@/components/ExpertMap";
 import AdFeaturedExperts from "@/components/ads/AdFeaturedExperts";
 
+export const revalidate = 3600;
+
 type Props = { params: Promise<{ countryCode: string; slug: string }> };
 
 function initials(name: string) {

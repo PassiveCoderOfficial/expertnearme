@@ -6,6 +6,8 @@ import ExpertMap, { MapExpert } from "@/components/ExpertMap";
 import { prisma } from "@/lib/db";
 import AdFeaturedExperts from "@/components/ads/AdFeaturedExperts";
 
+export const revalidate = 3600;
+
 interface Props {
   params: Promise<{ countryCode: string }>;
 }
