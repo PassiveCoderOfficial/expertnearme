@@ -42,7 +42,6 @@ export default function MobileNav() {
       .catch(() => {});
   }, []);
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -54,7 +53,6 @@ export default function MobileNav() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Close on route change
   useEffect(() => { setOpen(false); setCountryOpen(false); }, [pathname]);
 
   const go = (href: string) => { setOpen(false); router.push(href); };
@@ -79,7 +77,7 @@ export default function MobileNav() {
       {/* Hamburger */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center justify-center w-10 h-10 rounded-xl border border-white/15 bg-white/6 text-white hover:border-orange-500/40 transition-colors"
+        className="flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/6 text-slate-700 dark:text-white hover:border-orange-300 dark:hover:border-orange-500/40 transition-colors"
         aria-label="Toggle menu"
       >
         {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -88,91 +86,93 @@ export default function MobileNav() {
       {/* Backdrop */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/50 z-40"
+          className="fixed inset-0 bg-black/20 dark:bg-black/50 z-40"
           onClick={() => setOpen(false)}
         />
       )}
 
       {/* Panel */}
       {open && (
-        <div className="fixed top-16 left-0 right-0 mx-3 z-50 rounded-2xl bg-slate-900 border border-white/10 shadow-2xl overflow-hidden">
+        <div className="fixed top-16 left-0 right-0 mx-3 z-50 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 shadow-xl dark:shadow-2xl overflow-hidden">
           <div className="p-4 space-y-1">
 
             {/* Country selector */}
             <div className="mb-3">
               <button
                 onClick={() => setCountryOpen((v) => !v)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/10 bg-slate-800/60 text-sm text-white hover:border-orange-500/30 transition-colors"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/60 text-sm text-slate-700 dark:text-white hover:border-orange-300 dark:hover:border-orange-500/30 transition-colors"
               >
                 <span className="shrink-0">
                   {currentCountry
                     ? <FlagIcon countryCode={currentCountry.code} width={20} height={15} />
                     : <Globe className="w-4 h-4 text-slate-400" />}
                 </span>
-                <span className="flex-1 text-left text-slate-300">
+                <span className="flex-1 text-left text-slate-600 dark:text-slate-300">
                   {currentCountry?.name || "Select Country"}
                 </span>
-                <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${countryOpen ? "rotate-180" : ""}`} />
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${countryOpen ? "rotate-180" : ""}`} />
               </button>
 
               {countryOpen && (
-                <div className="mt-1 rounded-xl border border-white/10 bg-slate-800 overflow-hidden">
+                <div className="mt-1 rounded-xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-800 overflow-hidden">
                   {countries.map((c) => (
                     <button
                       key={c.code}
                       onClick={() => changeCountry(c.code)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors hover:bg-white/6 ${
-                        c.code === currentCode ? "text-orange-300 bg-orange-500/8" : "text-slate-300"
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${
+                        c.code === currentCode
+                          ? "text-orange-600 dark:text-orange-300 bg-orange-50 dark:bg-orange-500/8"
+                          : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/6"
                       }`}
                     >
                       <FlagIcon countryCode={c.code} width={20} height={15} />
                       <span>{c.name}</span>
-                      {c.code === currentCode && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-orange-400" />}
+                      {c.code === currentCode && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-orange-500" />}
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            <div className="h-px bg-white/8 my-2" />
+            <div className="h-px bg-slate-100 dark:bg-white/8 my-2" />
 
             {/* Nav links */}
-            <button onClick={() => go(currentCode ? `/${currentCode}` : "/")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-white/6 transition-colors">
+            <button onClick={() => go(currentCode ? `/${currentCode}` : "/")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/6 transition-colors">
               Find Experts
             </button>
-            <button onClick={() => go(withCountry("/categories"))} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-white/6 transition-colors">
+            <button onClick={() => go(withCountry("/categories"))} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/6 transition-colors">
               Categories
             </button>
-            <button onClick={() => go("/blog")} className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-white/6 transition-colors">
+            <button onClick={() => go("/blog")} className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/6 transition-colors">
               <BookOpen className="w-4 h-4 shrink-0" />
               Blog
             </button>
-            <button onClick={() => go("/pricing")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold text-orange-400 hover:text-orange-300 hover:bg-orange-500/8 transition-colors">
+            <button onClick={() => go("/pricing")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-500/8 transition-colors">
               List Your Business
             </button>
 
-            <div className="h-px bg-white/8 my-2" />
+            <div className="h-px bg-slate-100 dark:bg-white/8 my-2" />
 
             {session?.authenticated ? (
               <>
-                <button onClick={() => go("/dashboard")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-white/6 transition-colors">
+                <button onClick={() => go("/dashboard")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/6 transition-colors">
                   Dashboard
                 </button>
                 <button
                   onClick={() => { logout(); setOpen(false); }}
-                  className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/6 transition-colors"
+                  className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/6 transition-colors"
                 >
                   Log Out
                 </button>
               </>
             ) : (
               <>
-                <button onClick={() => go("/login")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-white/6 transition-colors">
+                <button onClick={() => go("/login")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/6 transition-colors">
                   Log In
                 </button>
                 <button
                   onClick={() => go("/signup")}
-                  className="w-full text-center px-3 py-2.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-400 text-slate-900 transition-colors mt-1"
+                  className="w-full text-center px-3 py-2.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-400 text-white transition-colors mt-1 shadow-sm shadow-orange-500/20"
                 >
                   Sign Up
                 </button>

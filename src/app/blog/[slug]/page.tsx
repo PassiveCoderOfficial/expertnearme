@@ -37,23 +37,22 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   if (!post) notFound();
 
-  // Increment view count (fire-and-forget)
   prisma.blogPost.update({
     where: { id: post.id },
     data: { viewCount: { increment: 1 } },
   }).catch(() => {});
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+    <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
       <div className="max-w-3xl mx-auto px-4 py-12">
         <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm mb-8 transition-colors"
+          href="/blog"
+          className="inline-flex items-center gap-2 text-slate-400 hover:text-orange-600 dark:hover:text-white text-sm mb-8 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to home
+          <ArrowLeft className="w-4 h-4" /> Back to blog
         </Link>
 
-        <div className="w-full aspect-[2/1] rounded-2xl overflow-hidden mb-8 bg-slate-800">
+        <div className="w-full aspect-[2/1] rounded-2xl overflow-hidden mb-8 bg-slate-100 dark:bg-slate-800">
           {post.coverImage ? (
             <img
               src={post.coverImage}
@@ -61,24 +60,24 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 flex flex-col items-center justify-center gap-3">
-              <img src="/logo.png" alt="ExpertNear.Me" className="h-14 w-auto opacity-25" />
-              <span className="text-sm font-semibold text-slate-600 uppercase tracking-widest">ExpertNear.Me</span>
+            <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-950 flex flex-col items-center justify-center gap-3">
+              <img src="/logo.png" alt="ExpertNear.Me" className="h-14 w-auto opacity-20 dark:opacity-25" />
+              <span className="text-sm font-semibold text-slate-300 dark:text-slate-600 uppercase tracking-widest">ExpertNear.Me</span>
             </div>
           )}
         </div>
 
         <header className="mb-8">
           {post.categoryTag && (
-            <span className="text-xs font-semibold text-orange-400 uppercase tracking-wider">
+            <span className="text-xs font-semibold text-orange-500 dark:text-orange-400 uppercase tracking-wider">
               {post.categoryTag.replace(/-/g, ' ')}
             </span>
           )}
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mt-2 leading-tight">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mt-2 leading-tight">
             {post.title}
           </h1>
           {post.excerpt && (
-            <p className="text-slate-300 text-lg mt-3 leading-relaxed">{post.excerpt}</p>
+            <p className="text-slate-500 dark:text-slate-300 text-lg mt-3 leading-relaxed">{post.excerpt}</p>
           )}
 
           <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-slate-400">
@@ -100,16 +99,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </header>
 
         <article
-          className="blog-content text-slate-300 leading-relaxed"
+          className="blog-content text-slate-600 dark:text-slate-300 leading-relaxed"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
 
         {post.tags && (
-          <div className="flex flex-wrap gap-2 mt-10 pt-6 border-t border-slate-700/50">
+          <div className="flex flex-wrap gap-2 mt-10 pt-6 border-t border-slate-100 dark:border-slate-700/50">
             {post.tags.split(',').map((tag) => tag.trim()).filter(Boolean).map((tag) => (
               <span
                 key={tag}
-                className="text-xs px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-400"
+                className="text-xs px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
               >
                 #{tag}
               </span>

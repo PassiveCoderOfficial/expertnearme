@@ -51,17 +51,17 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-slate-950 border-t border-white/8 mt-auto">
+    <footer className="bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-white/8 mt-auto">
       {/* CTA strip */}
-      <div className="border-b border-white/8 bg-gradient-to-r from-orange-500/10 via-orange-500/5 to-transparent">
+      <div className="border-b border-orange-100 dark:border-white/8 bg-gradient-to-r from-orange-50 to-amber-50/50 dark:from-orange-500/10 dark:via-orange-500/5 dark:to-transparent">
         <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <p className="text-white font-semibold text-lg">Ready to grow your business?</p>
-            <p className="text-slate-400 text-sm mt-0.5">Join 500+ experts on ExpertNear.Me — founding deal ends Aug 15, 2026.</p>
+            <p className="text-slate-900 dark:text-white font-semibold text-lg">Ready to grow your business?</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">Join 500+ experts on ExpertNear.Me — founding deal ends Aug 15, 2026.</p>
           </div>
           <Link
             href="/create-expert-account"
-            className="shrink-0 bg-orange-500 hover:bg-orange-400 text-slate-900 font-semibold text-sm px-6 py-2.5 rounded-xl transition-colors"
+            className="shrink-0 bg-orange-500 hover:bg-orange-400 text-white font-semibold text-sm px-6 py-2.5 rounded-xl transition-colors shadow-sm shadow-orange-500/20"
           >
             Get Listed Free
           </Link>
@@ -75,11 +75,11 @@ export default function Footer() {
           <div className="col-span-2 sm:col-span-3 lg:col-span-2 space-y-5">
             <Link href="/" className="inline-flex items-center gap-2">
               <LogoMark size={28} />
-              <span className="text-base font-bold text-white">
-                <span className="text-orange-400">Expert</span>Near.Me
+              <span className="text-base font-bold text-slate-900 dark:text-white">
+                <span className="text-orange-500">Expert</span>Near.Me
               </span>
             </Link>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
+            <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-xs">
               The global directory connecting buyers with verified local experts — by country, by category, by trust.
             </p>
             <div className="flex items-center gap-3">
@@ -90,7 +90,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="w-8 h-8 rounded-lg bg-white/6 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:border-white/25 transition-colors"
+                  className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/6 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 hover:text-orange-500 dark:hover:text-white hover:border-orange-200 dark:hover:border-white/25 transition-colors"
                 >
                   <Icon className="w-3.5 h-3.5" />
                 </a>
@@ -98,7 +98,7 @@ export default function Footer() {
               <a
                 href="mailto:hello@expertnear.me"
                 aria-label="Email"
-                className="w-8 h-8 rounded-lg bg-white/6 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:border-white/25 transition-colors"
+                className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/6 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 hover:text-orange-500 dark:hover:text-white hover:border-orange-200 dark:hover:border-white/25 transition-colors"
               >
                 <Mail className="w-3.5 h-3.5" />
               </a>
@@ -108,13 +108,13 @@ export default function Footer() {
           {/* Link columns */}
           {Object.entries(FOOTER_LINKS).map(([title, links]) => (
             <div key={title} className="space-y-3">
-              <p className="text-white font-semibold text-sm">{title}</p>
+              <p className="text-slate-900 dark:text-white font-semibold text-sm">{title}</p>
               <ul className="space-y-2">
                 {links.map(({ label, href }) => (
                   <li key={label}>
                     <Link
                       href={href}
-                      className="text-slate-400 hover:text-white text-sm transition-colors"
+                      className="text-slate-500 dark:text-slate-400 hover:text-orange-600 dark:hover:text-white text-sm transition-colors"
                     >
                       {label}
                     </Link>
@@ -126,8 +126,8 @@ export default function Footer() {
         </div>
 
         {/* Countries */}
-        <div className="mt-10 pt-8 border-t border-white/8">
-          <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2">
+        <div className="mt-10 pt-8 border-t border-slate-200 dark:border-white/8">
+          <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2">
             <Globe className="w-3.5 h-3.5" /> Available Countries
           </p>
           <div className="flex flex-wrap gap-2">
@@ -135,14 +135,14 @@ export default function Footer() {
               <Link
                 key={code}
                 href={`/${code}`}
-                className="text-xs text-slate-400 hover:text-white bg-white/4 hover:bg-white/8 border border-white/8 rounded-lg px-3 py-1.5 transition-colors"
+                className="text-xs text-slate-500 dark:text-slate-400 hover:text-orange-600 dark:hover:text-white bg-white dark:bg-white/4 hover:bg-orange-50 dark:hover:bg-white/8 border border-slate-200 dark:border-white/8 rounded-lg px-3 py-1.5 transition-colors shadow-sm dark:shadow-none"
               >
                 {name}
               </Link>
             ))}
             <Link
               href="/"
-              className="text-xs text-orange-400 hover:text-orange-300 bg-orange-500/8 border border-orange-500/20 rounded-lg px-3 py-1.5 transition-colors"
+              className="text-xs text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 bg-orange-50 dark:bg-orange-500/8 border border-orange-200 dark:border-orange-500/20 rounded-lg px-3 py-1.5 transition-colors"
             >
               + More Countries
             </Link>
@@ -150,12 +150,12 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-8 pt-6 border-t border-white/8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+        <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
           <p>© {year} ExpertNear.Me. All rights reserved.</p>
           <div className="flex items-center gap-4">
-            <Link href="/privacy" className="hover:text-slate-300 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-slate-300 transition-colors">Terms</Link>
-            <Link href="/cookies" className="hover:text-slate-300 transition-colors">Cookies</Link>
+            <Link href="/privacy" className="hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Terms</Link>
+            <Link href="/cookies" className="hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Cookies</Link>
           </div>
         </div>
       </div>

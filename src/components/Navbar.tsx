@@ -108,7 +108,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-white/8">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200/80 dark:border-white/8">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
 
         {/* Left: dashboard toggle (mobile only) + logo */}
@@ -116,7 +116,7 @@ export default function Navbar() {
           {isDashboard && (
             <button
               onClick={openDashboardSidebar}
-              className="md:hidden p-1.5 text-slate-400 hover:text-white transition-colors"
+              className="md:hidden p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
               aria-label="Open dashboard menu"
             >
               <Menu className="w-5 h-5" />
@@ -128,8 +128,8 @@ export default function Navbar() {
             ) : (
               <>
                 <LogoMark size={30} />
-                <span className="text-base font-bold text-white tracking-tight">
-                  <span className="text-orange-400">Expert</span>Near.Me
+                <span className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                  <span className="text-orange-500">Expert</span>Near.Me
                 </span>
               </>
             )}
@@ -142,33 +142,33 @@ export default function Navbar() {
           <div ref={dropdownRef} className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 h-9 rounded-lg border border-white/15 bg-white/6 px-3 text-sm text-white hover:border-orange-500/40 transition-colors"
+              className="flex items-center gap-2 h-9 rounded-lg border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/6 px-3 text-sm text-slate-700 dark:text-white hover:border-orange-400 dark:hover:border-orange-500/40 transition-colors"
             >
               <span className="flex items-center">
                 {currentCountry ? <FlagIcon countryCode={currentCountry.code} width={20} height={15} /> : <Globe className="w-4 h-4 text-slate-400" />}
               </span>
-              <span className="text-slate-300 max-w-[80px] truncate">
+              <span className="text-slate-600 dark:text-slate-300 max-w-[80px] truncate">
                 {currentCountry?.name || 'Country'}
               </span>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {dropdownOpen && (
-              <div className="absolute top-full left-0 mt-2 w-52 bg-slate-900 border border-white/10 rounded-xl shadow-2xl z-50 py-1.5 overflow-hidden">
+              <div className="absolute top-full left-0 mt-2 w-52 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-xl shadow-xl dark:shadow-2xl z-50 py-1.5 overflow-hidden">
                 {countries.map((c) => (
                   <button
                     key={c.code}
                     onClick={() => handleCountryChange(c.code)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors hover:bg-white/6 ${
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-white/6 ${
                       c.code === currentCode
-                        ? 'text-orange-300 bg-orange-500/8'
-                        : 'text-slate-300'
+                        ? 'text-orange-600 dark:text-orange-300 bg-orange-50 dark:bg-orange-500/8'
+                        : 'text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     <span className="shrink-0"><FlagIcon countryCode={c.code} width={20} height={15} /></span>
                     <span className="truncate">{c.name}</span>
                     {c.code === currentCode && (
-                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />
+                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
                     )}
                   </button>
                 ))}
@@ -176,14 +176,14 @@ export default function Navbar() {
             )}
           </div>
 
-          <nav className="flex items-center gap-5 text-sm font-medium text-slate-300">
+          <nav className="flex items-center gap-5 text-sm font-medium text-slate-600 dark:text-slate-300">
             <Link
               href={hasCountryPrefix ? `/${currentCode}` : '/'}
-              className="hover:text-white transition-colors"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               Find Experts
             </Link>
-            <Link href={withCountry('/categories')} className="hover:text-white transition-colors">
+            <Link href={withCountry('/categories')} className="hover:text-slate-900 dark:hover:text-white transition-colors">
               Categories
             </Link>
 
@@ -192,32 +192,32 @@ export default function Navbar() {
               <button
                 onClick={() => setBlogOpen((v) => !v)}
                 onMouseEnter={() => setBlogOpen(true)}
-                className="flex items-center gap-1 hover:text-white transition-colors"
+                className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-white transition-colors"
               >
                 Blog
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-150 ${blogOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-150 ${blogOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {blogOpen && (
                 <div
                   onMouseLeave={() => setBlogOpen(false)}
-                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-56 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 py-2 overflow-hidden"
+                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-56 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-2xl shadow-xl dark:shadow-2xl z-50 py-2 overflow-hidden"
                 >
                   <Link
                     href="/blog"
                     onClick={() => setBlogOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/6 transition-colors"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/6 transition-colors"
                   >
-                    <BookOpen className="w-4 h-4 text-orange-400 shrink-0" />
+                    <BookOpen className="w-4 h-4 text-orange-500 shrink-0" />
                     <span>All Articles</span>
                   </Link>
-                  <div className="h-px bg-white/8 mx-3 my-1" />
+                  <div className="h-px bg-slate-100 dark:bg-white/8 mx-3 my-1" />
                   {BLOG_CATEGORIES.map(({ label, href, icon: Icon }) => (
                     <Link
                       key={href}
                       href={href}
                       onClick={() => setBlogOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-400 hover:text-white hover:bg-white/6 transition-colors"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/6 transition-colors"
                     >
                       <Icon className="w-4 h-4 shrink-0" />
                       <span>{label}</span>
@@ -229,7 +229,7 @@ export default function Navbar() {
 
             <Link
               href="/pricing"
-              className="text-orange-400 hover:text-orange-300 transition-colors font-semibold"
+              className="text-orange-500 hover:text-orange-600 dark:hover:text-orange-300 transition-colors font-semibold"
             >
               List Your Business
             </Link>
@@ -244,24 +244,24 @@ export default function Navbar() {
           </div>
           {session?.authenticated ? (
             <>
-              <Link href="/dashboard" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+              <Link href="/dashboard" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
                 Dashboard
               </Link>
               <button
                 onClick={logout}
-                className="text-sm font-medium text-slate-400 hover:text-white transition-colors"
+                className="text-sm font-medium text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
               >
                 Log Out
               </button>
             </>
           ) : (
             <>
-              <Link href="/login" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+              <Link href="/login" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
                 Login
               </Link>
               <Link
                 href="/signup"
-                className="text-sm font-semibold bg-orange-500 hover:bg-orange-400 text-slate-900 px-4 py-1.5 rounded-lg transition-colors"
+                className="text-sm font-semibold bg-orange-500 hover:bg-orange-400 text-white px-4 py-1.5 rounded-lg transition-colors shadow-sm shadow-orange-500/20"
               >
                 Sign Up
               </Link>

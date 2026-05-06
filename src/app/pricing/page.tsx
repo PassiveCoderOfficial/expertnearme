@@ -103,23 +103,23 @@ export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
+    <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white">
 
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 pt-28 pb-16 text-center">
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-full px-4 py-2 text-orange-300 text-sm font-medium mb-7">
+          <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-full px-4 py-2 text-orange-600 dark:text-orange-300 text-sm font-medium mb-7">
             <Crown className="h-4 w-4" />
             Pre-Launch · Founding Expert spots available
           </div>
 
-          <h1 className="text-5xl sm:text-6xl font-bold leading-tight mb-6 max-w-4xl mx-auto">
+          <h1 className="text-5xl sm:text-6xl font-bold leading-tight mb-6 max-w-4xl mx-auto text-slate-900 dark:text-white">
             List your expertise.
             <br />
-            <span className="text-orange-400">Get found. Grow locally.</span>
+            <span className="text-orange-500 dark:text-orange-400">Get found. Grow locally.</span>
           </h1>
 
-          <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-10">
+          <p className="text-lg text-slate-500 dark:text-slate-300 max-w-2xl mx-auto mb-10">
             ExpertNear.Me connects clients with trusted local experts across Asia and the Middle East.
             Create your profile free — or secure lifetime access before we launch on August 16, 2026.
           </p>
@@ -127,7 +127,7 @@ export default function PricingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <a
               href="#pricing"
-              className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 text-slate-900 font-bold px-7 py-3.5 rounded-xl transition-all shadow-lg shadow-orange-500/20 group"
+              className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 text-white font-bold px-7 py-3.5 rounded-xl transition-all shadow-lg shadow-orange-500/20 group"
             >
               <Crown className="h-4 w-4" />
               Claim Founding Expert Spot
@@ -135,21 +135,21 @@ export default function PricingPage() {
             </a>
             <Link
               href="/create-expert-account"
-              className="flex items-center gap-2 border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-medium px-6 py-3.5 rounded-xl transition-colors"
+              className="flex items-center gap-2 border border-slate-200 dark:border-slate-600 hover:border-orange-300 dark:hover:border-slate-400 text-slate-600 dark:text-slate-300 hover:text-orange-600 dark:hover:text-white font-medium px-6 py-3.5 rounded-xl transition-colors bg-white dark:bg-transparent shadow-sm dark:shadow-none"
             >
               Start for Free
             </Link>
           </div>
 
-          <p className="text-sm text-slate-500">
-            <Zap className="inline h-3.5 w-3.5 text-orange-400 mr-1" />
+          <p className="text-sm text-slate-400 dark:text-slate-500">
+            <Zap className="inline h-3.5 w-3.5 text-orange-500 mr-1" />
             30-day money-back guarantee
           </p>
         </motion.div>
       </section>
 
       {/* Stats bar */}
-      <section className="border-y border-white/5 bg-white/3 backdrop-blur-sm">
+      <section className="border-y border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/3 dark:backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 py-8">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             {STATS.map((s, i) => (
@@ -159,7 +159,7 @@ export default function PricingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + i * 0.07 }}
               >
-                <p className="text-3xl font-bold text-orange-400">{s.value}</p>
+                <p className="text-3xl font-bold text-orange-500 dark:text-orange-400">{s.value}</p>
                 <p className="text-sm text-slate-400 mt-1">{s.label}</p>
               </motion.div>
             ))}
@@ -170,8 +170,8 @@ export default function PricingPage() {
       {/* Benefits */}
       <section className="max-w-6xl mx-auto px-6 py-24">
         <div className="text-center mb-14">
-          <p className="text-xs text-orange-300 uppercase tracking-widest mb-3">Why ExpertNear.Me</p>
-          <h2 className="text-4xl font-bold">Everything you need to grow locally</h2>
+          <p className="text-xs text-orange-500 uppercase tracking-widest mb-3 font-semibold">Why ExpertNear.Me</p>
+          <h2 className="text-4xl font-bold text-slate-900 dark:text-white">Everything you need to grow locally</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {BENEFITS.map((b, i) => (
@@ -181,24 +181,24 @@ export default function PricingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08 }}
-              className="rounded-2xl border border-white/8 bg-white/4 p-7 hover:border-orange-500/30 hover:bg-white/6 transition-colors"
+              className="rounded-2xl border border-slate-100 dark:border-white/8 bg-white dark:bg-white/4 p-7 hover:border-orange-200 dark:hover:border-orange-500/30 hover:shadow-md dark:hover:bg-white/6 transition-all shadow-sm dark:shadow-none"
             >
-              <div className="w-10 h-10 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center mb-4">
-                <b.icon className="h-5 w-5 text-orange-400" />
+              <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-500/15 border border-orange-100 dark:border-orange-500/25 flex items-center justify-center mb-4">
+                <b.icon className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               </div>
-              <h3 className="font-semibold text-white mb-2">{b.title}</h3>
-              <p className="text-sm text-slate-400 leading-relaxed">{b.body}</p>
+              <h3 className="font-semibold text-slate-800 dark:text-white mb-2">{b.title}</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{b.body}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
       {/* How it works */}
-      <section className="border-y border-white/5 bg-white/3">
+      <section className="border-y border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/3">
         <div className="max-w-6xl mx-auto px-6 py-24">
           <div className="text-center mb-14">
-            <p className="text-xs text-orange-300 uppercase tracking-widest mb-3">How it works</p>
-            <h2 className="text-4xl font-bold">Up and running in 10 minutes</h2>
+            <p className="text-xs text-orange-500 uppercase tracking-widest mb-3 font-semibold">How it works</p>
+            <h2 className="text-4xl font-bold text-slate-900 dark:text-white">Up and running in 10 minutes</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {STEPS.map((step, i) => (
@@ -210,11 +210,11 @@ export default function PricingPage() {
                 transition={{ delay: i * 0.1 }}
                 className="text-center"
               >
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500/20 to-amber-400/10 border border-orange-500/30 flex items-center justify-center mx-auto mb-5">
-                  <span className="text-orange-400 font-bold text-lg">{step.number}</span>
+                <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-gradient-to-br dark:from-orange-500/20 dark:to-amber-400/10 border border-orange-200 dark:border-orange-500/30 flex items-center justify-center mx-auto mb-5">
+                  <span className="text-orange-500 dark:text-orange-400 font-bold text-lg">{step.number}</span>
                 </div>
-                <h3 className="font-semibold text-white text-lg mb-2">{step.title}</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">{step.body}</p>
+                <h3 className="font-semibold text-slate-800 dark:text-white text-lg mb-2">{step.title}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{step.body}</p>
               </motion.div>
             ))}
           </div>
@@ -229,11 +229,11 @@ export default function PricingPage() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <p className="text-xs text-orange-300 uppercase tracking-widest mb-4">Your profile</p>
-            <h2 className="text-4xl font-bold mb-5 leading-tight">
+            <p className="text-xs text-orange-500 uppercase tracking-widest mb-4 font-semibold">Your profile</p>
+            <h2 className="text-4xl font-bold mb-5 leading-tight text-slate-900 dark:text-white">
               A professional presence your clients will trust
             </h2>
-            <p className="text-slate-300 mb-8 leading-relaxed">
+            <p className="text-slate-500 dark:text-slate-300 mb-8 leading-relaxed">
               Your expert profile is your storefront on ExpertNear.Me. It shows your work, your services, your contact info, and your reputation — all in one place, optimized for local search.
             </p>
             <ul className="space-y-3">
@@ -246,8 +246,8 @@ export default function PricingPage() {
                 'Client reviews & ratings',
                 '"Founding Expert" badge (lifetime deal)',
               ].map(item => (
-                <li key={item} className="flex items-center gap-3 text-sm text-slate-300">
-                  <CheckCircle className="h-4 w-4 text-orange-400 shrink-0" />
+                <li key={item} className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                  <CheckCircle className="h-4 w-4 text-orange-500 shrink-0" />
                   {item}
                 </li>
               ))}
@@ -258,37 +258,37 @@ export default function PricingPage() {
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="rounded-2xl border border-white/10 bg-slate-800/60 overflow-hidden shadow-2xl"
+            className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800/60 overflow-hidden shadow-xl dark:shadow-2xl"
           >
-            <div className="h-32 bg-gradient-to-r from-orange-900/50 to-amber-900/30 relative">
+            <div className="h-32 bg-gradient-to-r from-orange-100 dark:from-orange-900/50 to-amber-50 dark:to-amber-900/30 relative">
               <div className="absolute -bottom-8 left-6">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-slate-900 font-bold text-xl border-2 border-slate-800">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white font-bold text-xl border-2 border-white dark:border-slate-800">
                   AK
                 </div>
               </div>
               <div className="absolute top-3 right-3">
-                <span className="inline-flex items-center gap-1 bg-gradient-to-r from-orange-500 to-amber-400 text-slate-900 text-xs font-bold px-2.5 py-1 rounded-full">
+                <span className="inline-flex items-center gap-1 bg-gradient-to-r from-orange-500 to-amber-400 text-white text-xs font-bold px-2.5 py-1 rounded-full">
                   <Crown className="h-3 w-3" />
                   Founding Expert
                 </span>
               </div>
             </div>
             <div className="pt-10 px-6 pb-6">
-              <h4 className="font-bold text-white text-lg">Ahmad Karim</h4>
-              <p className="text-slate-400 text-sm">Interior Design & Renovation</p>
+              <h4 className="font-bold text-slate-900 dark:text-white text-lg">Ahmad Karim</h4>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">Interior Design & Renovation</p>
               <div className="flex items-center gap-1 mt-1.5 mb-4">
                 {[1,2,3,4,5].map(s => <Star key={s} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />)}
                 <span className="text-xs text-slate-400 ml-1">4.9 (38 reviews)</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-400 mb-5">
-                <MapPin className="h-3.5 w-3.5 text-orange-400" />
+                <MapPin className="h-3.5 w-3.5 text-orange-500" />
                 Singapore · Furniture & Renovation
               </div>
               <div className="flex gap-2">
                 <button className="flex-1 bg-green-600 hover:bg-green-500 text-white text-xs font-medium py-2 rounded-lg transition-colors">
                   WhatsApp
                 </button>
-                <button className="flex-1 border border-slate-600 hover:border-slate-400 text-slate-300 text-xs font-medium py-2 rounded-lg transition-colors">
+                <button className="flex-1 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-400 text-slate-600 dark:text-slate-300 text-xs font-medium py-2 rounded-lg transition-colors">
                   View Profile
                 </button>
               </div>
@@ -298,15 +298,15 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="border-t border-white/5">
+      <section id="pricing" className="border-t border-slate-100 dark:border-white/5">
         <PricingTable asSection />
       </section>
 
       {/* FAQ */}
       <section id="faq" className="max-w-3xl mx-auto px-6 py-24">
         <div className="text-center mb-12">
-          <p className="text-xs text-orange-300 uppercase tracking-widest mb-3">FAQ</p>
-          <h2 className="text-4xl font-bold">Common questions</h2>
+          <p className="text-xs text-orange-500 uppercase tracking-widest mb-3 font-semibold">FAQ</p>
+          <h2 className="text-4xl font-bold text-slate-900 dark:text-white">Common questions</h2>
         </div>
         <div className="space-y-3">
           {FAQS.map((faq, i) => (
@@ -316,19 +316,19 @@ export default function PricingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.06 }}
-              className="rounded-xl border border-white/8 bg-white/3 overflow-hidden"
+              className="rounded-xl border border-slate-100 dark:border-white/8 bg-white dark:bg-white/3 overflow-hidden shadow-sm dark:shadow-none"
             >
               <button
-                className="w-full flex items-center justify-between gap-4 px-6 py-4 text-left hover:bg-white/4 transition-colors"
+                className="w-full flex items-center justify-between gap-4 px-6 py-4 text-left hover:bg-slate-50 dark:hover:bg-white/4 transition-colors"
                 onClick={() => setOpenFaq(openFaq === i ? null : i)}
               >
-                <span className="font-medium text-white text-sm">{faq.q}</span>
+                <span className="font-medium text-slate-800 dark:text-white text-sm">{faq.q}</span>
                 <ChevronDown
                   className={`h-4 w-4 text-slate-400 shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}
                 />
               </button>
               {openFaq === i && (
-                <div className="px-6 pb-5 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4">
+                <div className="px-6 pb-5 text-sm text-slate-500 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-white/5 pt-4">
                   {faq.a}
                 </div>
               )}
@@ -338,19 +338,19 @@ export default function PricingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="border-t border-white/5 bg-gradient-to-r from-orange-950/30 to-slate-900/60">
+      <section className="border-t border-slate-100 dark:border-white/5 bg-gradient-to-r from-orange-50 to-amber-50/30 dark:from-orange-950/30 dark:to-slate-900/60">
         <div className="max-w-3xl mx-auto px-6 py-20 text-center">
-          <Crown className="h-10 w-10 text-orange-400 mx-auto mb-5" />
-          <h2 className="text-4xl font-bold mb-4">
+          <Crown className="h-10 w-10 text-orange-500 dark:text-orange-400 mx-auto mb-5" />
+          <h2 className="text-4xl font-bold mb-4 text-slate-900 dark:text-white">
             Ready to claim your founding spot?
           </h2>
-          <p className="text-slate-300 mb-8 text-lg">
+          <p className="text-slate-500 dark:text-slate-300 mb-8 text-lg">
             Secure your lifetime spot before August 15, 2026. After that — monthly plans only, no exceptions.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href="#pricing"
-              className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 text-slate-900 font-bold px-8 py-4 rounded-xl transition-all shadow-lg shadow-orange-500/20 group"
+              className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 text-white font-bold px-8 py-4 rounded-xl transition-all shadow-lg shadow-orange-500/20 group"
             >
               <Crown className="h-4 w-4" />
               Claim Founding Expert Spot
@@ -358,15 +358,15 @@ export default function PricingPage() {
             </a>
             <Link
               href="/create-expert-account"
-              className="border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-medium px-6 py-4 rounded-xl transition-colors"
+              className="border border-slate-200 dark:border-slate-600 hover:border-orange-300 dark:hover:border-slate-400 text-slate-600 dark:text-slate-300 hover:text-orange-600 dark:hover:text-white font-medium px-6 py-4 rounded-xl transition-colors bg-white dark:bg-transparent shadow-sm dark:shadow-none"
             >
               Start for Free
             </Link>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-sm text-slate-400">
-            <span className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-green-400" /> 30-day refund guarantee</span>
-            <span className="flex items-center gap-1.5"><Zap className="h-4 w-4 text-orange-400" /> No commissions, ever</span>
-            <span className="flex items-center gap-1.5"><Users className="h-4 w-4 text-blue-400" /> 500 spots maximum</span>
+          <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-sm text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-green-500" /> 30-day refund guarantee</span>
+            <span className="flex items-center gap-1.5"><Zap className="h-4 w-4 text-orange-500" /> No commissions, ever</span>
+            <span className="flex items-center gap-1.5"><Users className="h-4 w-4 text-blue-500" /> 500 spots maximum</span>
           </div>
         </div>
       </section>
