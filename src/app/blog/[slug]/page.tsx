@@ -53,15 +53,20 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <ArrowLeft className="w-4 h-4" /> Back to home
         </Link>
 
-        {post.coverImage && (
-          <div className="w-full aspect-[2/1] rounded-2xl overflow-hidden mb-8 bg-slate-800">
+        <div className="w-full aspect-[2/1] rounded-2xl overflow-hidden mb-8 bg-slate-800">
+          {post.coverImage ? (
             <img
               src={post.coverImage}
               alt={post.altText || post.title}
               className="w-full h-full object-cover"
             />
-          </div>
-        )}
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 flex flex-col items-center justify-center gap-3">
+              <img src="/logo.png" alt="ExpertNear.Me" className="h-14 w-auto opacity-25" />
+              <span className="text-sm font-semibold text-slate-600 uppercase tracking-widest">ExpertNear.Me</span>
+            </div>
+          )}
+        </div>
 
         <header className="mb-8">
           {post.categoryTag && (

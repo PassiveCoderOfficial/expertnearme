@@ -67,8 +67,9 @@ export default async function BlogIndexPage() {
                     />
                   </div>
                 ) : (
-                  <div className="aspect-[16/9] bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                    <BookOpen className="w-10 h-10 text-slate-600" />
+                  <div className="aspect-[16/9] bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 flex flex-col items-center justify-center gap-3">
+                    <img src="/logo.png" alt="ExpertNear.Me" className="h-10 w-auto opacity-30" />
+                    <span className="text-xs font-semibold text-slate-600 uppercase tracking-widest">ExpertNear.Me</span>
                   </div>
                 )}
 
