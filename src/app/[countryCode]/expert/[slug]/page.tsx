@@ -16,21 +16,6 @@ interface ExpertProfilePageProps {
   params: Promise<{ slug: string; countryCode: string }>;
 }
 
-export async function generateStaticParams() {
-  try {
-    const experts = await prisma.expert.findMany({
-      where: { verified: true },
-      select: { profileLink: true, id: true, countryCode: true },
-    });
-    return experts.map((e) => ({
-      countryCode: e.countryCode,
-      slug: e.profileLink || String(e.id),
-    }));
-  } catch {
-    return [];
-  }
-}
-
 export async function generateMetadata({ params }: ExpertProfilePageProps): Promise<Metadata> {
   try {
     const { slug, countryCode } = await params;
