@@ -15,10 +15,10 @@ export async function GET(req: NextRequest) {
       where: {
         ...(country ? { countryCode: country } : {}),
         OR: [
-          { name: { contains: q } },
-          { businessName: { contains: q } },
-          { shortDesc: { contains: q } },
-          { categories: { some: { category: { name: { contains: q } } } } },
+          { name: { contains: q, mode: "insensitive" } },
+          { businessName: { contains: q, mode: "insensitive" } },
+          { shortDesc: { contains: q, mode: "insensitive" } },
+          { categories: { some: { category: { name: { contains: q, mode: "insensitive" } } } } },
         ],
       },
       include: {
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       where: {
         active: true,
         ...(country ? { countryCode: country } : {}),
-        name: { contains: q },
+        name: { contains: q, mode: "insensitive" },
       },
       take: 5,
     }),
