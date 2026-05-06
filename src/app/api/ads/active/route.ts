@@ -95,7 +95,9 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    return NextResponse.json(grouped);
+    return NextResponse.json(grouped, {
+      headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" },
+    });
   } catch (err) {
     console.error("GET /api/ads/active error:", err);
     return NextResponse.json({ error: "Failed to fetch active ads" }, { status: 500 });

@@ -134,6 +134,9 @@ model Expert {
 
   @@unique([countryCode, profileLink])
   @@index([countryCode])
+  @@index([countryCode, verified])
+  @@index([countryCode, featured])
+  @@index([latitude, longitude])
 }
 
 model Service {
@@ -199,6 +202,7 @@ model ExpertCategory {
   expert     Expert   @relation(fields: [expertId], references: [id])
 
   @@id([expertId, categoryId])
+  @@index([categoryId])
 }
 
 model ExpertAvailability {
@@ -272,6 +276,9 @@ model Review {
   booking   Booking  @relation(fields: [bookingId], references: [id])
   client    User     @relation(fields: [clientId], references: [id])
   expert    Expert   @relation(fields: [expertId], references: [id])
+
+  @@index([expertId])
+  @@index([expertId, createdAt])
 }
 
 model PushSubscription {
@@ -637,6 +644,8 @@ model AdCampaign {
   @@index([placementId, status])
   @@index([startsAt, endsAt])
   @@index([targetCountry])
+  @@index([status, startsAt, endsAt])
+  @@index([status, targetCountry])
 }
 
 // Credit balance per expert (one row per expert, balance updated in place)

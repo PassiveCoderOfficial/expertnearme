@@ -5,7 +5,7 @@ import { LogoMark } from "@/components/Logo";
 import FlagIcon from "@/components/FlagIcon";
 import AdFeaturedExperts from "@/components/ads/AdFeaturedExperts";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function GlobalHomePage() {
   let countries: { code: string; name: string; flagEmoji: string | null; metaDesc: string | null }[] = [];

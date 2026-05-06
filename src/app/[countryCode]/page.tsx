@@ -25,13 +25,20 @@ export default async function CountryPage({ params }: Props) {
   const { countryCode } = await params;
   const code = countryCode.toLowerCase();
 
-  const [country, experts, categories] = await Promise.all([
+  const [country, experts, categories, reviewAgg] = await Promise.all([
     prisma.country.findFirst({ where: { code, active: true } }),
     prisma.expert.findMany({
       where: { countryCode: code, verified: true },
-      include: {
+      select: {
+        id: true, name: true, businessName: true, profileLink: true,
+        profilePicture: true, shortDesc: true, verified: true,
+        featured: true, foundingExpert: true, mapFeatured: true,
+        latitude: true, longitude: true,
+        _count: { select: { reviews: true } },
+        categories: {
+          select: { category: { select: { id: true, name: true, icon: true, color: true } } },
+        },
         reviews: { select: { rating: true } },
-        categories: { include: { category: { select: { id: true, name: true, icon: true, color: true } } } },
       },
       orderBy: [{ featured: 'desc' }, { foundingExpert: 'desc' }, { createdAt: 'desc' }],
     }),
@@ -41,6 +48,10 @@ export default async function CountryPage({ params }: Props) {
       orderBy: { name: 'asc' },
       take: 10,
     }),
+    prisma.review.aggregate({
+      where: { expert: { countryCode: code } },
+      _avg: { rating: true },
+    }),
   ]);
 
   if (!country) notFound();
@@ -49,10 +60,7 @@ export default async function CountryPage({ params }: Props) {
   const featured = experts.filter((e) => e.featured);
   const regular  = experts.filter((e) => !e.featured);
 
-  const allReviews = experts.flatMap((e) => e.reviews);
-  const overallAvg = allReviews.length
-    ? (allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length).toFixed(1)
-    : null;
+  const overallAvg = reviewAgg._avg.rating ? reviewAgg._avg.rating.toFixed(1) : null;
 
   const mapExperts: MapExpert[] = experts
     .filter((e) => e.latitude && e.longitude)
