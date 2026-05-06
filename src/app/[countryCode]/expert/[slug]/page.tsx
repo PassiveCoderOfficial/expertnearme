@@ -120,17 +120,17 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
     ].filter(s => s.url);
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
+      <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white">
         {/* Back nav */}
         <div className="max-w-6xl mx-auto px-6 pt-24 pb-4">
-          <Link href={`/${countryCode}`} className="text-sm text-slate-400 hover:text-orange-400 transition-colors">
+          <Link href={`/${countryCode}`} className="text-sm text-slate-400 hover:text-orange-600 dark:hover:text-orange-400 transition-colors">
             ← Back to {countryCode.toUpperCase()}
           </Link>
         </div>
 
         {/* Hero */}
         <section className="max-w-6xl mx-auto px-6 pb-10">
-          <div className="rounded-2xl bg-slate-800/60 border border-white/8 overflow-hidden">
+          <div className="rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-white/8 overflow-hidden shadow-sm dark:shadow-none">
             {expert.coverPhoto && (
               <div className="w-full h-40 sm:h-52 overflow-hidden">
                 <img src={expert.coverPhoto} alt="Cover" className="w-full h-full object-cover" />
@@ -148,7 +148,7 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                     className="w-28 h-28 md:w-36 md:h-36 rounded-2xl object-cover border-2 border-orange-500/30"
                   />
                 ) : (
-                  <div className="w-28 h-28 md:w-36 md:h-36 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-slate-900 font-bold text-3xl border-2 border-orange-500/30">
+                  <div className="w-28 h-28 md:w-36 md:h-36 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white font-bold text-3xl border-2 border-orange-500/30">
                     {initials(displayName)}
                   </div>
                 )}
@@ -157,14 +157,14 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-start gap-3 mb-3">
-                  <h1 className="text-3xl font-bold text-white">{displayName}</h1>
+                  <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{displayName}</h1>
                   {expert.foundingExpert && (
-                    <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-500/25 to-amber-500/15 border border-orange-400/30 text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-full">
+                    <span className="inline-flex items-center gap-1.5 bg-amber-50 dark:bg-gradient-to-r dark:from-orange-500/25 dark:to-amber-500/15 border border-amber-200 dark:border-orange-400/30 text-amber-700 dark:text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-full">
                       <Crown className="w-3.5 h-3.5" /> Founding Expert
                     </span>
                   )}
                   {expert.verified && (
-                    <span className="inline-flex items-center gap-1.5 bg-green-500/15 border border-green-500/25 text-green-300 text-xs font-semibold px-3 py-1.5 rounded-full">
+                    <span className="inline-flex items-center gap-1.5 bg-green-50 dark:bg-green-500/15 border border-green-200 dark:border-green-500/25 text-green-700 dark:text-green-300 text-xs font-semibold px-3 py-1.5 rounded-full">
                       <CheckCircle className="w-3.5 h-3.5" /> Verified
                     </span>
                   )}
@@ -173,7 +173,7 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                 {expert.categories.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-4">
                     {expert.categories.map((ec) => (
-                      <span key={`${ec.expertId}-${ec.categoryId}`} className="text-xs bg-orange-500/15 text-orange-300 border border-orange-500/20 px-2.5 py-1 rounded-full">
+                      <span key={`${ec.expertId}-${ec.categoryId}`} className="text-xs bg-orange-50 dark:bg-orange-500/15 text-orange-600 dark:text-orange-300 border border-orange-100 dark:border-orange-500/20 px-2.5 py-1 rounded-full">
                         {ec.category.name}
                       </span>
                     ))}
@@ -181,20 +181,20 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                 )}
 
                 {expert.shortDesc && (
-                  <p className="text-slate-300 text-sm leading-relaxed mb-4">{expert.shortDesc}</p>
+                  <p className="text-slate-500 dark:text-slate-300 text-sm leading-relaxed mb-4">{expert.shortDesc}</p>
                 )}
 
                 <div className="flex flex-wrap items-center gap-5 text-sm text-slate-400 mb-4">
                   {avgRating !== null && (
                     <span className="flex items-center gap-1.5">
                       <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      <strong className="text-white">{avgRating.toFixed(1)}</strong>
+                      <strong className="text-slate-900 dark:text-white">{avgRating.toFixed(1)}</strong>
                       <span>({expert.reviews.length} review{expert.reviews.length !== 1 ? "s" : ""})</span>
                     </span>
                   )}
                   {expert.countryCode && (
                     <span className="flex items-center gap-1.5">
-                      <MapPin className="w-4 h-4 text-slate-500" />
+                      <MapPin className="w-4 h-4 text-slate-400" />
                       {expert.countryCode.toUpperCase()}
                     </span>
                   )}
@@ -217,7 +217,7 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
               <div className="shrink-0 flex flex-col gap-3 min-w-[160px]">
                 {expert.phone && (
                   <a href={`tel:${expert.phone}`}
-                    className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold px-5 py-2.5 rounded-xl transition-colors text-sm">
+                    className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-400 text-white font-bold px-5 py-2.5 rounded-xl transition-colors text-sm shadow-sm shadow-orange-500/20">
                     <Phone className="w-4 h-4" /> Call Now
                   </a>
                 )}
@@ -230,13 +230,13 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                 )}
                 {expert.email && (
                   <a href={`mailto:${expert.email}`}
-                    className="flex items-center justify-center gap-2 border border-white/15 hover:border-orange-500/40 text-slate-300 hover:text-white font-medium px-5 py-2.5 rounded-xl transition-colors text-sm">
+                    className="flex items-center justify-center gap-2 border border-slate-200 dark:border-white/15 hover:border-orange-400 dark:hover:border-orange-500/40 text-slate-600 dark:text-slate-300 hover:text-orange-600 dark:hover:text-white font-medium px-5 py-2.5 rounded-xl transition-colors text-sm">
                     <Mail className="w-4 h-4" /> Email
                   </a>
                 )}
                 {expert.webAddress && (
                   <a href={expert.webAddress} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 border border-white/15 hover:border-orange-500/40 text-slate-300 hover:text-white font-medium px-5 py-2.5 rounded-xl transition-colors text-sm">
+                    className="flex items-center justify-center gap-2 border border-slate-200 dark:border-white/15 hover:border-orange-400 dark:hover:border-orange-500/40 text-slate-600 dark:text-slate-300 hover:text-orange-600 dark:hover:text-white font-medium px-5 py-2.5 rounded-xl transition-colors text-sm">
                     <Globe className="w-4 h-4" /> Website
                   </a>
                 )}
@@ -256,9 +256,9 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
         {/* Bio */}
         {expert.bio && (
           <section className="max-w-6xl mx-auto px-6 pb-10">
-            <div className="rounded-2xl bg-slate-800/50 border border-white/8 p-8">
-              <h2 className="text-lg font-bold text-white mb-4">About</h2>
-              <p className="text-slate-300 leading-relaxed whitespace-pre-line">{expert.bio}</p>
+            <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/8 p-8 shadow-sm dark:shadow-none">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">About</h2>
+              <p className="text-slate-500 dark:text-slate-300 leading-relaxed whitespace-pre-line">{expert.bio}</p>
             </div>
           </section>
         )}
@@ -266,21 +266,21 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
         {/* Services */}
         {expert.services.length > 0 && (
           <section className="max-w-6xl mx-auto px-6 pb-10">
-            <h2 className="text-xl font-bold text-white mb-5">Services</h2>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-5">Services</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {expert.services.map((service) => {
                 const servicePrice = (service as unknown as { price?: number | null }).price;
                 return (
-                  <div key={service.id} className="rounded-2xl bg-slate-800/50 border border-white/8 hover:border-orange-500/30 transition-colors p-6">
+                  <div key={service.id} className="rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-white/8 hover:border-orange-200 dark:hover:border-orange-500/30 transition-colors p-6 shadow-sm dark:shadow-none">
                     <div className="flex items-center gap-2 mb-3">
-                      <Award className="w-4 h-4 text-orange-400 shrink-0" />
-                      <h3 className="font-semibold text-white">{service.name}</h3>
+                      <Award className="w-4 h-4 text-orange-500 shrink-0" />
+                      <h3 className="font-semibold text-slate-800 dark:text-white">{service.name}</h3>
                     </div>
                     {service.description && (
-                      <p className="text-slate-400 text-sm leading-relaxed mb-4">{service.description}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4">{service.description}</p>
                     )}
                     {(servicePrice != null || service.rateUnit) && (
-                      <p className="text-orange-400 font-bold text-sm">
+                      <p className="text-orange-500 dark:text-orange-400 font-bold text-sm">
                         {servicePrice != null ? `$${servicePrice.toLocaleString()}` : ''}
                         {service.rateUnit ? ` ${service.rateUnit}` : ''}
                       </p>
@@ -315,36 +315,36 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
 
         {/* Reviews */}
         <section className="max-w-6xl mx-auto px-6 pb-16">
-          <h2 className="text-xl font-bold text-white mb-5">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-5">
             Reviews {expert.reviews.length > 0 && <span className="text-slate-400 font-normal text-base">({expert.reviews.length})</span>}
           </h2>
 
           {expert.reviews.length === 0 ? (
-            <div className="rounded-2xl bg-slate-800/40 border border-white/8 p-10 text-center text-slate-500">
+            <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-white/8 p-10 text-center text-slate-400">
               No reviews yet — be the first to work with {displayName}.
             </div>
           ) : (
             <>
-              <div className="rounded-2xl bg-slate-800/50 border border-white/8 p-6 mb-6 flex flex-col sm:flex-row gap-6 items-center">
+              <div className="rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-white/8 p-6 mb-6 flex flex-col sm:flex-row gap-6 items-center shadow-sm dark:shadow-none">
                 <div className="text-center shrink-0">
-                  <p className="text-5xl font-bold text-orange-400">{avgRating!.toFixed(1)}</p>
+                  <p className="text-5xl font-bold text-orange-500 dark:text-orange-400">{avgRating!.toFixed(1)}</p>
                   <div className="flex justify-center mt-1">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className={`w-4 h-4 ${i < Math.round(avgRating!) ? "text-yellow-400 fill-yellow-400" : "text-slate-600"}`} />
+                      <Star key={i} className={`w-4 h-4 ${i < Math.round(avgRating!) ? "text-yellow-400 fill-yellow-400" : "text-slate-300 dark:text-slate-600"}`} />
                     ))}
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">{expert.reviews.length} review{expert.reviews.length !== 1 ? "s" : ""}</p>
+                  <p className="text-xs text-slate-400 mt-1">{expert.reviews.length} review{expert.reviews.length !== 1 ? "s" : ""}</p>
                 </div>
                 <div className="flex-1 w-full space-y-1.5">
                   {[5, 4, 3, 2, 1].map(star => (
                     <div key={star} className="flex items-center gap-2">
                       <span className="text-xs text-slate-400 w-3">{star}</span>
                       <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                      <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                         <div className="h-full bg-yellow-400 rounded-full"
                           style={{ width: `${expert.reviews.length ? (ratingDist[star] / expert.reviews.length) * 100 : 0}%` }} />
                       </div>
-                      <span className="text-xs text-slate-500 w-4">{ratingDist[star]}</span>
+                      <span className="text-xs text-slate-400 w-4">{ratingDist[star]}</span>
                     </div>
                   ))}
                 </div>
@@ -352,22 +352,22 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
 
               <div className="grid sm:grid-cols-2 gap-5">
                 {expert.reviews.map((review) => (
-                  <div key={review.id} className="rounded-2xl bg-slate-800/50 border border-white/8 p-5">
+                  <div key={review.id} className="rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-white/8 p-5 shadow-sm dark:shadow-none">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-slate-900 font-bold text-sm shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white font-bold text-sm shrink-0">
                         {review.client.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-white text-sm">{review.client.name}</p>
-                        <p className="text-xs text-slate-500">{new Date(review.createdAt).toLocaleDateString()}</p>
+                        <p className="font-semibold text-slate-800 dark:text-white text-sm">{review.client.name}</p>
+                        <p className="text-xs text-slate-400">{new Date(review.createdAt).toLocaleDateString()}</p>
                       </div>
                       <div className="flex shrink-0">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className={`w-3.5 h-3.5 ${i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-600"}`} />
+                          <Star key={i} className={`w-3.5 h-3.5 ${i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-300 dark:text-slate-600"}`} />
                         ))}
                       </div>
                     </div>
-                    {review.comment && <p className="text-slate-300 text-sm leading-relaxed">{review.comment}</p>}
+                    {review.comment && <p className="text-slate-500 dark:text-slate-300 text-sm leading-relaxed">{review.comment}</p>}
                   </div>
                 ))}
               </div>
@@ -389,10 +389,10 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
         {nearbyExperts.length > 0 && (
           <section className="max-w-6xl mx-auto px-6 pb-12">
             <div className="mb-4">
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
                 {nearbyExperts.length > 1 ? "Experts Nearby in the Same Category" : "Location"}
               </h2>
-              <p className="text-slate-400 text-sm mt-0.5">
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
                 {nearbyExperts.length > 1
                   ? `${nearbyExperts.length - 1} other expert${nearbyExperts.length - 1 !== 1 ? "s" : ""} with similar services in ${countryCode.toUpperCase()}`
                   : `Showing ${displayName}'s location`}
@@ -408,28 +408,15 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
           </section>
         )}
 
-        <footer className="border-t border-white/5 bg-slate-950/50">
-          <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <span>
-              <span className="text-orange-400 font-bold mr-1">ExpertNear.Me</span>
-              © {new Date().getFullYear()}
-            </span>
-            <div className="flex items-center gap-5">
-              <Link href="/" className="hover:text-slate-300 transition-colors">Find Experts</Link>
-              <Link href="/for-experts" className="hover:text-slate-300 transition-colors">For Experts</Link>
-              <a href="mailto:info@expertnear.me" className="hover:text-slate-300 transition-colors">Contact</a>
-            </div>
-          </div>
-        </footer>
       </div>
     );
   } catch (err) {
     console.error("[ExpertPage] DB error:", err);
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-center px-4">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-center px-4">
         <div>
-          <p className="text-red-400 mb-4">Unable to load this profile right now. Please try again.</p>
-          <Link href={`/${countryCode}`} className="text-orange-400 hover:text-orange-300">← Back</Link>
+          <p className="text-red-500 dark:text-red-400 mb-4">Unable to load this profile right now. Please try again.</p>
+          <Link href={`/${countryCode}`} className="text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300">← Back</Link>
         </div>
       </div>
     );

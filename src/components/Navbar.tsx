@@ -94,6 +94,9 @@ export default function Navbar() {
     if (!pathname || pathname === '/') { router.push(`/${next}`); return; }
     if (hasCountryPrefix) {
       const [, ...rest] = pathSegments;
+      // Deep routes (expert profiles, category detail pages) don't exist cross-country — go to homepage
+      const isDeep = rest.length > 1 || (rest.length === 1 && rest[0] !== 'categories');
+      if (isDeep) { router.push(`/${next}`); return; }
       router.push(`/${next}${rest.length ? `/${rest.join('/')}` : ''}`);
       return;
     }

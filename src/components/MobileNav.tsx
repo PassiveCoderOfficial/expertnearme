@@ -64,6 +64,8 @@ export default function MobileNav() {
     if (!pathname || pathname === "/") { router.push(`/${code}`); return; }
     if (currentCode) {
       const [, ...rest] = pathSegments;
+      const isDeep = rest.length > 1 || (rest.length === 1 && rest[0] !== "categories");
+      if (isDeep) { router.push(`/${code}`); return; }
       router.push(`/${code}${rest.length ? `/${rest.join("/")}` : ""}`);
     } else {
       router.push(`/${code}`);

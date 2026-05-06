@@ -74,32 +74,32 @@ export default async function CountryPage({ params }: Props) {
     }));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
+    <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white">
 
       {/* Hero */}
-      <section className="relative overflow-hidden pt-28 pb-16 px-6">
+      <section className="relative overflow-hidden pt-28 pb-16 px-6 bg-gradient-to-br from-slate-50 via-white to-orange-50/20 dark:from-transparent dark:via-transparent dark:to-transparent">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-orange-500/6 rounded-full blur-3xl" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-orange-500/5 dark:bg-orange-500/6 rounded-full blur-3xl" />
         </div>
 
         <div className="relative max-w-4xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500 mb-6">
-            <Link href="/" className="hover:text-slate-300 transition-colors">Home</Link>
+          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400 mb-6">
+            <Link href="/" className="hover:text-orange-600 dark:hover:text-slate-300 transition-colors">Home</Link>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-slate-300">{countryName}</span>
+            <span className="text-slate-600 dark:text-slate-300">{countryName}</span>
           </div>
 
-          <div className="flex items-center justify-center gap-2 mb-4 text-slate-400 text-sm">
+          <div className="flex items-center justify-center gap-2 mb-4 text-slate-500 dark:text-slate-400 text-sm">
             <span className="text-2xl">{country.flagEmoji || "🌍"}</span>
-            <MapPin className="w-4 h-4 text-orange-400" />
-            <span className="text-orange-400 uppercase tracking-widest text-xs font-semibold">{code}</span>
+            <MapPin className="w-4 h-4 text-orange-500" />
+            <span className="text-orange-500 dark:text-orange-400 uppercase tracking-widest text-xs font-semibold">{code}</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4 tracking-tight">
+          <h1 className="text-4xl sm:text-5xl font-bold mb-4 tracking-tight text-slate-900 dark:text-white">
             Verified Experts in{" "}
-            <span className="text-orange-400">{countryName}</span>
+            <span className="text-orange-500 dark:text-orange-400">{countryName}</span>
           </h1>
-          <p className="text-slate-400 text-lg mb-8 max-w-xl mx-auto">
+          <p className="text-slate-500 dark:text-slate-400 text-lg mb-8 max-w-xl mx-auto">
             Browse local professionals, check reviews, and get in touch directly — no middleman.
           </p>
 
@@ -107,24 +107,24 @@ export default async function CountryPage({ params }: Props) {
             <SearchBar currentCountry={code} placeholder={`Search experts in ${countryName}…`} />
           </div>
 
-          <div className="inline-flex flex-wrap items-center justify-center gap-6 text-sm bg-slate-800/50 border border-white/8 rounded-2xl px-8 py-4">
-            <span className="flex items-center gap-2 text-slate-400">
-              <Users className="w-4 h-4 text-orange-400" />
-              <strong className="text-white">{experts.length}</strong> Expert{experts.length !== 1 ? "s" : ""}
+          <div className="inline-flex flex-wrap items-center justify-center gap-6 text-sm bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-white/8 rounded-2xl px-8 py-4 shadow-sm dark:shadow-none">
+            <span className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+              <Users className="w-4 h-4 text-orange-500" />
+              <strong className="text-slate-900 dark:text-white">{experts.length}</strong> Expert{experts.length !== 1 ? "s" : ""}
             </span>
-            <span className="w-px h-4 bg-white/10" />
-            <span className="flex items-center gap-2 text-slate-400">
-              <Shield className="w-4 h-4 text-green-400" />
-              <strong className="text-white">{experts.filter((e) => e.verified).length}</strong> Verified
+            <span className="w-px h-4 bg-slate-200 dark:bg-white/10" />
+            <span className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+              <Shield className="w-4 h-4 text-green-500" />
+              <strong className="text-slate-900 dark:text-white">{experts.filter((e) => e.verified).length}</strong> Verified
             </span>
-            <span className="w-px h-4 bg-white/10" />
-            <span className="flex items-center gap-2 text-slate-400">
+            <span className="w-px h-4 bg-slate-200 dark:bg-white/10" />
+            <span className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
               <Star className="w-4 h-4 text-yellow-400" />
-              <strong className="text-white">{overallAvg ?? "—"}</strong> Avg Rating
+              <strong className="text-slate-900 dark:text-white">{overallAvg ?? "—"}</strong> Avg Rating
             </span>
-            <span className="w-px h-4 bg-white/10" />
-            <span className="flex items-center gap-2 text-slate-400">
-              <strong className="text-white">{categories.length}</strong> Categories
+            <span className="w-px h-4 bg-slate-200 dark:bg-white/10" />
+            <span className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+              <strong className="text-slate-900 dark:text-white">{categories.length}</strong> Categories
             </span>
           </div>
         </div>
@@ -135,13 +135,13 @@ export default async function CountryPage({ params }: Props) {
         <section className="max-w-6xl mx-auto px-6 pb-14">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <p className="text-xs uppercase tracking-widest text-orange-400 mb-1">Explore</p>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-orange-400" />
+              <p className="text-xs uppercase tracking-widest text-orange-500 dark:text-orange-400 mb-1 font-semibold">Explore</p>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-orange-500" />
                 Experts on the Map
               </h2>
             </div>
-            <span className="text-xs text-slate-500">All experts on map · featured pins highlighted · click to view</span>
+            <span className="text-xs text-slate-400">All experts on map · featured pins highlighted · click to view</span>
           </div>
           <ExpertMap experts={mapExperts} countryCode={code} className="h-[420px]" />
         </section>
@@ -156,9 +156,9 @@ export default async function CountryPage({ params }: Props) {
       {featured.length > 0 && (
         <section className="max-w-6xl mx-auto px-6 pb-14">
           <div className="flex items-center gap-3 mb-5">
-            <Crown className="w-4 h-4 text-amber-400" />
-            <h2 className="text-base font-bold text-white">Featured Experts</h2>
-            <span className="text-xs bg-amber-500/15 text-amber-300 border border-amber-500/20 px-2 py-0.5 rounded-full">Sponsored</span>
+            <Crown className="w-4 h-4 text-amber-500" />
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">Featured Experts</h2>
+            <span className="text-xs bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-200 dark:border-amber-500/20 px-2 py-0.5 rounded-full">Sponsored</span>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {featured.map((expert) => {
@@ -166,38 +166,38 @@ export default async function CountryPage({ params }: Props) {
               const avg = avgRatingOf(expert.reviews);
               return (
                 <Link key={expert.id} href={`/${code}/expert/${expert.profileLink || expert.id}`}
-                  className="group rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/8 to-slate-800/60 hover:border-amber-500/50 hover:from-amber-500/12 transition-all overflow-hidden block touch-manipulation">
-                  <div className="h-20 bg-gradient-to-br from-slate-700/60 to-slate-800/60 flex items-center justify-center relative">
+                  className="group rounded-2xl border border-amber-200 dark:border-amber-500/25 bg-gradient-to-br from-amber-50 dark:from-amber-500/8 to-white dark:to-slate-800/60 hover:border-amber-300 dark:hover:border-amber-500/50 hover:shadow-md dark:hover:from-amber-500/12 transition-all overflow-hidden block touch-manipulation shadow-sm dark:shadow-none">
+                  <div className="h-20 bg-gradient-to-br from-slate-100 dark:from-slate-700/60 to-slate-50 dark:to-slate-800/60 flex items-center justify-center relative">
                     {expert.profilePicture ? (
                       <img src={expert.profilePicture} alt={displayName} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-slate-900 font-bold">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold">
                         {initials(displayName)}
                       </div>
                     )}
-                    <span className="absolute top-2 left-2 text-xs bg-amber-500/25 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-medium">★ Featured</span>
+                    <span className="absolute top-2 left-2 text-xs bg-amber-100 dark:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 px-2 py-0.5 rounded-full font-medium">★ Featured</span>
                     {expert.verified && (
-                      <span className="absolute top-2 right-2 flex items-center gap-1 bg-green-500/20 text-green-300 text-xs px-2 py-0.5 rounded-full border border-green-500/20">
+                      <span className="absolute top-2 right-2 flex items-center gap-1 bg-green-50 dark:bg-green-500/20 text-green-700 dark:text-green-300 text-xs px-2 py-0.5 rounded-full border border-green-200 dark:border-green-500/20">
                         <Shield className="w-3 h-3" /> Verified
                       </span>
                     )}
                   </div>
                   <div className="p-4">
                     <div className="flex items-start gap-2 mb-1.5">
-                      <h3 className="font-semibold text-white text-sm group-hover:text-amber-300 transition-colors flex-1">{displayName}</h3>
-                      {expert.foundingExpert && <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />}
+                      <h3 className="font-semibold text-slate-800 dark:text-white text-sm group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors flex-1">{displayName}</h3>
+                      {expert.foundingExpert && <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />}
                     </div>
                     {expert.categories.length > 0 && (
-                      <p className="text-xs text-orange-300 mb-2">{expert.categories[0].category.name}</p>
+                      <p className="text-xs text-orange-600 dark:text-orange-300 mb-2">{expert.categories[0].category.name}</p>
                     )}
-                    {expert.shortDesc && <p className="text-slate-400 text-xs line-clamp-2 mb-3">{expert.shortDesc}</p>}
+                    {expert.shortDesc && <p className="text-slate-500 dark:text-slate-400 text-xs line-clamp-2 mb-3">{expert.shortDesc}</p>}
                     <div className="flex items-center justify-between">
                       {avg ? (
                         <span className="flex items-center gap-1 text-xs text-slate-400">
                           <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" /> {avg.toFixed(1)} ({expert.reviews.length})
                         </span>
                       ) : <span />}
-                      <span className="text-xs text-amber-400 group-hover:text-amber-300 transition-colors">View Profile →</span>
+                      <span className="text-xs text-amber-600 dark:text-amber-400 group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">View Profile →</span>
                     </div>
                   </div>
                 </Link>
@@ -211,18 +211,18 @@ export default async function CountryPage({ params }: Props) {
       {categories.length > 0 && (
         <section className="max-w-6xl mx-auto px-6 pb-14">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-bold text-white">Browse by Category</h2>
-            <Link href={`/${code}/categories`} className="text-sm text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-1">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">Browse by Category</h2>
+            <Link href={`/${code}/categories`} className="text-sm text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 transition-colors flex items-center gap-1">
               All categories <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {categories.map((cat) => (
               <Link key={cat.id} href={`/${code}/categories/${cat.slug}`}
-                className="rounded-xl border border-white/8 bg-slate-800/50 hover:border-orange-500/30 hover:bg-slate-800/80 p-4 text-center transition-colors group">
+                className="rounded-xl border border-slate-100 dark:border-white/8 bg-white dark:bg-slate-800/50 hover:border-orange-200 dark:hover:border-orange-500/30 hover:bg-orange-50 dark:hover:bg-slate-800/80 p-4 text-center transition-colors group shadow-sm dark:shadow-none">
                 <div className="text-2xl mb-2">{cat.icon || "🏢"}</div>
-                <p className="text-xs font-semibold text-slate-300 group-hover:text-white transition-colors leading-tight">{cat.name}</p>
-                <p className="text-xs text-slate-600 mt-1">{cat._count.experts} experts</p>
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 group-hover:text-orange-600 dark:group-hover:text-white transition-colors leading-tight">{cat.name}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-600 mt-1">{cat._count.experts} experts</p>
               </Link>
             ))}
           </div>
@@ -232,17 +232,17 @@ export default async function CountryPage({ params }: Props) {
       {/* All Experts */}
       <section id="experts" className="max-w-6xl mx-auto px-6 pb-20">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-bold text-white">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">
             All Experts
-            <span className="text-slate-500 font-normal text-sm ml-2">({regular.length})</span>
+            <span className="text-slate-400 font-normal text-sm ml-2">({regular.length})</span>
           </h2>
         </div>
 
         {regular.length === 0 && featured.length === 0 ? (
-          <div className="rounded-2xl border border-white/8 bg-slate-800/40 p-14 text-center">
-            <Users className="w-10 h-10 text-slate-600 mx-auto mb-4" />
+          <div className="rounded-2xl border border-slate-100 dark:border-white/8 bg-slate-50 dark:bg-slate-800/40 p-14 text-center">
+            <Users className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
             <p className="text-slate-400 mb-3">No experts listed in {countryName} yet.</p>
-            <Link href="/for-experts" className="text-sm text-orange-400 hover:text-orange-300 transition-colors">
+            <Link href="/for-experts" className="text-sm text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 transition-colors">
               Be the first to list here →
             </Link>
           </div>
@@ -253,43 +253,43 @@ export default async function CountryPage({ params }: Props) {
               const avg = avgRatingOf(expert.reviews);
               return (
                 <Link key={expert.id} href={`/${code}/expert/${expert.profileLink || expert.id}`}
-                  className="group rounded-2xl border border-white/8 bg-slate-800/50 hover:border-orange-500/30 hover:bg-slate-800/70 transition-colors overflow-hidden block touch-manipulation">
-                  <div className="h-20 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center relative">
+                  className="group rounded-2xl border border-slate-100 dark:border-white/8 bg-white dark:bg-slate-800/50 hover:border-orange-200 dark:hover:border-orange-500/30 hover:shadow-md dark:hover:bg-slate-800/70 transition-all overflow-hidden block touch-manipulation shadow-sm dark:shadow-none">
+                  <div className="h-20 bg-gradient-to-br from-slate-100 dark:from-slate-700 to-slate-50 dark:to-slate-800 flex items-center justify-center relative">
                     {expert.profilePicture ? (
                       <img src={expert.profilePicture} alt={displayName} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-slate-900 font-bold">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white font-bold">
                         {initials(displayName)}
                       </div>
                     )}
                     {expert.verified && (
-                      <span className="absolute top-2 right-2 flex items-center gap-1 bg-green-500/20 text-green-300 text-xs px-2 py-0.5 rounded-full border border-green-500/20">
+                      <span className="absolute top-2 right-2 flex items-center gap-1 bg-green-50 dark:bg-green-500/20 text-green-700 dark:text-green-300 text-xs px-2 py-0.5 rounded-full border border-green-200 dark:border-green-500/20">
                         <Shield className="w-3 h-3" /> Verified
                       </span>
                     )}
                   </div>
                   <div className="p-4">
                     <div className="flex items-start gap-2 mb-2">
-                      <h3 className="font-semibold text-white text-sm group-hover:text-orange-300 transition-colors flex-1">{displayName}</h3>
-                      {expert.foundingExpert && <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />}
+                      <h3 className="font-semibold text-slate-800 dark:text-white text-sm group-hover:text-orange-600 dark:group-hover:text-orange-300 transition-colors flex-1">{displayName}</h3>
+                      {expert.foundingExpert && <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />}
                     </div>
                     {expert.categories.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-2">
                         {expert.categories.slice(0, 2).map((c) => (
-                          <span key={c.category.id} className="text-xs bg-orange-500/10 text-orange-300 border border-orange-500/15 px-2 py-0.5 rounded-full">
+                          <span key={c.category.id} className="text-xs bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-300 border border-orange-100 dark:border-orange-500/15 px-2 py-0.5 rounded-full">
                             {c.category.name}
                           </span>
                         ))}
                       </div>
                     )}
-                    {expert.shortDesc && <p className="text-slate-400 text-xs line-clamp-2 mb-3">{expert.shortDesc}</p>}
+                    {expert.shortDesc && <p className="text-slate-500 dark:text-slate-400 text-xs line-clamp-2 mb-3">{expert.shortDesc}</p>}
                     <div className="flex items-center justify-between">
                       {avg ? (
                         <span className="flex items-center gap-1 text-xs text-slate-400">
                           <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" /> {avg.toFixed(1)} ({expert.reviews.length})
                         </span>
                       ) : <span />}
-                      <span className="text-xs text-orange-400 group-hover:text-orange-300 transition-colors">View →</span>
+                      <span className="text-xs text-orange-500 dark:text-orange-400 group-hover:text-orange-600 dark:group-hover:text-orange-300 transition-colors">View →</span>
                     </div>
                   </div>
                 </Link>
@@ -300,13 +300,13 @@ export default async function CountryPage({ params }: Props) {
       </section>
 
       {/* CTA */}
-      <section className="border-t border-white/5 bg-slate-950/60">
+      <section className="border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-950/60">
         <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
-            <h3 className="text-lg font-bold text-white mb-1">Are you an expert in {countryName}?</h3>
-            <p className="text-slate-400 text-sm">List your business and get discovered by local clients.</p>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Are you an expert in {countryName}?</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">List your business and get discovered by local clients.</p>
           </div>
-          <Link href="/for-experts" className="shrink-0 bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold px-6 py-3 rounded-xl transition-colors text-sm">
+          <Link href="/for-experts" className="shrink-0 bg-orange-500 hover:bg-orange-400 text-white font-bold px-6 py-3 rounded-xl transition-colors text-sm shadow-sm shadow-orange-500/20">
             List Your Business →
           </Link>
         </div>
