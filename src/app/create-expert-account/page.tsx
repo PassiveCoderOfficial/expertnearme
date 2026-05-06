@@ -138,17 +138,17 @@ function OnboardingForm() {
     }
   };
 
-  const inputCls = 'w-full bg-slate-800 border border-slate-700 focus:border-orange-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none transition-colors text-sm';
-  const labelCls = 'block text-sm font-medium text-slate-300 mb-1.5';
+  const inputCls = 'w-full bg-white border border-slate-200 focus:border-orange-500 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 outline-none transition-colors text-sm';
+  const labelCls = 'block text-sm font-medium text-slate-600 mb-1.5';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
+    <div className="min-h-screen bg-white text-slate-900">
       {/* Nav */}
-      <nav className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-md border-b border-white/5">
+      <nav className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200">
         <div className="max-w-2xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="text-orange-400 font-bold tracking-tight">ExpertNear.Me</Link>
-          <span className="text-xs text-slate-500">Already have an account?{' '}
-            <Link href="/login" className="text-orange-400 hover:underline">Sign in</Link>
+          <Link href="/" className="text-orange-500 font-bold tracking-tight">ExpertNear.Me</Link>
+          <span className="text-xs text-slate-400">Already have an account?{' '}
+            <Link href="/login" className="text-orange-500 hover:underline">Sign in</Link>
           </span>
         </div>
       </nav>
@@ -156,7 +156,7 @@ function OnboardingForm() {
       <div className="max-w-xl mx-auto px-6 py-12">
         {/* Founder badge */}
         {isFounder && step < 3 && (
-          <div className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-xl px-4 py-3 mb-8 text-sm text-orange-300">
+          <div className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-xl px-4 py-3 mb-8 text-sm text-orange-600">
             <Crown className="h-4 w-4 shrink-0" />
             <span><strong>Founding Expert</strong> — Your payment was received. Complete your profile to go live.</span>
           </div>
@@ -169,15 +169,15 @@ function OnboardingForm() {
               <div key={label} className="flex items-center flex-1">
                 <div className="flex flex-col items-center">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                    i < step ? 'bg-orange-500 text-slate-900'
-                    : i === step ? 'bg-orange-500/20 border-2 border-orange-500 text-orange-400'
-                    : 'bg-slate-800 border border-slate-700 text-slate-500'
+                    i < step ? 'bg-orange-500 text-white'
+                    : i === step ? 'bg-orange-500/20 border-2 border-orange-500 text-orange-500'
+                    : 'bg-slate-100 border border-slate-200 text-slate-400'
                   }`}>
                     {i < step ? <Check className="h-4 w-4" /> : i + 1}
                   </div>
-                  <span className={`text-xs mt-1.5 ${i === step ? 'text-orange-400' : 'text-slate-500'}`}>{label}</span>
+                  <span className={`text-xs mt-1.5 ${i === step ? 'text-orange-500' : 'text-slate-400'}`}>{label}</span>
                 </div>
-                {i < 2 && <div className={`flex-1 h-px mx-2 mt-[-14px] ${i < step ? 'bg-orange-500' : 'bg-slate-700'}`} />}
+                {i < 2 && <div className={`flex-1 h-px mx-2 mt-[-14px] ${i < step ? 'bg-orange-500' : 'bg-slate-200'}`} />}
               </div>
             ))}
           </div>
@@ -187,8 +187,8 @@ function OnboardingForm() {
           {/* ── Step 0: Account ── */}
           {step === 0 && (
             <motion.div key="s0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-              <h1 className="text-2xl font-bold mb-1">Create your account</h1>
-              <p className="text-slate-400 text-sm mb-7">Your login credentials for ExpertNear.Me.</p>
+              <h1 className="text-2xl font-bold mb-1 text-slate-900">Create your account</h1>
+              <p className="text-slate-500 text-sm mb-7">Your login credentials for ExpertNear.Me.</p>
               <div className="space-y-4">
                 <div>
                   <label className={labelCls}>Full name *</label>
@@ -202,7 +202,7 @@ function OnboardingForm() {
                   <label className={labelCls}>Password *</label>
                   <div className="relative">
                     <input className={inputCls + ' pr-11'} type={showPass ? 'text' : 'password'} placeholder="Min. 8 characters" value={form.password} onChange={e => set('password', e.target.value)} />
-                    <button type="button" onClick={() => setShowPass(v => !v)} className="absolute right-3 top-3 text-slate-400 hover:text-slate-200">
+                    <button type="button" onClick={() => setShowPass(v => !v)} className="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
                       {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
@@ -218,20 +218,20 @@ function OnboardingForm() {
           {/* ── Step 1: Business / Profile ── */}
           {step === 1 && (
             <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-              <h1 className="text-2xl font-bold mb-1">Your profile</h1>
-              <p className="text-slate-400 text-sm mb-7">Tell clients who you are and what you do.</p>
+              <h1 className="text-2xl font-bold mb-1 text-slate-900">Your profile</h1>
+              <p className="text-slate-500 text-sm mb-7">Tell clients who you are and what you do.</p>
               <div className="space-y-4">
                 {/* Business toggle */}
-                <div className="flex items-center gap-4 bg-slate-800/60 border border-slate-700 rounded-xl p-4">
+                <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
                   <button
                     onClick={() => set('isBusiness', false)}
-                    className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${!form.isBusiness ? 'bg-orange-500 text-slate-900' : 'text-slate-400 hover:text-white'}`}
+                    className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${!form.isBusiness ? 'bg-orange-500 text-white' : 'text-slate-400 hover:text-slate-700'}`}
                   >
                     <User className="h-4 w-4" /> Individual
                   </button>
                   <button
                     onClick={() => set('isBusiness', true)}
-                    className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${form.isBusiness ? 'bg-orange-500 text-slate-900' : 'text-slate-400 hover:text-white'}`}
+                    className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${form.isBusiness ? 'bg-orange-500 text-white' : 'text-slate-400 hover:text-slate-700'}`}
                   >
                     <Building2 className="h-4 w-4" /> Business
                   </button>
@@ -298,10 +298,10 @@ function OnboardingForm() {
           {/* ── Step 2: Categories ── */}
           {step === 2 && (
             <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-              <h1 className="text-2xl font-bold mb-1">Your categories</h1>
-              <p className="text-slate-400 text-sm mb-7">Pick up to 5 categories that describe your work.</p>
+              <h1 className="text-2xl font-bold mb-1 text-slate-900">Your categories</h1>
+              <p className="text-slate-500 text-sm mb-7">Pick up to 5 categories that describe your work.</p>
               {categories.length === 0 ? (
-                <div className="text-center py-10 text-slate-500 text-sm">Loading categories…</div>
+                <div className="text-center py-10 text-slate-400 text-sm">Loading categories…</div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {categories.map(cat => {
@@ -312,19 +312,19 @@ function OnboardingForm() {
                         onClick={() => toggleCategory(cat.id)}
                         className={`rounded-xl border p-3 text-left transition-all ${
                           selected
-                            ? 'border-orange-500 bg-orange-500/15 text-white'
-                            : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-500'
+                            ? 'border-orange-500 bg-orange-500/15 text-orange-700'
+                            : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300'
                         }`}
                       >
                         <span className="text-xl block mb-1">{cat.icon ?? '📌'}</span>
                         <span className="text-xs font-medium">{cat.name}</span>
-                        {selected && <Check className="h-3.5 w-3.5 text-orange-400 float-right mt-0.5" />}
+                        {selected && <Check className="h-3.5 w-3.5 text-orange-500 float-right mt-0.5" />}
                       </button>
                     );
                   })}
                 </div>
               )}
-              <p className="text-xs text-slate-500 mt-4">{form.categoryIds.length} / 5 selected</p>
+              <p className="text-xs text-slate-400 mt-4">{form.categoryIds.length} / 5 selected</p>
             </motion.div>
           )}
 
@@ -337,7 +337,7 @@ function OnboardingForm() {
               <h1 className="text-3xl font-bold mb-3">
                 {isFounder ? "You're a Founding Expert!" : "Profile created!"}
               </h1>
-              <p className="text-slate-300 mb-8 max-w-sm mx-auto">
+              <p className="text-slate-600 mb-8 max-w-sm mx-auto">
                 {isFounder
                   ? "Your Founding Expert profile is live. You're permanently listed on our Hall of Fame page."
                   : "Your expert profile is live. Add photos and services from your dashboard to attract more clients."}
@@ -357,7 +357,7 @@ function OnboardingForm() {
                 </Link>
                 <Link
                   href="/dashboard"
-                  className="flex items-center justify-center gap-2 border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-medium px-6 py-3 rounded-xl transition-colors"
+                  className="flex items-center justify-center gap-2 border border-slate-200 hover:border-slate-400 text-slate-600 hover:text-slate-900 font-medium px-6 py-3 rounded-xl transition-colors"
                 >
                   Go to Dashboard
                 </Link>
@@ -375,7 +375,7 @@ function OnboardingForm() {
 
         {/* Error */}
         {error && (
-          <p className="mt-4 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+          <p className="mt-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
             {error}
           </p>
         )}
@@ -384,7 +384,7 @@ function OnboardingForm() {
         {step < 3 && (
           <div className="flex items-center justify-between mt-8">
             {step > 0 ? (
-              <button onClick={back} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm">
+              <button onClick={back} className="flex items-center gap-2 text-slate-400 hover:text-slate-700 transition-colors text-sm">
                 <ChevronLeft className="h-4 w-4" /> Back
               </button>
             ) : <div />}
@@ -392,7 +392,7 @@ function OnboardingForm() {
             {step < 2 ? (
               <button
                 onClick={next}
-                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold px-6 py-2.5 rounded-xl transition-colors text-sm"
+                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white font-bold px-6 py-2.5 rounded-xl transition-colors text-sm"
               >
                 Continue <ChevronRight className="h-4 w-4" />
               </button>
@@ -400,7 +400,7 @@ function OnboardingForm() {
               <button
                 onClick={submit}
                 disabled={loading}
-                className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 disabled:opacity-60 text-slate-900 font-bold px-6 py-2.5 rounded-xl transition-all text-sm"
+                className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 disabled:opacity-60 text-white font-bold px-6 py-2.5 rounded-xl transition-all text-sm"
               >
                 {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating…</> : <>Create Profile <Check className="h-4 w-4" /></>}
               </button>
@@ -415,8 +415,8 @@ function OnboardingForm() {
 export default function CreateExpertAccountPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 text-orange-400 animate-spin" />
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-orange-500 animate-spin" />
       </div>
     }>
       <OnboardingForm />
