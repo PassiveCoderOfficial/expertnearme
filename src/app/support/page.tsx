@@ -60,7 +60,7 @@ export default function SupportPage() {
 
   return (
     <main className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white">
-      <div className="max-w-xl mx-auto px-6 pt-28 pb-20">
+      <div className="max-w-xl mx-auto px-6 pt-12 pb-20">
         <div className="mb-10">
           <div className="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-500/10 border border-orange-100 dark:border-orange-500/15 flex items-center justify-center mb-5">
             <LifeBuoy className="w-6 h-6 text-orange-500" />

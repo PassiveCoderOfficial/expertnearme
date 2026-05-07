@@ -132,7 +132,7 @@ export default async function FoundingExpertsPage({
       </nav>
 
       {/* Header */}
-      <section className="max-w-4xl mx-auto px-6 pt-20 pb-12 text-center">
+      <section className="max-w-4xl mx-auto px-6 pt-4 pb-12 text-center">
         <Crown className="h-12 w-12 text-orange-400 mx-auto mb-5" />
         <h1 className="text-5xl font-bold mb-4">Founding Experts</h1>
         <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-8">

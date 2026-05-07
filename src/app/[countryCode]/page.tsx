@@ -87,7 +87,7 @@ export default async function CountryPage({ params }: Props) {
     <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white">
 
       {/* Hero */}
-      <section className="relative overflow-hidden pt-28 pb-16 px-6 bg-gradient-to-br from-slate-50 via-white to-orange-50/20 dark:from-transparent dark:via-transparent dark:to-transparent">
+      <section className="relative overflow-hidden pt-12 pb-16 px-6 bg-gradient-to-br from-slate-50 via-white to-orange-50/20 dark:from-transparent dark:via-transparent dark:to-transparent">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-orange-500/5 dark:bg-orange-500/6 rounded-full blur-3xl" />
         </div>

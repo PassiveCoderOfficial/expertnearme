@@ -132,7 +132,7 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
     return (
       <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white">
         {/* Back nav */}
-        <div className="max-w-6xl mx-auto px-6 pt-24 pb-4">
+        <div className="max-w-6xl mx-auto px-6 pt-8 pb-4">
           <Link href={`/${countryCode}`} className="text-sm text-slate-400 hover:text-orange-600 dark:hover:text-orange-400 transition-colors">
             ← Back to {countryCode.toUpperCase()}
           </Link>

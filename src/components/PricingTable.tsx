@@ -164,20 +164,20 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
   ];
 
   return (
-    <div className={asSection ? '' : 'min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white'}>
+    <div className={asSection ? '' : 'min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white'}>
       <div className="max-w-6xl mx-auto px-6 py-24">
 
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-full px-4 py-2 text-orange-300 text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-full px-4 py-2 text-orange-600 dark:text-orange-300 text-sm font-medium mb-6">
             <Clock className="h-4 w-4" />
             Pre-Launch Offer · Expires August 15, 2026
           </div>
-          <h1 className="text-5xl sm:text-6xl font-bold leading-tight mb-5">
-            Get in <span className="text-orange-400">Early.</span>
-            <br />Get in <span className="text-orange-400">Forever.</span>
+          <h1 className="text-5xl sm:text-6xl font-bold leading-tight mb-5 text-slate-900 dark:text-white">
+            Get in <span className="text-orange-500 dark:text-orange-400">Early.</span>
+            <br />Get in <span className="text-orange-500 dark:text-orange-400">Forever.</span>
           </h1>
-          <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+          <p className="text-lg text-slate-500 dark:text-slate-300 max-w-2xl mx-auto">
             Secure your expert profile before ExpertNear.Me launches globally. Founding Experts get lifetime access, an exclusive badge, and a permanent place in our history.
           </p>
         </motion.div>
@@ -186,7 +186,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-10 mb-16">
           <div className="text-center">
-            <p className="text-xs text-slate-400 uppercase tracking-widest mb-3">Offer ends in</p>
+            <p className="text-xs text-slate-400 dark:text-slate-400 uppercase tracking-widest mb-3">Offer ends in</p>
             <div className="flex items-center gap-2">
               {[
                 { value: timeLeft.days, label: 'Days' },
@@ -195,31 +195,31 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                 { value: timeLeft.seconds, label: 'Sec' },
               ].map(({ value, label }, i) => (
                 <div key={label} className="flex items-center gap-2">
-                  <div className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-3 min-w-[60px] text-center">
-                    <span className="text-3xl font-bold tabular-nums">{String(value).padStart(2, '0')}</span>
+                  <div className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3 min-w-[60px] text-center">
+                    <span className="text-3xl font-bold tabular-nums text-slate-900 dark:text-white">{String(value).padStart(2, '0')}</span>
                     <p className="text-xs text-slate-400 mt-1">{label}</p>
                   </div>
-                  {i < 3 && <span className="text-slate-600 text-xl font-bold">:</span>}
+                  {i < 3 && <span className="text-slate-300 dark:text-slate-600 text-xl font-bold">:</span>}
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="hidden sm:block h-16 w-px bg-slate-700" />
+          <div className="hidden sm:block h-16 w-px bg-slate-200 dark:bg-slate-700" />
 
           <div className="text-center">
             <p className="text-xs text-slate-400 uppercase tracking-widest mb-3">Founding spots</p>
-            <div className="bg-slate-800 border border-orange-500/30 rounded-xl px-6 py-3 mb-2">
+            <div className="bg-slate-100 dark:bg-slate-800 border border-orange-500/30 rounded-xl px-6 py-3 mb-2">
               <p className="text-3xl font-bold">
-                <span className="text-orange-400">{spotsLeft}</span>
+                <span className="text-orange-500 dark:text-orange-400">{spotsLeft}</span>
                 <span className="text-slate-400 text-base font-normal"> / {TOTAL_SPOTS}</span>
               </p>
               <p className="text-xs text-slate-400 mt-1">spots remaining</p>
             </div>
-            <div className="w-full max-w-[180px] mx-auto bg-slate-700 rounded-full h-1.5">
+            <div className="w-full max-w-[180px] mx-auto bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
               <div className="bg-gradient-to-r from-orange-500 to-amber-400 h-1.5 rounded-full" style={{ width: `${spotsPct}%` }} />
             </div>
-            <p className="text-xs text-slate-500 mt-1.5">{spotsTaken} already claimed</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">{spotsTaken} already claimed</p>
           </div>
         </motion.div>
 
@@ -270,7 +270,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                   className={`rounded-2xl p-8 flex flex-col relative ${
                     isHero
                       ? 'border-2 border-orange-500/60 bg-gradient-to-b from-orange-950/40 via-slate-900/90 to-slate-900/60 shadow-2xl shadow-orange-950/40 md:-mt-4 md:mb-4'
-                      : 'border border-slate-700 bg-slate-800/50'
+                      : 'border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50'
                   }`}
                 >
                   {/* Hero badge */}

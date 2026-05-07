@@ -70,7 +70,7 @@ export default function CategorySlugPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white pt-16">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white ">
       <div className="max-w-6xl mx-auto px-6 pt-10 pb-20">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-slate-500 mb-8">

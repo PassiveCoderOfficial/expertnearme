@@ -83,7 +83,7 @@ export default async function CountryCategoryPage({ params }: Props) {
       }));
 
     return (
-      <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white pt-16">
+      <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white ">
         <div className="max-w-6xl mx-auto px-6 pt-10 pb-20">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm text-slate-400 dark:text-slate-500 mb-8">

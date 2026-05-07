@@ -36,7 +36,7 @@ export default async function CompletedWorkPage() {
 
   return (
     <main className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white">
-      <div className="max-w-6xl mx-auto px-6 pt-28 pb-20">
+      <div className="max-w-6xl mx-auto px-6 pt-12 pb-20">
 
         {/* Header */}
         <div className="mb-12">

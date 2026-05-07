@@ -106,7 +106,7 @@ export default function PricingPage() {
     <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white">
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-28 pb-16 text-center">
+      <section className="max-w-6xl mx-auto px-6 pt-12 pb-16 text-center">
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }}>
           <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-full px-4 py-2 text-orange-600 dark:text-orange-300 text-sm font-medium mb-7">
             <Crown className="h-4 w-4" />

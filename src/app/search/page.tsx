@@ -126,7 +126,7 @@ function SearchPageContent() {
   const primaryCat = (e: Expert) => e.categories?.[0]?.category;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white pt-16">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white ">
       {/* Sticky search bar */}
       <div className="sticky top-16 z-30 bg-slate-950/90 backdrop-blur-md border-b border-white/8">
         <div className="max-w-5xl mx-auto px-6 py-3">

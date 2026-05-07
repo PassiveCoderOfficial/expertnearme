@@ -31,7 +31,7 @@ export default async function BlogIndexPage() {
   return (
     <main className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
       {/* Hero */}
-      <section className="pt-28 pb-14 px-4 text-center bg-gradient-to-br from-slate-50 via-white to-orange-50/20 dark:from-transparent dark:via-transparent dark:to-transparent">
+      <section className="pt-12 pb-14 px-4 text-center bg-gradient-to-br from-slate-50 via-white to-orange-50/20 dark:from-transparent dark:via-transparent dark:to-transparent">
         <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded-full px-4 py-1.5 mb-6">
           <BookOpen className="w-3.5 h-3.5 text-orange-500" />
           <span className="text-xs font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wider">Our Blog</span>
