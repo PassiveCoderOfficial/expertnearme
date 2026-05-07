@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { placementId, billingCycle, startsAt, targetCountry, targetCategory, bannerImageUrl, bannerLinkUrl, bannerAltText } = body;
+  const { placementId, billingCycle, startsAt, targetCountry, targetCategory, bannerImageUrl, bannerMobileImageUrl, bannerLinkUrl, bannerAltText } = body;
 
   if (!placementId || !billingCycle || !startsAt) {
     return NextResponse.json({ error: "placementId, billingCycle, and startsAt required" }, { status: 400 });
@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
       amountPaid,
       currency: "USD",
       bannerImageUrl: bannerImageUrl || null,
+      bannerMobileImageUrl: bannerMobileImageUrl || null,
       bannerLinkUrl: bannerLinkUrl || null,
       bannerAltText: bannerAltText || null,
       targetCountry: targetCountry || null,

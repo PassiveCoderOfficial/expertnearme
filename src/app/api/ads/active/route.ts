@@ -80,6 +80,7 @@ export async function GET(req: NextRequest) {
         profilePic: c.expert.profilePicture,
         categories: c.expert.categories.map((ec) => ec.category),
         bannerImageUrl: c.bannerImageUrl,
+        bannerMobileImageUrl: c.bannerMobileImageUrl,
         bannerLinkUrl: c.bannerLinkUrl,
         bannerAltText: c.bannerAltText,
         targetCountry: c.targetCountry,

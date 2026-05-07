@@ -108,6 +108,7 @@ export default function AdsPage() {
     targetCountry: "",
     targetCategory: "",
     bannerImageUrl: "",
+    bannerMobileImageUrl: "",
     bannerLinkUrl: "",
     bannerAltText: "",
     adminNote: "",
@@ -277,6 +278,7 @@ export default function AdsPage() {
           targetCountry: createForm.targetCountry || null,
           targetCategory: createForm.targetCategory || null,
           bannerImageUrl: createForm.bannerImageUrl || null,
+          bannerMobileImageUrl: createForm.bannerMobileImageUrl || null,
           bannerLinkUrl: createForm.bannerLinkUrl || null,
           bannerAltText: createForm.bannerAltText || null,
           adminNote: createForm.adminNote || null,
@@ -777,15 +779,27 @@ export default function AdsPage() {
               </div>
 
               {/* Banner fields */}
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">Banner Image URL <span className="text-slate-600">(BANNER_TOP only)</span></label>
-                <input
-                  type="url"
-                  value={createForm.bannerImageUrl}
-                  onChange={(e) => setCreateForm((f) => ({ ...f, bannerImageUrl: e.target.value }))}
-                  placeholder="https://…"
-                  className={inputCls}
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Banner Image URL <span className="text-slate-600">desktop 1200×90</span></label>
+                  <input
+                    type="url"
+                    value={createForm.bannerImageUrl}
+                    onChange={(e) => setCreateForm((f) => ({ ...f, bannerImageUrl: e.target.value }))}
+                    placeholder="https://…"
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Mobile Banner URL <span className="text-slate-600">400×90</span></label>
+                  <input
+                    type="url"
+                    value={createForm.bannerMobileImageUrl}
+                    onChange={(e) => setCreateForm((f) => ({ ...f, bannerMobileImageUrl: e.target.value }))}
+                    placeholder="https://…"
+                    className={inputCls}
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>

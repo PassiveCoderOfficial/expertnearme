@@ -100,6 +100,7 @@ export default function PromotePage() {
     targetCountry: "",
     targetCategory: "",
     bannerImageUrl: "",
+    bannerMobileImageUrl: "",
     bannerLinkUrl: "",
     bannerAltText: "",
   });
@@ -163,6 +164,7 @@ export default function PromotePage() {
           targetCountry: buyForm.targetCountry || null,
           targetCategory: buyForm.targetCategory || null,
           bannerImageUrl: buyForm.bannerImageUrl || null,
+          bannerMobileImageUrl: buyForm.bannerMobileImageUrl || null,
           bannerLinkUrl: buyForm.bannerLinkUrl || null,
           bannerAltText: buyForm.bannerAltText || null,
         }),
@@ -206,6 +208,7 @@ export default function PromotePage() {
       targetCountry: "",
       targetCategory: "",
       bannerImageUrl: "",
+      bannerMobileImageUrl: "",
       bannerLinkUrl: "",
       bannerAltText: "",
     });
@@ -469,15 +472,27 @@ export default function PromotePage() {
 
               {needsBanner(buyModal.spot) && (
                 <>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1.5">Banner Image URL</label>
-                    <input
-                      type="url"
-                      value={buyForm.bannerImageUrl}
-                      onChange={(e) => setBuyForm((f) => ({ ...f, bannerImageUrl: e.target.value }))}
-                      placeholder="https://…"
-                      className={inputCls}
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1.5">Banner Image URL <span className="text-slate-600">desktop 1200×90</span></label>
+                      <input
+                        type="url"
+                        value={buyForm.bannerImageUrl}
+                        onChange={(e) => setBuyForm((f) => ({ ...f, bannerImageUrl: e.target.value }))}
+                        placeholder="https://…"
+                        className={inputCls}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1.5">Mobile Banner URL <span className="text-slate-600">400×90</span></label>
+                      <input
+                        type="url"
+                        value={buyForm.bannerMobileImageUrl}
+                        onChange={(e) => setBuyForm((f) => ({ ...f, bannerMobileImageUrl: e.target.value }))}
+                        placeholder="https://…"
+                        className={inputCls}
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-400 mb-1.5">Banner Link URL</label>

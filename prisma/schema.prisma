@@ -618,9 +618,10 @@ model AdCampaign {
   amountPaid    Float
   currency      String            @default("USD")
   // For banner (spot 1): store the ad creative
-  bannerImageUrl String?
-  bannerLinkUrl  String?
-  bannerAltText  String?
+  bannerImageUrl       String?
+  bannerMobileImageUrl String?
+  bannerLinkUrl        String?
+  bannerAltText        String?
   // Targeting (spots 4 & 5)
   targetCountry  String?           // ISO code — null = all countries
   targetCategory String?           // category slug — null = all categories
