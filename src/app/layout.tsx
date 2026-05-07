@@ -26,9 +26,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <AuthProvider>
               <div className="flex flex-col min-h-screen">
                 <Navbar />
-                <AdBanner />
                 <CountryPickerModal />
                 <div className="flex-1">
+                  <AdBanner />
                   {children}
                 </div>
                 <Footer />

@@ -53,33 +53,21 @@ export default function AdBanner() {
 
   const visible = loaded && !!campaign && !dismissed;
 
-  return (
-    <>
-      {/* Fixed banner pinned just below the fixed navbar (top-16 = 64px) */}
-      {visible && (
-        <div
-          className="fixed left-0 right-0 z-40 overflow-hidden border-b border-black/10 dark:border-white/5"
-          style={{ top: 64, height: BANNER_H }}
-        >
-          {campaign!.bannerLinkUrl ? (
-            <a
-              href={campaign!.bannerLinkUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={trackClick}
-              className="block w-full h-full"
-            >
-              <BannerContent campaign={campaign!} onDismiss={() => setDismissed(true)} />
-            </a>
-          ) : (
-            <BannerContent campaign={campaign!} onDismiss={() => setDismissed(true)} />
-          )}
-        </div>
-      )}
+  if (!visible) return null;
 
-      {/* Sentinel — pushes page content below navbar + banner */}
-      <div style={{ height: visible ? 64 + BANNER_H : 64 }} className="shrink-0" />
-    </>
+  const inner = <BannerContent campaign={campaign!} onDismiss={() => setDismissed(true)} />;
+
+  return (
+    <div
+      className="w-full overflow-hidden border-b border-black/10 dark:border-white/5"
+      style={{ height: BANNER_H }}
+    >
+      {campaign!.bannerLinkUrl ? (
+        <a href={campaign!.bannerLinkUrl} target="_blank" rel="noopener noreferrer" onClick={trackClick} className="block w-full h-full">
+          {inner}
+        </a>
+      ) : inner}
+    </div>
   );
 }
 
