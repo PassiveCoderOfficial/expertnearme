@@ -1,4 +1,3 @@
-// File: src/context/AuthContext.tsx
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
@@ -7,6 +6,8 @@ interface Session {
   ok: boolean;
   authenticated: boolean;
   role?: string;
+  activeRole?: string;
+  roles?: string[];
   userId?: number;
   email?: string;
 }
@@ -16,6 +17,9 @@ interface User {
   email: string;
   name?: string;
   role: string;
+  roles: string[];
+  activeRole: string;
+  defaultRole: string;
   verified: boolean;
 }
 
@@ -25,6 +29,7 @@ interface AuthContextType {
   loading: boolean;
   refresh: () => Promise<void>;
   logout: () => void;
+  switchRole: (role: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -33,6 +38,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   refresh: async () => {},
   logout: () => {},
+  switchRole: async () => false,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -79,8 +85,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
+  const switchRole = async (role: string): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/auth/switch-role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        await refresh();
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ session, user, loading, refresh, logout }}>
+    <AuthContext.Provider value={{ session, user, loading, refresh, logout, switchRole }}>
       {children}
     </AuthContext.Provider>
   );

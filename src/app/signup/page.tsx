@@ -5,11 +5,38 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { LogoMark } from "@/components/Logo";
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Search, Star, Handshake } from "lucide-react";
+
+type SignupRole = "BUYER" | "EXPERT" | "SALES_AGENT";
+
+const ROLE_OPTIONS: { value: SignupRole; label: string; desc: string; icon: React.ReactNode; color: string }[] = [
+  {
+    value: "BUYER",
+    label: "Buyer",
+    desc: "Find & book experts",
+    icon: <Search className="w-5 h-5" />,
+    color: "border-cyan-500/40 bg-cyan-500/10 text-cyan-300",
+  },
+  {
+    value: "EXPERT",
+    label: "Expert",
+    desc: "List your services",
+    icon: <Star className="w-5 h-5" />,
+    color: "border-orange-500/40 bg-orange-500/10 text-orange-300",
+  },
+  {
+    value: "SALES_AGENT",
+    label: "Agent",
+    desc: "Refer & earn commissions",
+    icon: <Handshake className="w-5 h-5" />,
+    color: "border-green-500/40 bg-green-500/10 text-green-300",
+  },
+];
 
 export default function SignupPage() {
   const router = useRouter();
   const { session, loading, refresh } = useAuth();
+  const [role, setRole] = useState<SignupRole>("BUYER");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,7 +56,7 @@ export default function SignupPage() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, role }),
       });
       const data = await res.json();
       if (data.ok) {
@@ -60,9 +87,8 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-2.5 mb-10">
           <LogoMark size={36} />
           <span className="text-xl font-bold text-white tracking-tight">
@@ -72,7 +98,27 @@ export default function SignupPage() {
 
         <div className="bg-slate-800/60 border border-white/8 rounded-2xl p-8 shadow-2xl">
           <h1 className="text-2xl font-bold text-white mb-1">Create an account</h1>
-          <p className="text-slate-400 text-sm mb-7">Join ExpertNear.Me and connect with clients</p>
+          <p className="text-slate-400 text-sm mb-6">Choose how you'll use ExpertNear.Me</p>
+
+          {/* Role selector */}
+          <div className="grid grid-cols-3 gap-2 mb-6">
+            {ROLE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setRole(opt.value)}
+                className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border-2 transition-all text-center ${
+                  role === opt.value
+                    ? opt.color + " border-2"
+                    : "border-white/8 text-slate-500 hover:border-white/20 hover:text-slate-400"
+                }`}
+              >
+                {opt.icon}
+                <span className="text-xs font-bold">{opt.label}</span>
+                <span className="text-[10px] leading-tight opacity-70">{opt.desc}</span>
+              </button>
+            ))}
+          </div>
 
           {error && (
             <div className="mb-5 text-sm text-red-300 bg-red-500/15 border border-red-500/25 rounded-lg px-4 py-3">
@@ -139,7 +185,7 @@ export default function SignupPage() {
               disabled={submitting}
               className="w-full bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 text-slate-900 font-bold py-2.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
-              {submitting ? "Creating account…" : "Create Account"}
+              {submitting ? "Creating account…" : `Create ${ROLE_OPTIONS.find(r => r.value === role)?.label} Account`}
             </button>
           </form>
 
@@ -152,10 +198,7 @@ export default function SignupPage() {
         </div>
 
         <p className="text-center text-xs text-slate-600 mt-6">
-          Want to list your business?{" "}
-          <Link href="/for-experts" className="text-orange-500 hover:text-orange-400 transition-colors">
-            Become an Expert →
-          </Link>
+          You can switch between Buyer, Expert, and Agent views anytime from your dashboard.
         </p>
       </div>
     </div>

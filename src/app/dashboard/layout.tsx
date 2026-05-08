@@ -9,7 +9,7 @@ import {
   MdCurrencyExchange, MdEdit, MdClose, MdLogout,
   MdStar, MdMap, MdPayment, MdAdminPanelSettings, MdBarChart,
   MdFavorite, MdSearch, MdCampaign, MdSupportAgent, MdMessage, MdAccessTime,
-  MdArticle, MdHandshake, MdBackup,
+  MdArticle, MdHandshake, MdBackup, MdSwapHoriz,
 } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
 import { LogoMark } from "@/components/Logo";
@@ -101,6 +101,14 @@ const BUYER_NAV: NavItem[] = [
   { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
 ];
 
+const AGENT_NAV: NavItem[] = [
+  { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
+  { name: "My Referrals",   href: "/dashboard/agents",              icon: <MdHandshake /> },
+  { name: "Messages",       href: "/dashboard/messages",            icon: <MdMessage /> },
+  { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
+  { name: "Notifications",  href: "/dashboard/notifications",       icon: <MdNotifications /> },
+];
+
 const USER_NAV: NavItem[] = [
   { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
   { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },
@@ -139,18 +147,22 @@ const ROLE_LABEL: Record<string, string> = {
   MANAGER:     "Manager",
   MARKETER:    "Marketer",
   SEO_EXPERT:  "SEO Expert",
-  SALES_AGENT: "Sales Agent",
+  SALES_AGENT: "Agent",
   EXPERT:      "Expert",
   BUYER:       "Buyer",
   USER:        "User",
 };
 
+// Roles that can be freely switched to by any user
+const SWITCHABLE_ROLES = ["EXPERT", "BUYER", "SALES_AGENT"];
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { session, loading, logout } = useAuth();
+  const { session, user, loading, logout, switchRole } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [switching, setSwitching] = useState(false);
 
   useEffect(() => {
     const fetchUnread = async () => {
@@ -186,14 +198,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!session?.authenticated) return null;
 
-  const role = session.role || "USER";
-  const navItems = NAV_BY_ROLE[role] || USER_NAV;
-  const roleColor = ROLE_COLOR[role] || ROLE_COLOR.USER;
-  const roleLabel = ROLE_LABEL[role] || role;
+  const activeRole = user?.activeRole || session.role || "USER";
+  const userRoles = user?.roles || session.roles || [activeRole];
+  const navItems = NAV_BY_ROLE[activeRole] || USER_NAV;
+  const roleColor = ROLE_COLOR[activeRole] || ROLE_COLOR.USER;
+  const roleLabel = ROLE_LABEL[activeRole] || activeRole;
+
+  // Roles available to switch to: owned roles + any SWITCHABLE_ROLES not yet owned
+  const availableRoles = [
+    ...SWITCHABLE_ROLES.filter(r => !userRoles.includes(r)),
+    ...userRoles.filter(r => SWITCHABLE_ROLES.includes(r)),
+  ].filter((r, i, arr) => arr.indexOf(r) === i);
+
+  const handleSwitchRole = async (role: string) => {
+    if (role === activeRole || switching) return;
+    setSwitching(true);
+    const ok = await switchRole(role);
+    setSwitching(false);
+    if (ok) router.push("/dashboard");
+  };
 
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
     <aside className={`${mobile ? "w-full" : "w-64 hidden md:flex"} flex-col bg-slate-950 border-r border-white/8 sticky top-16 self-start h-[calc(100vh-4rem)] overflow-y-auto`}>
-      {/* Brand (mobile only — desktop Navbar already shows logo) */}
       {mobile && (
         <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-1.5">
@@ -208,12 +234,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       )}
 
-      {/* Role badge */}
+      {/* Role badge + switcher */}
       <div className="px-5 py-3 border-b border-white/5">
         <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${roleColor}`}>
           {roleLabel}
         </span>
         <p className="text-xs text-slate-500 mt-1 truncate">{session.email}</p>
+
+        {/* Role switcher — only show for switchable roles */}
+        {availableRoles.length > 1 && (
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {availableRoles.map((r) => (
+              <button
+                key={r}
+                onClick={() => handleSwitchRole(r)}
+                disabled={switching}
+                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
+                  r === activeRole
+                    ? `${ROLE_COLOR[r] || ROLE_COLOR.USER} opacity-100`
+                    : "border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20"
+                } ${switching ? "opacity-50 cursor-wait" : "cursor-pointer"}`}
+              >
+                {ROLE_LABEL[r] || r}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Nav */}

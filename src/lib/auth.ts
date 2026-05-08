@@ -2,7 +2,6 @@
 import { cookies } from "next/headers";
 
 export async function getSession() {
-  // Await cookies() because your runtime expects it
   const cookieStore = await cookies();
 
   const role = cookieStore.get("role")?.value || "USER";
@@ -12,6 +11,7 @@ export async function getSession() {
   return {
     authenticated: !!userId,
     role,
+    activeRole: role,
     userId,
     email,
   };

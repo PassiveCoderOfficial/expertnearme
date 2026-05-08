@@ -19,12 +19,16 @@ export async function GET(req: NextRequest): Promise<Response> {
     const payload = jwt.verify(token, JWT_SECRET) as {
       userId: number;
       role: string;
+      activeRole?: string;
+      roles?: string[];
     };
 
     return NextResponse.json({
       ok: true,
       authenticated: true,
-      role: payload.role,
+      role: payload.activeRole || payload.role,
+      activeRole: payload.activeRole || payload.role,
+      roles: payload.roles || [payload.role],
       userId: payload.userId,
     });
   } catch (err) {
