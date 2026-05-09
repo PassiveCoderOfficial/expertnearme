@@ -18,16 +18,17 @@ Country-based SaaS for local expert listings. Buyers find experts by country/cat
 - **Build:** `eas build --platform android --profile preview` for APK
 
 ## Tech Stack
-- **Framework:** Next.js 15 App Router, TypeScript
+- **Framework:** Next.js 16 App Router, TypeScript
 - **Styling:** TailwindCSS 4, Lucide icons
-- **ORM:** Prisma + PostgreSQL (Supabase)
+- **ORM:** Prisma + PostgreSQL (Supabase) — use `prisma db push`, `directUrl` set in schema
 - **Auth:** JWT (custom, not NextAuth)
 - **Maps:** `@googlemaps/react-wrapper` + Google Maps JS API
 - **Flags:** `country-flag-icons` package (SVG React components via `FlagIcon.tsx`)
 - **Animation:** Framer Motion
+- **Storage:** Supabase Storage (`uploads` bucket) via `supabaseServer` — media upload API at `/api/media`
 
 ## Design System
-Dark slate theme throughout:
+Dark slate theme throughout (some pages have light/dark variants via Tailwind `dark:` prefix):
 - Background: `bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800`
 - Cards: `bg-slate-800/50`, `border border-white/8`
 - Accent: `text-orange-400`, `border-orange-500`, `bg-orange-500`
@@ -77,7 +78,7 @@ Dark slate theme throughout:
 - **Founding Expert Lifetime** — **ACTIVE until Aug 15, 2026**, max 500 spots
   - Perks: gold badge, Hall of Fame listing, priority in search, all future Pro features, price locked
 
-`SPOTS_TAKEN` is hardcoded at `47` in `PricingTable.tsx` — wire to `/api/stats/founding-spots` later.
+`SPOTS_TAKEN` hardcoded at `47` in `PricingTable.tsx` — wire to `/api/stats/founding-spots` later.
 
 ## Key Components
 | Component | Purpose |
@@ -89,6 +90,8 @@ Dark slate theme throughout:
 | `Navbar.tsx` | Sitewide; ☰ toggle (mobile, dashboard only) left of logo dispatches `toggle-dashboard-sidebar` event |
 | `CountryPickerModal.tsx` | Full-screen country switcher modal |
 | `Logo.tsx` | `LogoMark` component |
+| `PortfolioLightbox.tsx` | Client component — portfolio grid with lightbox, YouTube/Vimeo embed, keyboard nav |
+| `PricingTable.tsx` | Full pricing page — `SPOTS_TAKEN` hardcoded at 47 (wire to `/api/stats/founding-spots` later); lifetime vs pro comparison line is dynamic from plan prices |
 
 ## Middleware (`src/middleware.ts`)
 - Validates country code prefix (redirects unknown `[a-z]{2,3}` to `/`)
@@ -98,8 +101,12 @@ Dark slate theme throughout:
 
 ## Database Notes
 - Use `prisma db push` (not `migrate dev`) — migration history has drift
+- Schema datasource has `directUrl = env("DIRECT_URL")` — required for push to work (pooler URL alone fails)
 - `SavedExpert` model: userId + expertId unique pair, toggle save/unsave
 - Expert has: `latitude`, `longitude`, `mapLocation`, `featured`, `mapFeatured`, `homeFeatured`, `foundingExpert`
+- Expert also has: `linkedinUrl`, `instagramUrl`, `twitterUrl`, `facebookUrl` (social links)
+- `Portfolio` model: `id`, `expertId`, `title`, `description`, `imageUrl`, `videoUrl`, `socialUrl`, `sortOrder`
+- `Service` model: `id`, `expertId`, `name`, `description`, `rateUnit`, `price`, `image`, `sortOrder`, booking fields
 
 ## Environment Variables Needed
 ```
@@ -117,8 +124,23 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 - Sidebar overlay `z-40`, Navbar `z-50` (Navbar always on top)
 
 ## Conventions
-- Server components fetch data with Prisma directly (no API layer)
+- Server components fetch data with Prisma directly (no API layer) — never use `fetch()` to own API from server components
 - Client components in `src/components/` — mark `'use client'` at top
-- API routes in `src/app/api/` — use `getServerSession()` for auth checks
+- API routes in `src/app/api/` — use `getSession()` (not `getServerSession()`) for auth checks
 - No comments unless the WHY is non-obvious
 - No trailing summaries in responses
+- Pages that were previously `"use client"` with `useEffect` fetch — convert to server components if no interactivity needed (performance critical)
+
+## Expert Self-Service APIs
+| Route | Methods | Purpose |
+|-------|---------|---------|
+| `/api/me/expert` | GET, PATCH | Expert profile (includes social links, lat/lng) |
+| `/api/me/portfolio` | GET, POST, PATCH, DELETE | Portfolio CRUD (max 20 items) |
+| `/api/me/services` | GET, POST, PATCH, DELETE | Services CRUD (max 20 items) |
+| `/api/media` | GET, POST | Media upload to Supabase (10MB max, images only) |
+
+## Performance Notes
+- `[countryCode]/page.tsx` — server component, 3 parallel Prisma queries
+- `[countryCode]/categories/page.tsx` — server component, `revalidate = 3600`
+- `[countryCode]/expert/[slug]/page.tsx` — server component, `revalidate = 3600`
+- Dashboard pages can stay as client components (CRUD interactivity needed)
