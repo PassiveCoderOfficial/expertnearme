@@ -144,3 +144,43 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 - `[countryCode]/categories/page.tsx` — server component, `revalidate = 3600`
 - `[countryCode]/expert/[slug]/page.tsx` — server component, `revalidate = 3600`
 - Dashboard pages can stay as client components (CRUD interactivity needed)
+
+## Ads & Featured System
+- 7 `AdSpot` enum values: `BANNER_TOP`, `SEARCH_SPONSOR`, `HOMEPAGE_FEATURED`, `COUNTRY_FEATURED`, `CATEGORY_FEATURED`, `PROFILE_SIDEBAR`, `MAP_FEATURED`
+- `AdPlacement` model: spot, weeklyPrice, monthlyPrice, maxSlots, active
+- `AdCampaign` model: expertId, spot, status (PENDING/ACTIVE/PAUSED/REJECTED/CANCELLED), billing, country, category, impressions, clicks
+- Shared rotation model (spots 2-7): weekly/monthly pricing, admin sets maxSlots
+- Admin dashboard: `/dashboard/ads` — 3 tabs: Placements Config, Active Campaigns, Credit Packages
+- API: `/api/admin/ad-placements`, `/api/admin/ad-campaigns`, `/api/admin/ad-campaigns/[id]`, `/api/ads/active`, `/api/admin/credits`
+- Frontend: `AdBanner.tsx` (BANNER_TOP, dismissable), `AdFeaturedExperts.tsx` (spots 3-6, grid/list/compact layouts)
+- `SEARCH_SPONSOR` slot exists in DB/API but not yet wired into SearchBar dropdown
+
+## Blog System
+- `BlogPost` model with `BlogStatus` enum: DRAFT/SCHEDULED/PUBLISHED/ARCHIVED
+- `countryCode = null` = global post (shown everywhere)
+- Scheduled posts auto-published by GitHub Actions hourly cron → `/api/admin/blog/publish-scheduled` (Bearer CRON_SECRET)
+- Rich text editor: Tiptap v3 — `TextStyle`/`Color` are named exports from `@tiptap/extension-text-style`
+- Blog dashboard (`/dashboard/blog`): bulk select, bulk status change, bulk delete, view button for published posts
+- Blog frontend route `/blog/[slug]` not yet built
+
+## Backup System
+- GitHub Actions workflow: `.github/workflows/backup.yml` — runs hourly
+- 3 jobs in parallel: code snapshot, pg_dump, Supabase storage download
+- Dual destination: Google Drive (OAuth refresh token via Drive API, no rclone) + FTP (Pure-FTPd with TLS, `--ssl-reqd`)
+- Count-based retention: keep last N hourly per day × last N days (default 4×6=24 max per type)
+- Config stored in `Setting` table keys: `backup_enabled`, `backup_hourly_keep`, `backup_daily_keep`, `backup_include_*`
+- Admin panel: `/dashboard/backup` — toggle enable, set retention, manual trigger via GitHub dispatch API
+- API: `/api/admin/backup/config` (SUPER_ADMIN PATCH), `/api/admin/backup/status` (workflow POST), `/api/admin/backup/trigger` (GitHub dispatch)
+- Scripts in `scripts/backup/`: `backup-code.sh`, `backup-db.sh`, `backup-storage.sh`, `gdrive-upload.sh`, `prune-old-backups.sh`
+- pg_dump uses pooler URL (not direct) — Supabase blocks direct connections from GitHub Actions IPs
+- FTP: `backup@fullready.site` on `131.153.48.203`, dir `expertnearme_backup`
+- Required GitHub secrets: `DATABASE_URL` (pooler), `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GDRIVE_CLIENT_ID`, `GDRIVE_CLIENT_SECRET`, `GDRIVE_REFRESH_TOKEN`, `GDRIVE_FOLDER_ID`, `FTP_HOST`, `FTP_USER`, `FTP_PASS`, `FTP_DIR`, `GH_OWNER`, `GH_PAT`, `GH_REPO`
+
+## Key Routes (updated)
+Additional routes added:
+| Route | Purpose |
+|-------|---------|
+| `/dashboard/ads` | Ads & featured placement management (admin) |
+| `/dashboard/backup` | Backup system config + manual trigger (SUPER_ADMIN) |
+| `/dashboard/blog` | Blog post management with bulk actions |
+| `/blog/[slug]` | Blog frontend (not yet built) |
