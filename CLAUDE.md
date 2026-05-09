@@ -28,12 +28,20 @@ Country-based SaaS for local expert listings. Buyers find experts by country/cat
 - **Storage:** Supabase Storage (`uploads` bucket) via `supabaseServer` — media upload API at `/api/media`
 
 ## Design System
-Dark slate theme throughout (some pages have light/dark variants via Tailwind `dark:` prefix):
-- Background: `bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800`
-- Cards: `bg-slate-800/50`, `border border-white/8`
-- Accent: `text-orange-400`, `border-orange-500`, `bg-orange-500`
-- Text hierarchy: `text-white` > `text-slate-300` > `text-slate-400` > `text-slate-500`
+Full light/dark dual-theme. Default = **light**. `next-themes` with `defaultTheme="light"`, `attribute="class"`, `storageKey="enm-theme"`. ThemeToggle cycles light → system → dark.
+
+**Pattern for all public pages** — always use `dark:` variants, never hardcode dark:
+- Background: `bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800`
+- Cards: `bg-white dark:bg-slate-800/50`, `border border-slate-100 dark:border-white/8`, `shadow-sm dark:shadow-none`
+- Accent: `text-orange-500 dark:text-orange-400`, `border-orange-500`, `bg-orange-500`
+- Text hierarchy: `text-slate-900 dark:text-white` > `text-slate-600 dark:text-slate-300` > `text-slate-500 dark:text-slate-400`
+- Inputs: `bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white`
 - Rounded: `rounded-2xl` for cards, `rounded-xl` for buttons/inputs
+- Buttons: orange CTAs always `text-white` (not `text-slate-900`)
+
+**Dashboard** — intentionally stays dark-only (admin tool, not public-facing).
+
+**Maps (ExpertMap, WorldMap)** — use `useTheme` from `next-themes`, `resolvedTheme === 'dark'` → pass `isDark` prop → switch between `DARK_STYLE`/`LIGHT_STYLE` Google Maps style arrays. Info windows and overlays also theme-switch via inline style vars.
 
 ## Multi-Role Auth System (implemented)
 - `User` model has `roles[]`, `activeRole`, `defaultRole` (in addition to legacy `role`)
@@ -140,10 +148,12 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 | `/api/media` | GET, POST | Media upload to Supabase (10MB max, images only) |
 
 ## Performance Notes
-- `[countryCode]/page.tsx` — server component, 3 parallel Prisma queries
+- `[countryCode]/page.tsx` — server component, 3 parallel Prisma queries, `revalidate = 3600`
 - `[countryCode]/categories/page.tsx` — server component, `revalidate = 3600`
-- `[countryCode]/expert/[slug]/page.tsx` — server component, `revalidate = 3600`
+- `[countryCode]/categories/[slug]/page.tsx` — server component, `revalidate = 3600`
+- `[countryCode]/expert/[slug]/page.tsx` — server component, `revalidate = 3600`; **no `generateStaticParams`** — Prisma can't connect during Vercel build phase, causes 500
 - Dashboard pages can stay as client components (CRUD interactivity needed)
+- Country switcher: deep routes (`/[cc]/expert/[slug]`, `/[cc]/categories/[slug]`) redirect to country homepage when switching country — slugs don't exist cross-country
 
 ## Ads & Featured System
 - 7 `AdSpot` enum values: `BANNER_TOP`, `SEARCH_SPONSOR`, `HOMEPAGE_FEATURED`, `COUNTRY_FEATURED`, `CATEGORY_FEATURED`, `PROFILE_SIDEBAR`, `MAP_FEATURED`
@@ -161,7 +171,7 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 - Scheduled posts auto-published by GitHub Actions hourly cron → `/api/admin/blog/publish-scheduled` (Bearer CRON_SECRET)
 - Rich text editor: Tiptap v3 — `TextStyle`/`Color` are named exports from `@tiptap/extension-text-style`
 - Blog dashboard (`/dashboard/blog`): bulk select, bulk status change, bulk delete, view button for published posts
-- Blog frontend route `/blog/[slug]` not yet built
+- Blog frontend route `/blog/[slug]` — server component, Prisma direct fetch, 404 if not PUBLISHED, increments `viewCount` fire-and-forget, `.blog-content` CSS class in `globals.css` for HTML content styling (no typography plugin — TailwindCSS 4)
 
 ## Backup System
 - GitHub Actions workflow: `.github/workflows/backup.yml` — runs hourly
@@ -183,4 +193,13 @@ Additional routes added:
 | `/dashboard/ads` | Ads & featured placement management (admin) |
 | `/dashboard/backup` | Backup system config + manual trigger (SUPER_ADMIN) |
 | `/dashboard/blog` | Blog post management with bulk actions |
-| `/blog/[slug]` | Blog frontend (not yet built) |
+| `/blog/[slug]` | Blog frontend (server component, public) |
+| `/dashboard/agents` | Agent referral dashboard — generate links, view commissions |
+
+## Agent & Referral System
+- `AgentReferral` model: `referrerId`, `referralCode` (`ENM-{userId}-{timestamp36}`), `commissionPct`, `status`, `referredUser`, `commissions[]`
+- `AgentCommission` model: `referrerId`, `amount`, `type`, `status` (PENDING/APPROVED/PAID/CANCELLED)
+- API: `GET /api/admin/agents` — own referrals + earnings; `?admin=1` for admin view (all referrals)
+- API: `POST /api/admin/agents` — create referral link; returns full record **with `commissions` + `referredUser` included** (required — page calls `.reduce()` on commissions)
+- Commission %: read from `Setting` key `expertSubscriptionCommissionPct` (default 20%)
+- Commission structure: 20% recurring on expert subscriptions, 50% of booking fee (platform cut), 20% one-time on lifetime deals
