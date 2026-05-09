@@ -226,17 +226,17 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
         {/* Billing toggle — only when BOTH monthly and yearly plans exist */}
         {showToggle && (
           <div className="flex items-center justify-center gap-4 mb-12">
-            <span className={`text-sm transition-colors ${billingCycle === 'monthly' ? 'text-white font-medium' : 'text-slate-500'}`}>Monthly</span>
+            <span className={`text-sm transition-colors ${billingCycle === 'monthly' ? 'text-slate-900 dark:text-white font-medium' : 'text-slate-400 dark:text-slate-500'}`}>Monthly</span>
             <button
               onClick={() => setBillingCycle(b => b === 'monthly' ? 'yearly' : 'monthly')}
-              className={`relative w-12 h-6 rounded-full transition-colors ${billingCycle === 'yearly' ? 'bg-orange-500' : 'bg-slate-600'}`}
+              className={`relative w-12 h-6 rounded-full transition-colors ${billingCycle === 'yearly' ? 'bg-orange-500' : 'bg-slate-300 dark:bg-slate-600'}`}
             >
               <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${billingCycle === 'yearly' ? 'translate-x-6' : ''}`} />
             </button>
-            <span className={`text-sm transition-colors ${billingCycle === 'yearly' ? 'text-white font-medium' : 'text-slate-500'}`}>
+            <span className={`text-sm transition-colors ${billingCycle === 'yearly' ? 'text-slate-900 dark:text-white font-medium' : 'text-slate-400 dark:text-slate-500'}`}>
               Yearly{' '}
               {monthlyPlans[0] && yearlyPlans[0] && (
-                <span className="text-orange-400 text-xs font-medium">
+                <span className="text-orange-500 dark:text-orange-400 text-xs font-medium">
                   Save {Math.round((1 - yearlyPlans[0].price / (monthlyPlans[0].price * 12)) * 100)}%
                 </span>
               )}
@@ -324,7 +324,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                   {plan.price === 0 ? (
                     <Link
                       href="/create-expert-account"
-                      className="block text-center py-3 px-4 rounded-xl border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white transition-colors font-medium text-sm mb-8"
+                      className="block text-center py-3 px-4 rounded-xl border border-slate-200 dark:border-slate-600 hover:border-slate-400 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors font-medium text-sm mb-8"
                     >
                       Start Free
                     </Link>
@@ -332,7 +332,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                     <>
                       <button
                         onClick={() => { setActivePlan(plan); setShowPaymentModal(true); }}
-                        className="block w-full text-center py-3.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-orange-500/25 mb-1 group"
+                        className="block w-full text-center py-3.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 text-white font-bold text-sm transition-all shadow-lg shadow-orange-500/25 mb-1 group"
                       >
                         Claim Your Spot <ArrowRight className="inline h-4 w-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
                       </button>
@@ -344,14 +344,14 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                   ) : plan.active ? (
                     <button
                       onClick={() => { setActivePlan(plan); setShowPaymentModal(true); }}
-                      className="block w-full text-center py-3.5 px-4 rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold text-sm transition-all shadow-lg shadow-orange-500/20 mb-8 group"
+                      className="block w-full text-center py-3.5 px-4 rounded-xl bg-orange-500 hover:bg-orange-400 text-white font-bold text-sm transition-all shadow-lg shadow-orange-500/20 mb-8 group"
                     >
                       Get Started <ArrowRight className="inline h-4 w-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
                     </button>
                   ) : (
                     <button
                       disabled
-                      className="block w-full text-center py-3 px-4 rounded-xl border border-slate-700 text-slate-600 font-medium text-sm mb-8 cursor-not-allowed"
+                      className="block w-full text-center py-3 px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-600 font-medium text-sm mb-8 cursor-not-allowed"
                     >
                       Coming Soon
                     </button>
@@ -360,8 +360,8 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                   {/* Features */}
                   <ul className="space-y-3">
                     {features.map((f, fi) => (
-                      <li key={fi} className={`flex items-start gap-3 text-sm ${isHero ? 'text-slate-200' : 'text-slate-300'}`}>
-                        <Check className={`h-4 w-4 mt-0.5 shrink-0 ${isHero ? 'text-orange-400' : 'text-green-400'}`} />
+                      <li key={fi} className={`flex items-start gap-3 text-sm ${isHero ? 'text-slate-200' : 'text-slate-600 dark:text-slate-300'}`}>
+                        <Check className={`h-4 w-4 mt-0.5 shrink-0 ${isHero ? 'text-orange-400' : 'text-green-500 dark:text-green-400'}`} />
                         {f}
                       </li>
                     ))}
@@ -374,33 +374,33 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
 
         {/* Value anchors */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}
-          className="flex flex-wrap items-center justify-center gap-6 mt-10 text-sm text-slate-400">
-          <span className="flex items-center gap-2"><Shield className="h-4 w-4 text-green-400" />30-day money-back guarantee</span>
+          className="flex flex-wrap items-center justify-center gap-6 mt-10 text-sm text-slate-500 dark:text-slate-400">
+          <span className="flex items-center gap-2"><Shield className="h-4 w-4 text-green-500 dark:text-green-400" />30-day money-back guarantee</span>
           {lifetimePlans[0] && monthlyPlans[0] && (
-            <span className="flex items-center gap-2"><Zap className="h-4 w-4 text-orange-400" />${lifetimePlans[0].price} = less than {Math.ceil(lifetimePlans[0].price / monthlyPlans[0].price)} months of Pro</span>
+            <span className="flex items-center gap-2"><Zap className="h-4 w-4 text-orange-500 dark:text-orange-400" />${lifetimePlans[0].price} = less than {Math.ceil(lifetimePlans[0].price / monthlyPlans[0].price)} months of Pro</span>
           )}
           <span className="flex items-center gap-2"><Star className="h-4 w-4 text-amber-400" />Founding Expert badge, yours forever</span>
         </motion.div>
 
         {/* Hall of Fame */}
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-          className="mt-20 rounded-2xl border border-orange-500/20 bg-gradient-to-r from-orange-950/30 to-slate-900/60 p-10 text-center">
-          <Trophy className="h-9 w-9 text-orange-400 mx-auto mb-4" />
-          <h2 className="text-3xl font-bold mb-3">Founding Experts Hall of Fame</h2>
-          <p className="text-slate-300 max-w-xl mx-auto mb-8">
+          className="mt-20 rounded-2xl border border-orange-500/20 bg-gradient-to-r from-orange-50 to-amber-50/50 dark:from-orange-950/30 dark:to-slate-900/60 p-10 text-center">
+          <Trophy className="h-9 w-9 text-orange-500 dark:text-orange-400 mx-auto mb-4" />
+          <h2 className="text-3xl font-bold mb-3 text-slate-900 dark:text-white">Founding Experts Hall of Fame</h2>
+          <p className="text-slate-500 dark:text-slate-300 max-w-xl mx-auto mb-8">
             Every Founding Expert gets a permanent listing on our dedicated page — your name, profile link, and contribution to building ExpertNear.Me, honored forever.
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto mb-8">
             {FOUNDING_EXPERTS_PREVIEW.map((expert) => (
-              <div key={expert.name} className={`rounded-xl border p-4 text-sm ${expert.name === 'You?' ? 'border-orange-500/40 bg-orange-500/10 border-dashed' : 'border-slate-700 bg-slate-800/50'}`}>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-slate-900 font-bold text-sm mx-auto mb-2">
+              <div key={expert.name} className={`rounded-xl border p-4 text-sm ${expert.name === 'You?' ? 'border-orange-500/40 bg-orange-500/10 border-dashed' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50'}`}>
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white font-bold text-sm mx-auto mb-2">
                   {expert.name === 'You?' ? '?' : expert.name[0]}
                 </div>
-                <p className="font-semibold text-white text-xs">{expert.name}</p>
+                <p className="font-semibold text-slate-900 dark:text-white text-xs">{expert.name}</p>
                 <p className="text-slate-400 text-xs mt-0.5">{expert.country}</p>
-                <p className="text-orange-300 text-xs mt-0.5">{expert.category}</p>
+                <p className="text-orange-500 dark:text-orange-300 text-xs mt-0.5">{expert.category}</p>
                 {expert.name !== 'You?' && (
-                  <div className="mt-2 inline-flex items-center gap-1 bg-orange-500/15 text-orange-300 text-xs px-2 py-0.5 rounded-full border border-orange-500/25">
+                  <div className="mt-2 inline-flex items-center gap-1 bg-orange-500/15 text-orange-600 dark:text-orange-300 text-xs px-2 py-0.5 rounded-full border border-orange-500/25">
                     <Crown className="h-2.5 w-2.5" /> Founding
                   </div>
                 )}
@@ -409,14 +409,14 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
           </div>
           <div className="flex flex-wrap justify-center gap-3">
             {['Founding Expert', 'Early Believer', 'Platform Builder', 'Legacy Member'].map(tag => (
-              <span key={tag} className="bg-orange-500/10 border border-orange-500/25 text-orange-300 text-sm px-3 py-1.5 rounded-full">{tag}</span>
+              <span key={tag} className="bg-orange-500/10 border border-orange-500/25 text-orange-600 dark:text-orange-300 text-sm px-3 py-1.5 rounded-full">{tag}</span>
             ))}
           </div>
         </motion.div>
 
         <div className="text-center mt-10 text-slate-400 text-sm">
-          <Zap className="inline h-4 w-4 text-orange-400 mr-1.5" />
-          <strong className="text-white">{spotsTaken} experts</strong> have already secured their Founding Expert spot.
+          <Zap className="inline h-4 w-4 text-orange-500 dark:text-orange-400 mr-1.5" />
+          <strong className="text-slate-900 dark:text-white">{spotsTaken} experts</strong> have already secured their Founding Expert spot.
         </div>
       </div>
 
@@ -427,35 +427,35 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
             className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-6"
             onClick={(e) => { if (e.target === e.currentTarget) setShowWaitlist(false); }}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-slate-800 border border-slate-700 rounded-2xl p-8 max-w-md w-full shadow-2xl">
+              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-8 max-w-md w-full shadow-2xl">
               {!waitlistSubmitted ? (
                 <>
-                  <Bell className="h-8 w-8 text-orange-400 mb-4" />
-                  <h3 className="text-xl font-bold mb-2">Join the Pro Waitlist</h3>
-                  <p className="text-slate-400 text-sm mb-6">We&apos;ll notify you the moment Pro launches on August 16, 2026.</p>
+                  <Bell className="h-8 w-8 text-orange-500 dark:text-orange-400 mb-4" />
+                  <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Join the Pro Waitlist</h3>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">We&apos;ll notify you the moment Pro launches on August 16, 2026.</p>
                   <form onSubmit={handleWaitlist} className="space-y-4">
                     <input type="email" required value={waitlistEmail} onChange={e => setWaitlistEmail(e.target.value)} placeholder="your@email.com"
-                      className="w-full bg-slate-900 border border-slate-600 focus:border-orange-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none text-sm" />
-                    <button type="submit" className="w-full bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold py-3 rounded-xl transition-colors text-sm">
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 focus:border-orange-500 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none text-sm" />
+                    <button type="submit" className="w-full bg-orange-500 hover:bg-orange-400 text-white font-bold py-3 rounded-xl transition-colors text-sm">
                       Notify Me at Launch
                     </button>
                   </form>
-                  <button onClick={() => setShowWaitlist(false)} className="w-full text-slate-500 hover:text-slate-300 text-sm mt-4 transition-colors">
+                  <button onClick={() => setShowWaitlist(false)} className="w-full text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 text-sm mt-4 transition-colors">
                     No thanks
                   </button>
                 </>
               ) : (
                 <div className="text-center py-4">
                   <div className="w-14 h-14 rounded-full bg-green-500/15 flex items-center justify-center mx-auto mb-4 border border-green-500/30">
-                    <Check className="h-7 w-7 text-green-400" />
+                    <Check className="h-7 w-7 text-green-500 dark:text-green-400" />
                   </div>
-                  <h3 className="text-xl font-bold mb-2">You&apos;re on the list!</h3>
-                  <p className="text-slate-400 text-sm mb-6">Meanwhile, the Founding Expert deal is still open — {spotsLeft} spots left.</p>
+                  <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">You&apos;re on the list!</h3>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">Meanwhile, the Founding Expert deal is still open — {spotsLeft} spots left.</p>
                   <button onClick={() => { setShowWaitlist(false); setShowPaymentModal(true); }}
-                    className="block w-full text-center py-3 bg-orange-500 hover:bg-orange-400 text-slate-900 font-bold rounded-xl transition-colors text-sm mb-3">
+                    className="block w-full text-center py-3 bg-orange-500 hover:bg-orange-400 text-white font-bold rounded-xl transition-colors text-sm mb-3">
                     Claim Founding Expert Spot Instead
                   </button>
-                  <button onClick={() => setShowWaitlist(false)} className="w-full text-slate-500 hover:text-slate-300 text-sm transition-colors">Close</button>
+                  <button onClick={() => setShowWaitlist(false)} className="w-full text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 text-sm transition-colors">Close</button>
                 </div>
               )}
             </motion.div>
@@ -470,15 +470,15 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
             className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={(e) => { if (e.target === e.currentTarget) setShowPaymentModal(false); }}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-              <div className="flex items-center justify-between px-6 py-5 border-b border-white/8">
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-white/8">
                 <div>
-                  <h3 className="text-lg font-bold text-white">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                     Claim Your {activePlan?.name || 'Founding Expert'} Spot
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">Choose your preferred payment method</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Choose your preferred payment method</p>
                 </div>
-                <button onClick={() => setShowPaymentModal(false)} className="text-slate-400 hover:text-white transition-colors">
+                <button onClick={() => setShowPaymentModal(false)} className="text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -492,10 +492,10 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                 const ordered = (paymentConfig.tabOrder || ['lemonsqueezy', 'surjopay', 'manual'])
                   .filter((k): k is keyof typeof ALL_TABS => k in ALL_TABS);
                 return (
-                  <div className="flex border-b border-white/8">
+                  <div className="flex border-b border-slate-100 dark:border-white/8">
                     {ordered.map(id => (
                       <button key={id} onClick={() => setPaymentTab(id)}
-                        className={`flex-1 py-3 text-xs font-semibold transition-colors border-b-2 ${paymentTab === id ? 'border-orange-500 text-orange-400' : 'border-transparent text-slate-500 hover:text-slate-300'}`}>
+                        className={`flex-1 py-3 text-xs font-semibold transition-colors border-b-2 ${paymentTab === id ? 'border-orange-500 text-orange-500 dark:text-orange-400' : 'border-transparent text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
                         {ALL_TABS[id].label}
                         <span className="block text-[10px] font-normal opacity-70">{ALL_TABS[id].sub}</span>
                       </button>
@@ -509,8 +509,8 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                   <div className="text-center space-y-4">
                     <div className="w-16 h-16 rounded-2xl bg-yellow-500/15 border border-yellow-500/25 flex items-center justify-center mx-auto text-3xl">🍋</div>
                     <div>
-                      <h4 className="text-white font-semibold mb-1">Pay with LemonSqueezy</h4>
-                      <p className="text-slate-400 text-sm">Secure checkout. Accepts all major cards, PayPal and more.</p>
+                      <h4 className="text-slate-900 dark:text-white font-semibold mb-1">Pay with LemonSqueezy</h4>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm">Secure checkout. Accepts all major cards, PayPal and more.</p>
                     </div>
                     {checkoutError && <p className="text-red-400 text-xs">{checkoutError}</p>}
                     <button onClick={handleCheckout} disabled={checkoutLoading}
@@ -523,8 +523,8 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                   <div className="text-center space-y-4">
                     <div className="w-16 h-16 rounded-2xl bg-green-500/15 border border-green-500/25 flex items-center justify-center mx-auto text-2xl font-bold text-green-400">SP</div>
                     <div>
-                      <h4 className="text-white font-semibold mb-1">Pay with SurjoPay</h4>
-                      <p className="text-slate-400 text-sm">BD-friendly gateway. Supports local cards and mobile banking.</p>
+                      <h4 className="text-slate-900 dark:text-white font-semibold mb-1">Pay with SurjoPay</h4>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm">BD-friendly gateway. Supports local cards and mobile banking.</p>
                     </div>
                     <a href={`https://wa.me/${paymentConfig.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, I want to pay for the ${activePlan?.name ?? 'plan'} ($${activePlan?.price ?? ''}) via SurjoPay.`)}`}
                       target="_blank" rel="noopener noreferrer"
@@ -535,17 +535,17 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                 )}
                 {paymentTab === 'manual' && (
                   <div className="space-y-4">
-                    <p className="text-sm text-slate-300">Transfer <span className="text-orange-400 font-bold">${activePlan?.price ?? 999} USD</span> equivalent to any account below, then contact us on WhatsApp with your receipt.</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">Transfer <span className="text-orange-500 dark:text-orange-400 font-bold">${activePlan?.price ?? 999} USD</span> equivalent to any account below, then contact us on WhatsApp with your receipt.</p>
                     <div className="space-y-3">
                       {paymentConfig.methods.map((method, i) => (
-                        <div key={i} className="bg-slate-800/60 border border-white/8 rounded-xl p-4">
+                        <div key={i} className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-white/8 rounded-xl p-4">
                           <div className="flex items-center gap-2 mb-2">
                             {method.icon
                               ? <img src={method.icon} alt={method.title} className="w-6 h-6 rounded object-cover" />
-                              : <div className="w-6 h-6 rounded bg-orange-500/20 flex items-center justify-center text-orange-400 text-xs font-bold">{method.title[0]}</div>}
-                            <p className="text-sm font-semibold text-white">{method.title}</p>
+                              : <div className="w-6 h-6 rounded bg-orange-500/20 flex items-center justify-center text-orange-500 dark:text-orange-400 text-xs font-bold">{method.title[0]}</div>}
+                            <p className="text-sm font-semibold text-slate-900 dark:text-white">{method.title}</p>
                           </div>
-                          <pre className="text-xs text-slate-300 font-mono whitespace-pre-wrap leading-relaxed">{method.details}</pre>
+                          <pre className="text-xs text-slate-600 dark:text-slate-300 font-mono whitespace-pre-wrap leading-relaxed">{method.details}</pre>
                         </div>
                       ))}
                     </div>
@@ -554,7 +554,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                       className="flex items-center justify-center gap-2 w-full py-3.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors text-sm">
                       💬 Send Receipt on WhatsApp
                     </a>
-                    <p className="text-xs text-slate-500 text-center">WhatsApp: {paymentConfig.whatsapp} — We&apos;ll activate your account within 24h.</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 text-center">WhatsApp: {paymentConfig.whatsapp} — We&apos;ll activate your account within 24h.</p>
                   </div>
                 )}
               </div>
