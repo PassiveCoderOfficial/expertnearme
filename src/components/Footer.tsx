@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { LogoMark } from './Logo';
 import { Globe, Twitter, Linkedin, Facebook, Mail } from 'lucide-react';
 
@@ -48,7 +51,10 @@ const TOP_COUNTRIES = [
 ];
 
 export default function Footer() {
+  const pathname = usePathname();
   const year = new Date().getFullYear();
+
+  if (pathname?.startsWith('/dashboard')) return null;
 
   return (
     <footer className="bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-white/8 mt-auto">

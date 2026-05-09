@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
 
 interface BannerCampaign {
@@ -14,9 +15,11 @@ interface BannerCampaign {
 const BANNER_H = 90;
 
 export default function AdBanner() {
+  const pathname = usePathname();
   const [campaign, setCampaign] = useState<BannerCampaign | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const isDashboard = pathname?.startsWith('/dashboard');
 
   useEffect(() => {
     fetch('/api/ads/active')
@@ -51,7 +54,7 @@ export default function AdBanner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campaign]);
 
-  const visible = loaded && !!campaign && !dismissed;
+  const visible = !isDashboard && loaded && !!campaign && !dismissed;
 
   if (!visible) return null;
 

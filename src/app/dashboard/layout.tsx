@@ -325,6 +325,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <div className="flex-1 flex flex-col min-w-0">
         <main className="flex-1 p-6 overflow-auto">{children}</main>
+        <footer className="border-t border-white/8 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+          <p>© {new Date().getFullYear()} ExpertNear.Me. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="hover:text-slate-300 transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-slate-300 transition-colors">Terms</Link>
+            <Link href="/cookies" className="hover:text-slate-300 transition-colors">Cookies</Link>
+          </div>
+        </footer>
       </div>
     </div>
   );
