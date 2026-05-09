@@ -138,6 +138,9 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 - No comments unless the WHY is non-obvious
 - No trailing summaries in responses
 - Pages that were previously `"use client"` with `useEffect` fetch — convert to server components if no interactivity needed (performance critical)
+- All Prisma `contains` queries must use `mode: "insensitive"` — `/api/search/route.ts` already does this
+- `create-expert-account/page.tsx` intentionally forces light theme (no `dark:` variants) — do not add dark variants back
+- `/api/dashboard/experts?search=...` returns bare array (not `{ experts: [] }`) — use `Array.isArray(data) ? data : (data.experts || [])` defensively
 
 ## Expert Self-Service APIs
 | Route | Methods | Purpose |
@@ -148,21 +151,27 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 | `/api/media` | GET, POST | Media upload to Supabase (10MB max, images only) |
 
 ## Performance Notes
-- `[countryCode]/page.tsx` — server component, 3 parallel Prisma queries, `revalidate = 3600`
+- `page.tsx` (homepage) — `revalidate = 300` (was `force-dynamic` — caused slow loads)
+- `[countryCode]/page.tsx` — server component, 4 parallel Prisma queries incl. `review.aggregate(_avg)` for rating (not full reviews load), `revalidate = 3600`
 - `[countryCode]/categories/page.tsx` — server component, `revalidate = 3600`
 - `[countryCode]/categories/[slug]/page.tsx` — server component, `revalidate = 3600`
 - `[countryCode]/expert/[slug]/page.tsx` — server component, `revalidate = 3600`; **no `generateStaticParams`** — Prisma can't connect during Vercel build phase, causes 500
+- `/api/ads/active` — `Cache-Control: public, s-maxage=60, stale-while-revalidate=120`
+- DB indexes added: `Expert(countryCode,verified)`, `Expert(countryCode,featured)`, `Expert(latitude,longitude)`, `ExpertCategory(categoryId)`, `Review(expertId)`, `Review(expertId,createdAt)`, `AdCampaign(status,startsAt,endsAt)`, `AdCampaign(status,targetCountry)` — run `prisma db push` if not applied
 - Dashboard pages can stay as client components (CRUD interactivity needed)
 - Country switcher: deep routes (`/[cc]/expert/[slug]`, `/[cc]/categories/[slug]`) redirect to country homepage when switching country — slugs don't exist cross-country
 
 ## Ads & Featured System
 - 7 `AdSpot` enum values: `BANNER_TOP`, `SEARCH_SPONSOR`, `HOMEPAGE_FEATURED`, `COUNTRY_FEATURED`, `CATEGORY_FEATURED`, `PROFILE_SIDEBAR`, `MAP_FEATURED`
 - `AdPlacement` model: spot, weeklyPrice, monthlyPrice, maxSlots, active
-- `AdCampaign` model: expertId, spot, status (PENDING/ACTIVE/PAUSED/REJECTED/CANCELLED), billing, country, category, impressions, clicks
+- `AdCampaign` model: expertId, spot, status (PENDING/ACTIVE/PAUSED/REJECTED/CANCELLED), billing, country, category, impressions, clicks, `bannerImageUrl` (desktop 1200×90), `bannerMobileImageUrl` (mobile 400×90), `bannerLinkUrl`, `bannerAltText`
 - Shared rotation model (spots 2-7): weekly/monthly pricing, admin sets maxSlots
-- Admin dashboard: `/dashboard/ads` — 3 tabs: Placements Config, Active Campaigns, Credit Packages
-- API: `/api/admin/ad-placements`, `/api/admin/ad-campaigns`, `/api/admin/ad-campaigns/[id]`, `/api/ads/active`, `/api/admin/credits`
-- Frontend: `AdBanner.tsx` (BANNER_TOP, dismissable), `AdFeaturedExperts.tsx` (spots 3-6, grid/list/compact layouts)
+- Admin dashboard: `/dashboard/ads` — 3 tabs: Placements Config, Active Campaigns, Credit Packages; create-campaign modal has side-by-side desktop/mobile banner URL inputs
+- Expert self-service: `/dashboard/promote` — Browse Spots + My Campaigns tabs; buy modal with desktop/mobile banner URL inputs
+- API: `/api/admin/ad-placements`, `/api/admin/ad-campaigns`, `/api/admin/ad-campaigns/[id]`, `/api/ads/active`, `/api/admin/credits`, `/api/me/ad-campaigns`
+- Frontend: `AdBanner.tsx` (BANNER_TOP, dismissable, orange bg fallback, mobile image shown `< sm` / desktop on `sm+`), `AdFeaturedExperts.tsx` (spots 3-6, grid/list/compact layouts)
+- Layout: navbar spacer `h-16 shrink-0` in `layout.tsx` (navbar is fixed, zero flow height); `AdBanner` placed after spacer, before page children — pages must NOT add their own 64px navbar offset
+- All page top-padding already reduced by 64px (pt-28→pt-12, pt-24→pt-8, pt-20→pt-4, pt-16 removed where applicable)
 - `SEARCH_SPONSOR` slot exists in DB/API but not yet wired into SearchBar dropdown
 
 ## Blog System
@@ -191,6 +200,7 @@ Additional routes added:
 | Route | Purpose |
 |-------|---------|
 | `/dashboard/ads` | Ads & featured placement management (admin) |
+| `/dashboard/promote` | Expert self-service ad campaign creation |
 | `/dashboard/backup` | Backup system config + manual trigger (SUPER_ADMIN) |
 | `/dashboard/blog` | Blog post management with bulk actions |
 | `/blog/[slug]` | Blog frontend (server component, public) |
