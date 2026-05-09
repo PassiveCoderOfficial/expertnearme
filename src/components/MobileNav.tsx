@@ -140,17 +140,20 @@ export default function MobileNav() {
 
             {/* Nav links */}
             <button onClick={() => go(currentCode ? `/${currentCode}` : "/")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/6 transition-colors">
-              Find Experts
+              Home
             </button>
             <button onClick={() => go(withCountry("/categories"))} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/6 transition-colors">
               Categories
+            </button>
+            <button onClick={() => go("/completed-work")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/6 transition-colors">
+              Job Done
             </button>
             <button onClick={() => go("/blog")} className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/6 transition-colors">
               <BookOpen className="w-4 h-4 shrink-0" />
               Blog
             </button>
-            <button onClick={() => go("/pricing")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-500/8 transition-colors">
-              List Your Business
+            <button onClick={() => go("/pricing")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-400 hover:to-orange-300 transition-all">
+              Add Expert
             </button>
 
             <div className="h-px bg-slate-100 dark:bg-white/8 my-2" />

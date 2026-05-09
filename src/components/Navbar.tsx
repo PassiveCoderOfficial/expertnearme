@@ -185,13 +185,13 @@ export default function Navbar() {
               href={hasCountryPrefix ? `/${currentCode}` : '/'}
               className="hover:text-slate-900 dark:hover:text-white transition-colors"
             >
-              Find Experts
+              Home
             </Link>
             <Link href={withCountry('/categories')} className="hover:text-slate-900 dark:hover:text-white transition-colors">
               Categories
             </Link>
             <Link href="/completed-work" className="hover:text-slate-900 dark:hover:text-white transition-colors">
-              Completed Work
+              Job Done
             </Link>
 
             {/* Blog dropdown */}
@@ -236,9 +236,9 @@ export default function Navbar() {
 
             <Link
               href="/pricing"
-              className="text-orange-500 hover:text-orange-600 dark:hover:text-orange-300 transition-colors font-semibold"
+              className="text-white font-semibold px-4 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-400 hover:to-orange-300 transition-all shadow-sm shadow-orange-500/20"
             >
-              List Your Business
+              Add Expert
             </Link>
           </nav>
         </div>
