@@ -204,7 +204,7 @@ export default function DashboardHome() {
           <StatCard label="Reviews" value={reviewCount} icon={<MdRateReview />} />
           <StatCard
             label="Avg Rating"
-            value={avgRating !== null ? `${avgRating.toFixed(1)} ★` : "No reviews"}
+            value={avgRating != null ? `${avgRating.toFixed(1)} ★` : "No reviews"}
             icon={<MdStar />}
             accent={avgRating !== null}
           />
