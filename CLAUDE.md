@@ -4,7 +4,18 @@
 Country-based SaaS for local expert listings. Buyers find experts by country/category. Experts create profiles to receive leads. Multi-country platform.
 
 **Launch date:** August 16, 2026  
-**Current branch:** `codex/multi-country-platform-updates`
+**Current branch:** `main`
+
+## Companion Mobile App
+- **Repo:** `d:/Dev/Projects/expertnearme-app` → github.com/PassiveCoderOfficial/expertnearme-app
+- **Stack:** Expo (React Native), expo-router v6, Zustand, TypeScript
+- **EAS project:** `2a20cb92-907f-47b9-a4ec-fcb04d313343` (account: passivecoder)
+- **API:** hits `https://expertnear.me` (production) — `constants/index.ts` `API_BASE`
+- **Auth:** JWT stored in SecureStore (native) / localStorage (web) via `lib/storage.ts`
+- **State:** `store/auth.ts`, `store/country.ts`, `store/onboarding.ts` (all Zustand)
+- **Key screens:** onboarding wizard → country → role → auth → tabs (Home/Search/Bookings/Messages/Dashboard)
+- **Dashboard:** role switcher (Buyer/Expert/Agent pills) + slide-out drawer nav
+- **Build:** `eas build --platform android --profile preview` for APK
 
 ## Tech Stack
 - **Framework:** Next.js 15 App Router, TypeScript
@@ -22,6 +33,16 @@ Dark slate theme throughout:
 - Accent: `text-orange-400`, `border-orange-500`, `bg-orange-500`
 - Text hierarchy: `text-white` > `text-slate-300` > `text-slate-400` > `text-slate-500`
 - Rounded: `rounded-2xl` for cards, `rounded-xl` for buttons/inputs
+
+## Multi-Role Auth System (implemented)
+- `User` model has `roles[]`, `activeRole`, `defaultRole` (in addition to legacy `role`)
+- Signup accepts `role` param → sets all three fields (BUYER/EXPERT/SALES_AGENT)
+- Login JWT carries `activeRole` + `roles[]`
+- `POST /api/auth/switch-role` → switches `activeRole`, re-issues JWT
+- `/api/auth/me` + `/api/auth/session` return `roles[]` + `activeRole`
+- `AuthContext` exposes `switchRole()` + `roles[]` + `activeRole`
+- Dashboard sidebar shows role switcher pills (Buyer/Expert/Agent)
+- Signup page has 3-card role selector
 
 ## Roles (RBAC)
 `SUPER_ADMIN`, `ADMIN`, `MANAGER`, `MARKETER`, `SEO_EXPERT`, `SALES_AGENT`, `EXPERT`, `BUYER`, `USER`
