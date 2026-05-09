@@ -50,13 +50,13 @@ Dark slate theme throughout:
 ## Key Routes
 | Route | Purpose |
 |-------|---------|
-| `/` | Global buyer homepage with WorldMap |
+| `/` | Global buyer homepage (country cards, stats, no map) |
 | `/[countryCode]` | Country landing page |
 | `/[countryCode]/categories` | Category browser |
 | `/[countryCode]/categories/[slug]` | Category listing + ExpertMap |
 | `/[countryCode]/expert/[slug]` | Expert profile + nearby ExpertMap |
-| `/for-experts` | Expert acquisition marketing page |
-| `/pricing` | Standalone pricing page |
+| `/for-experts` | Redirects → `/pricing` (server redirect) |
+| `/pricing` | Full marketing + pricing page (merged from /for-experts) |
 | `/create-expert-account` | Expert onboarding form (with MapPicker) |
 | `/founding-experts` | Hall of Fame (to build) |
 | `/dashboard` | Admin/staff dashboard |
@@ -73,8 +73,8 @@ Dark slate theme throughout:
 
 ## Pricing Strategy (finalized)
 - **Free:** $0 forever — basic listing, 1 country, 1 category, 5 portfolio images
-- **Pro:** $99/month or $499/year — **DISABLED until Aug 16, 2026** (waitlist only)
-- **Founding Expert Lifetime:** $999 one-time — **ACTIVE until Aug 15, 2026**, max 500 spots
+- **Pro Monthly / Pro Yearly** — toggled in single card; toggle hidden if only one exists; inactive = Coming Soon overlay
+- **Founding Expert Lifetime** — **ACTIVE until Aug 15, 2026**, max 500 spots
   - Perks: gold badge, Hall of Fame listing, priority in search, all future Pro features, price locked
 
 `SPOTS_TAKEN` is hardcoded at `47` in `PricingTable.tsx` — wire to `/api/stats/founding-spots` later.
@@ -85,8 +85,8 @@ Dark slate theme throughout:
 | `FlagIcon.tsx` | Lazy-loaded SVG flags from `country-flag-icons/react/3x2` |
 | `MapPicker.tsx` | Click-to-set lat/lng picker for forms (dark theme, geocoder) |
 | `ExpertMap.tsx` | Expert listing map — SVG pins with category icons, info windows |
-| `WorldMap.tsx` | Homepage world map with clickable country pins |
-| `Navbar.tsx` | Country dropdown with flag icons |
+| `WorldMap.tsx` | Unused — removed from homepage (no Maps API key) |
+| `Navbar.tsx` | Sitewide; ☰ toggle (mobile, dashboard only) left of logo dispatches `toggle-dashboard-sidebar` event |
 | `CountryPickerModal.tsx` | Full-screen country switcher modal |
 | `Logo.tsx` | `LogoMark` component |
 
@@ -106,6 +106,15 @@ Dark slate theme throughout:
 DATABASE_URL=
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 ```
+
+## Favicon
+`src/app/icon.svg` — orange pin SVG (LogoMark). Next.js auto-serves as favicon.
+
+## Dashboard Mobile Nav
+- Main Navbar always visible (no hide on dashboard)
+- ☰ button (mobile only, dashboard pages) dispatches `CustomEvent('toggle-dashboard-sidebar')`
+- `dashboard/layout.tsx` listens for that event → toggles sidebar
+- Sidebar overlay `z-40`, Navbar `z-50` (Navbar always on top)
 
 ## Conventions
 - Server components fetch data with Prisma directly (no API layer)
