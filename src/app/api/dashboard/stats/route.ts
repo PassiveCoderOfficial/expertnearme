@@ -7,8 +7,9 @@ export async function GET() {
   if (!session?.authenticated) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const role = session.role;
+  const ADMIN_ROLES = ["SUPER_ADMIN", "ADMIN", "MANAGER", "MARKETER", "SEO_EXPERT", "SALES_AGENT"];
 
-  if (role === "ADMIN") {
+  if (ADMIN_ROLES.includes(role)) {
     const [totalExperts, totalUsers, totalBookings, totalReviews, foundingExperts, recentExperts] =
       await Promise.all([
         prisma.expert.count(),
