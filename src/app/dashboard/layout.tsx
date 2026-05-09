@@ -153,7 +153,7 @@ const ROLE_LABEL: Record<string, string> = {
   USER:        "User",
 };
 
-// Roles that can be freely switched to by any user
+const ADMIN_ROLES = ["SUPER_ADMIN", "ADMIN", "MANAGER", "MARKETER", "SEO_EXPERT"];
 const SWITCHABLE_ROLES = ["EXPERT", "BUYER", "SALES_AGENT"];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -204,11 +204,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const roleColor = ROLE_COLOR[activeRole] || ROLE_COLOR.USER;
   const roleLabel = ROLE_LABEL[activeRole] || activeRole;
 
-  // Roles available to switch to: owned roles + any SWITCHABLE_ROLES not yet owned
-  const availableRoles = [
-    ...SWITCHABLE_ROLES.filter(r => !userRoles.includes(r)),
-    ...userRoles.filter(r => SWITCHABLE_ROLES.includes(r)),
-  ].filter((r, i, arr) => arr.indexOf(r) === i);
+  const hasAdminRole = userRoles.some(r => ADMIN_ROLES.includes(r));
+
+  // Switcher pills: admin pill (if user has any admin role) + owned BUYER/EXPERT/SALES_AGENT
+  const switcherRoles: string[] = [];
+  if (hasAdminRole) {
+    // Use highest-privilege admin role as the "Admin" target
+    const adminTarget = (["SUPER_ADMIN", "ADMIN", "MANAGER", "MARKETER", "SEO_EXPERT"] as const)
+      .find(r => userRoles.includes(r)) ?? userRoles.find(r => ADMIN_ROLES.includes(r))!;
+    switcherRoles.push(adminTarget);
+  }
+  for (const r of ["BUYER", "EXPERT", "SALES_AGENT"] as const) {
+    if (userRoles.includes(r) && !switcherRoles.includes(r)) switcherRoles.push(r);
+  }
 
   const handleSwitchRole = async (role: string) => {
     if (role === activeRole || switching) return;
@@ -241,21 +249,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </span>
         <p className="text-xs text-slate-500 mt-1 truncate">{session.email}</p>
 
-        {/* Role switcher — only show for switchable roles */}
-        {availableRoles.length > 1 && (
+        {/* Role switcher */}
+        {switcherRoles.length > 1 && (
           <div className="mt-2.5 flex flex-wrap gap-1.5">
-            {availableRoles.map((r) => (
+            {switcherRoles.map((r) => (
               <button
                 key={r}
                 onClick={() => handleSwitchRole(r)}
                 disabled={switching}
                 className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
-                  r === activeRole
+                  (ADMIN_ROLES.includes(r) ? ADMIN_ROLES.includes(activeRole) : r === activeRole)
                     ? `${ROLE_COLOR[r] || ROLE_COLOR.USER} opacity-100`
                     : "border-white/10 text-slate-500 hover:text-slate-300 hover:border-white/20"
                 } ${switching ? "opacity-50 cursor-wait" : "cursor-pointer"}`}
               >
-                {ROLE_LABEL[r] || r}
+                {ADMIN_ROLES.includes(r) ? "Admin" : (ROLE_LABEL[r] || r)}
               </button>
             ))}
           </div>
