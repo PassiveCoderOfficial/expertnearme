@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LogoMark } from './Logo';
@@ -53,6 +54,14 @@ const TOP_COUNTRIES = [
 export default function Footer() {
   const pathname = usePathname();
   const year = new Date().getFullYear();
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/admin/settings/site')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.logo) setLogoUrl(d.logo); })
+      .catch(() => {});
+  }, []);
 
   if (pathname?.startsWith('/dashboard')) return null;
 
@@ -80,10 +89,16 @@ export default function Footer() {
           {/* Brand col */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-2 space-y-5">
             <Link href="/" className="inline-flex items-center gap-2">
-              <LogoMark size={28} />
-              <span className="text-base font-bold text-slate-900 dark:text-white">
-                <span className="text-orange-500">Expert</span>Near.Me
-              </span>
+              {logoUrl ? (
+                <img src={logoUrl} alt="ExpertNear.Me" className="h-8 w-auto object-contain" />
+              ) : (
+                <>
+                  <LogoMark size={28} />
+                  <span className="text-base font-bold text-slate-900 dark:text-white">
+                    <span className="text-orange-500">Expert</span>Near.Me
+                  </span>
+                </>
+              )}
             </Link>
             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-xs">
               The global directory connecting buyers with verified local experts — by country, by category, by trust.
