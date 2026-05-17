@@ -172,8 +172,8 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
             <div className="h-1 w-full bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500" />
 
             <div className="px-6 md:px-10 pb-8">
-              {/* Avatar row */}
-              <div className="-mt-14 mb-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+              {/* Avatar row — avatar left, owner actions right */}
+              <div className="-mt-14 mb-5 flex items-end justify-between gap-4">
                 <div className="relative shrink-0">
                   {expert.profilePicture ? (
                     <img src={expert.profilePicture} alt={displayName}
@@ -183,58 +183,22 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                       {initials(displayName)}
                     </div>
                   )}
-                  {/* Availability dot */}
                   <span className={`absolute -bottom-1.5 -right-1.5 w-5 h-5 rounded-full border-2 border-white dark:border-slate-800 ${avail.color}`} title={avail.label} />
                 </div>
 
-                {/* Owner / contact actions */}
-                <div className="flex flex-wrap gap-2 sm:pb-1">
-                  {expert.phone && (
-                    <a href={`tel:${expert.phone}`}
-                      className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white font-bold px-4 py-2 rounded-xl transition-colors text-sm shadow-sm shadow-orange-500/20">
-                      <Phone className="w-4 h-4" /> Call Now
-                    </a>
-                  )}
-                  {expert.whatsapp && (
-                    <a href={`https://wa.me/${expert.whatsapp.replace(/\D/g, "")}`}
-                      target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 rounded-xl transition-colors text-sm">
-                      <MessageCircle className="w-4 h-4" /> WhatsApp
-                    </a>
-                  )}
-                  {expert.email && (
-                    <a href={`mailto:${expert.email}`}
-                      className="inline-flex items-center gap-2 border border-slate-200 dark:border-white/15 hover:border-orange-400 text-slate-600 dark:text-slate-300 hover:text-orange-600 dark:hover:text-white font-medium px-4 py-2 rounded-xl transition-colors text-sm">
-                      <Mail className="w-4 h-4" /> Email
-                    </a>
-                  )}
-                  {expert.webAddress && (
-                    <a href={expert.webAddress} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 border border-slate-200 dark:border-white/15 hover:border-orange-400 text-slate-600 dark:text-slate-300 hover:text-orange-600 dark:hover:text-white font-medium px-4 py-2 rounded-xl transition-colors text-sm">
-                      <Globe className="w-4 h-4" /> Website
-                    </a>
-                  )}
-                  {expert.ctaLabel && expert.ctaUrl && (
-                    <a href={expert.ctaUrl} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-bold px-4 py-2 rounded-xl transition-all text-sm shadow-sm">
-                      <ExternalLink className="w-4 h-4" /> {expert.ctaLabel}
-                    </a>
-                  )}
-                  {isOwner ? (
-                    <>
-                      <Link href="/dashboard/profile"
-                        className="inline-flex items-center gap-2 border border-orange-500/40 hover:border-orange-500/70 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 font-medium px-4 py-2 rounded-xl transition-colors text-sm">
-                        <Pencil className="w-4 h-4" /> Edit Profile
-                      </Link>
-                      <Link href="/dashboard/completed-work"
-                        className="inline-flex items-center gap-2 border border-slate-200 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:text-orange-500 font-medium px-4 py-2 rounded-xl transition-colors text-sm">
-                        + Post Work
-                      </Link>
-                    </>
-                  ) : (
-                    expertUser && <MessageButton toUserId={expertUser.id} />
-                  )}
-                </div>
+                {/* Owner edit actions */}
+                {isOwner && (
+                  <div className="flex flex-wrap gap-2 pb-1">
+                    <Link href="/dashboard/profile"
+                      className="inline-flex items-center gap-2 border border-orange-500/40 hover:border-orange-500/70 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 font-medium px-4 py-2 rounded-xl transition-colors text-sm">
+                      <Pencil className="w-4 h-4" /> Edit Profile
+                    </Link>
+                    <Link href="/dashboard/completed-work"
+                      className="inline-flex items-center gap-2 border border-slate-200 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:text-orange-500 font-medium px-4 py-2 rounded-xl transition-colors text-sm">
+                      + Post Work
+                    </Link>
+                  </div>
+                )}
               </div>
 
               {/* Name + badges */}
@@ -319,7 +283,6 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                     {expert.countryCode.toUpperCase()}
                   </span>
                 )}
-                {/* Availability badge */}
                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${avail.bg} ${avail.textColor} ${avail.border}`}>
                   <span className={`w-2 h-2 rounded-full ${avail.color}`} />
                   {avail.label}
@@ -328,13 +291,51 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
 
               {/* Social links */}
               {socialLinks.length > 0 && (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 mb-5">
                   {socialLinks.map(({ url, icon: Icon, label, color }) => (
                     <a key={label} href={url!} target="_blank" rel="noopener noreferrer"
                       className={`${color} transition-colors`} title={label}>
                       <Icon className="w-5 h-5" />
                     </a>
                   ))}
+                </div>
+              )}
+
+              {/* Contact / action buttons — prominent row below profile info */}
+              {(expert.phone || expert.whatsapp || expert.email || expert.webAddress || expert.ctaLabel || (!isOwner && expertUser)) && (
+                <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100 dark:border-white/8">
+                  {expert.phone && (
+                    <a href={`tel:${expert.phone}`}
+                      className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white font-bold px-5 py-2.5 rounded-xl transition-colors text-sm shadow-sm shadow-orange-500/20">
+                      <Phone className="w-4 h-4" /> Call Now
+                    </a>
+                  )}
+                  {expert.whatsapp && (
+                    <a href={`https://wa.me/${expert.whatsapp.replace(/\D/g, "")}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition-colors text-sm">
+                      <MessageCircle className="w-4 h-4" /> WhatsApp
+                    </a>
+                  )}
+                  {!isOwner && expertUser && <MessageButton toUserId={expertUser.id} />}
+                  {expert.email && (
+                    <a href={`mailto:${expert.email}`}
+                      className="inline-flex items-center gap-2 border border-slate-200 dark:border-white/15 hover:border-orange-400 text-slate-600 dark:text-slate-300 hover:text-orange-600 dark:hover:text-white font-medium px-5 py-2.5 rounded-xl transition-colors text-sm">
+                      <Mail className="w-4 h-4" /> Email
+                    </a>
+                  )}
+                  {expert.webAddress && (
+                    <a href={expert.webAddress} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 border border-slate-200 dark:border-white/15 hover:border-orange-400 text-slate-600 dark:text-slate-300 hover:text-orange-600 dark:hover:text-white font-medium px-5 py-2.5 rounded-xl transition-colors text-sm">
+                      <Globe className="w-4 h-4" /> Website
+                    </a>
+                  )}
+                  {expert.ctaLabel && expert.ctaUrl && (
+                    <a href={expert.ctaUrl} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-bold px-5 py-2.5 rounded-xl transition-all text-sm shadow-sm">
+                      <ExternalLink className="w-4 h-4" /> {expert.ctaLabel}
+                    </a>
+                  )}
                 </div>
               )}
             </div>
@@ -714,8 +715,25 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                 </div>
               )}
 
-              {/* Availability / office hours summary */}
-              {expert.officeAddress && (
+              {/* Location map + address */}
+              {currentExpertPin && (
+                <div className="rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/8 overflow-hidden shadow-sm dark:shadow-none">
+                  <ExpertMap
+                    experts={[currentExpertPin]}
+                    countryCode={countryCode}
+                    center={{ lat: expert.latitude!, lng: expert.longitude! }}
+                    zoom={14}
+                    className="h-44"
+                  />
+                  {expert.officeAddress && (
+                    <div className="px-4 py-3 flex items-start gap-2">
+                      <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                      <p className="text-sm text-slate-600 dark:text-slate-300">{expert.officeAddress}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {!currentExpertPin && expert.officeAddress && (
                 <div className="rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/8 p-5 shadow-sm dark:shadow-none">
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-slate-400" /> Location
@@ -729,24 +747,20 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
             </div>
           </div>
 
-          {/* ── NEARBY MAP (full width) ── */}
-          {nearbyExperts.length > 0 && (
+          {/* ── NEARBY EXPERTS MAP (full width) — only when there are other experts nearby ── */}
+          {nearbyExperts.length > 1 && (
             <div className="mt-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/8 overflow-hidden shadow-sm dark:shadow-none">
               <div className="p-6 pb-3">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                  {nearbyExperts.length > 1 ? "Experts Nearby in the Same Category" : "Location"}
-                </h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Experts Nearby in the Same Category</h2>
                 <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
-                  {nearbyExperts.length > 1
-                    ? `${nearbyExperts.length - 1} other expert${nearbyExperts.length - 1 !== 1 ? "s" : ""} with similar services in ${countryCode.toUpperCase()}`
-                    : `Showing ${displayName}'s location`}
+                  {nearbyExperts.length - 1} other expert{nearbyExperts.length - 1 !== 1 ? "s" : ""} with similar services in {countryCode.toUpperCase()}
                 </p>
               </div>
               <ExpertMap
                 experts={nearbyExperts}
                 countryCode={countryCode}
                 center={expert.latitude && expert.longitude ? { lat: expert.latitude, lng: expert.longitude } : undefined}
-                zoom={nearbyExperts.length > 1 ? 10 : 13}
+                zoom={10}
                 className="h-80 sm:h-96"
               />
             </div>

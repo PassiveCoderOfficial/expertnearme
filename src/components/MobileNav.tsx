@@ -29,7 +29,7 @@ export default function MobileNav() {
   const containerRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
-  const { session, logout } = useAuth();
+  const { session, user, logout } = useAuth();
 
   const pathSegments = useMemo(() => (pathname || "/").split("/").filter(Boolean), [pathname]);
   const currentCode = COUNTRY_CODES.has(pathSegments[0] || "") ? pathSegments[0] : "";
@@ -160,12 +160,25 @@ export default function MobileNav() {
 
             {session?.authenticated ? (
               <>
+                {/* User identity row */}
+                <div className="flex items-center gap-3 px-3 py-2.5">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                    {user?.name ? user.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() : (user?.email?.charAt(0).toUpperCase() || '?')}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user?.name || 'My Account'}</p>
+                    <p className="text-xs text-slate-400 truncate">{user?.activeRole ? (user.activeRole.charAt(0) + user.activeRole.slice(1).toLowerCase()) : ''}</p>
+                  </div>
+                </div>
                 <button onClick={() => go("/dashboard")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/6 transition-colors">
                   Dashboard
                 </button>
+                <button onClick={() => go("/dashboard/profile")} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/6 transition-colors">
+                  Edit Profile
+                </button>
                 <button
                   onClick={() => { logout(); setOpen(false); }}
-                  className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/6 transition-colors"
+                  className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/8 transition-colors"
                 >
                   Log Out
                 </button>
