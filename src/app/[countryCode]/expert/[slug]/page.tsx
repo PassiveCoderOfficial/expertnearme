@@ -56,33 +56,51 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
   const { slug, countryCode } = await params;
 
   try {
-    const expert = await prisma.expert.findFirst({
-      where: { profileLink: slug, countryCode },
-      include: {
-        categories:     { include: { category: true } },
-        services:       { include: { category: true }, orderBy: { sortOrder: 'asc' } },
-        portfolio:      { orderBy: { sortOrder: 'asc' } },
-        reviews: {
-          include: { client: { select: { id: true, name: true } } },
-          orderBy: { createdAt: "desc" },
+    // Fetch expert + session in parallel (session doesn't need expert data)
+    const [expert, session] = await Promise.all([
+      prisma.expert.findFirst({
+        where: { profileLink: slug, countryCode },
+        include: {
+          categories:     { include: { category: true } },
+          services:       { include: { category: true }, orderBy: { sortOrder: 'asc' } },
+          portfolio:      { orderBy: { sortOrder: 'asc' } },
+          reviews: {
+            include: { client: { select: { id: true, name: true } } },
+            orderBy: { createdAt: "desc" },
+          },
+          certifications: { orderBy: { sortOrder: 'asc' } },
+          skills:         true,
+          testimonials:   { orderBy: { sortOrder: 'asc' } },
+          industries:     true,
+          awards:         { orderBy: { sortOrder: 'asc' } },
         },
-        certifications: { orderBy: { sortOrder: 'asc' } },
-        skills:         true,
-        testimonials:   { orderBy: { sortOrder: 'asc' } },
-        industries:     true,
-        awards:         { orderBy: { sortOrder: 'asc' } },
-      },
-    });
+      }),
+      getSession(),
+    ]);
 
     if (!expert) notFound();
 
-    const [expertUser, session, expertCompletedWork] = await Promise.all([
+    const categoryIds = expert.categories.map(c => c.categoryId);
+
+    // All dependent queries in parallel
+    const [expertUser, expertCompletedWork, nearbyRaw] = await Promise.all([
       prisma.user.findUnique({ where: { email: expert.email }, select: { id: true } }).catch(() => null),
-      getSession(),
       prisma.completedWork.findMany({
         where: { expertId: expert.id, published: true },
         orderBy: { createdAt: "desc" },
         take: 12,
+      }).catch(() => []),
+      prisma.expert.findMany({
+        where: {
+          countryCode, verified: true, id: { not: expert.id },
+          latitude: { not: null }, longitude: { not: null },
+          categories: { some: { categoryId: { in: categoryIds } } },
+        },
+        include: {
+          categories: { include: { category: { select: { name: true, icon: true, color: true } } } },
+        },
+        orderBy: [{ mapFeatured: "desc" }, { featured: "desc" }],
+        take: 20,
       }).catch(() => []),
     ]);
 
@@ -94,21 +112,6 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
     const avgRating = expert.reviews.length > 0
       ? expert.reviews.reduce((s, r) => s + r.rating, 0) / expert.reviews.length
       : null;
-
-    const categoryIds = expert.categories.map(c => c.categoryId);
-
-    const nearbyRaw = await prisma.expert.findMany({
-      where: {
-        countryCode, verified: true, id: { not: expert.id },
-        latitude: { not: null }, longitude: { not: null },
-        categories: { some: { categoryId: { in: categoryIds } } },
-      },
-      include: {
-        categories: { include: { category: { select: { name: true, icon: true, color: true } } } },
-      },
-      orderBy: [{ mapFeatured: "desc" }, { featured: "desc" }],
-      take: 20,
-    }).catch(() => []);
 
     const currentExpertPin: MapExpert | null = (expert.latitude && expert.longitude) ? {
       id: expert.id, name: displayName,
