@@ -617,7 +617,7 @@ export default function MyProfilePage() {
           ].map(({ icon: Icon, color, key, placeholder }) => (
             <div key={key} className="flex items-center gap-2">
               <Icon className={`h-4 w-4 ${color} shrink-0`} />
-              <input className={inputCls} placeholder={placeholder} value={(form as Record<string, string>)[key]} onChange={e => set(key, e.target.value)} />
+              <input className={inputCls} placeholder={placeholder} value={(form as unknown as Record<string, string>)[key]} onChange={e => set(key, e.target.value)} />
             </div>
           ))}
         </div>
