@@ -1,9 +1,16 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
-import { Star, Shield, Crown, CheckCircle } from "lucide-react";
+import { Star, Shield, Crown, CheckCircle, Briefcase, DollarSign } from "lucide-react";
 import ExpertMap, { MapExpert } from "@/components/ExpertMap";
 import AdFeaturedExperts from "@/components/ads/AdFeaturedExperts";
+
+const AVAIL_DOT: Record<string, string> = {
+  AVAILABLE: 'bg-green-500',
+  AWAY:      'bg-yellow-400',
+  BUSY:      'bg-red-500',
+  VACATION:  'bg-blue-400',
+};
 
 export const revalidate = 3600;
 
@@ -51,6 +58,7 @@ export default async function CountryCategoryPage({ params }: Props) {
         avg,
         reviewCount: ratings.length,
         shortDesc: expert.shortDesc || null,
+        serviceTitle: (expert as unknown as { serviceTitle?: string | null }).serviceTitle || null,
         verified: expert.verified,
         foundingExpert: expert.foundingExpert,
         featured: expert.featured,
@@ -58,6 +66,10 @@ export default async function CountryCategoryPage({ params }: Props) {
         latitude: expert.latitude || null,
         longitude: expert.longitude || null,
         profileLink: expert.profileLink || String(expert.id),
+        availabilityStatus: (expert as unknown as { availabilityStatus?: string }).availabilityStatus || 'AVAILABLE',
+        yearsOfExperience: (expert as unknown as { yearsOfExperience?: number | null }).yearsOfExperience ?? null,
+        startingRate: (expert as unknown as { startingRate?: number | null }).startingRate ?? null,
+        startingRateUnit: (expert as unknown as { startingRateUnit?: string | null }).startingRateUnit ?? null,
         categories: expert.categories.map((c) => ({ name: c.category.name, icon: c.category.icon, color: c.category.color })),
       };
     });
@@ -185,9 +197,17 @@ export default async function CountryCategoryPage({ params }: Props) {
 
                     {/* Body */}
                     <div className="px-4 pb-4 flex flex-col flex-1">
-                      <p className="font-bold text-slate-900 dark:text-white text-sm leading-tight mb-1.5 group-hover:text-orange-500 dark:group-hover:text-orange-300 transition-colors">
-                        {expert.name}
-                      </p>
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <p className="font-bold text-slate-900 dark:text-white text-sm leading-tight group-hover:text-orange-500 dark:group-hover:text-orange-300 transition-colors">
+                          {expert.name}
+                        </p>
+                        {/* Availability dot */}
+                        <span className={`mt-1 w-2 h-2 rounded-full shrink-0 ${AVAIL_DOT[expert.availabilityStatus] ?? 'bg-green-500'}`} title={expert.availabilityStatus} />
+                      </div>
+
+                      {expert.serviceTitle && (
+                        <p className="text-[10px] text-orange-500 dark:text-orange-400 font-medium mb-1.5 line-clamp-1">{expert.serviceTitle}</p>
+                      )}
 
                       {expert.categories.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-2">
@@ -205,10 +225,24 @@ export default async function CountryCategoryPage({ params }: Props) {
                       )}
 
                       {expert.shortDesc && (
-                        <p className="text-slate-500 dark:text-slate-400 text-xs line-clamp-2 flex-1 mb-3 leading-relaxed">
+                        <p className="text-slate-500 dark:text-slate-400 text-xs line-clamp-2 flex-1 mb-2 leading-relaxed">
                           {expert.shortDesc}
                         </p>
                       )}
+
+                      {/* Quick stats row */}
+                      <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-slate-500 mb-3">
+                        {expert.yearsOfExperience != null && (
+                          <span className="flex items-center gap-0.5">
+                            <Briefcase className="w-3 h-3" /> {expert.yearsOfExperience}yr
+                          </span>
+                        )}
+                        {expert.startingRate != null && (
+                          <span className="flex items-center gap-0.5 text-green-600 dark:text-green-400 font-semibold">
+                            <DollarSign className="w-3 h-3" /> From ${expert.startingRate.toLocaleString()}{expert.startingRateUnit ? expert.startingRateUnit : ''}
+                          </span>
+                        )}
+                      </div>
 
                       <span className="mt-auto text-xs font-semibold text-orange-500 dark:text-orange-400 group-hover:text-orange-600 dark:group-hover:text-orange-300 transition-colors self-end">
                         View Profile →

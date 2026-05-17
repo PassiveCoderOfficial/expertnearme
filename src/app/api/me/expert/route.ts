@@ -47,14 +47,29 @@ export async function PATCH(request: NextRequest) {
     const strings = ['name', 'businessName', 'contactPerson', 'phone', 'whatsapp',
                      'bio', 'shortDesc', 'webAddress', 'officeAddress',
                      'profilePicture', 'coverPhoto', 'mapLocation',
-                     'linkedinUrl', 'instagramUrl', 'twitterUrl', 'facebookUrl'];
+                     'linkedinUrl', 'instagramUrl', 'twitterUrl', 'facebookUrl',
+                     'serviceTitle', 'responseTime', 'startingRateUnit',
+                     'videoIntroUrl', 'ctaLabel', 'ctaUrl', 'tiktokUrl', 'youtubeUrl'];
     for (const key of strings) {
       if (key in body) updateData[key] = (body[key] ?? '').trim() || null;
     }
-    if ('isBusiness'  in body) updateData.isBusiness  = Boolean(body.isBusiness);
-    if ('featured'    in body) updateData.featured    = Boolean(body.featured);
-    if ('latitude'    in body) updateData.latitude    = body.latitude  != null ? Number(body.latitude)  : null;
-    if ('longitude'   in body) updateData.longitude   = body.longitude != null ? Number(body.longitude) : null;
+    if ('isBusiness'         in body) updateData.isBusiness         = Boolean(body.isBusiness);
+    if ('featured'           in body) updateData.featured           = Boolean(body.featured);
+    if ('profileVisible'     in body) updateData.profileVisible     = Boolean(body.profileVisible);
+    if ('allowBooking'       in body) updateData.allowBooking       = Boolean(body.allowBooking);
+    if ('urgentBooking'      in body) updateData.urgentBooking      = Boolean(body.urgentBooking);
+    if ('blockSlotAfterBooking' in body) updateData.blockSlotAfterBooking = Boolean(body.blockSlotAfterBooking);
+    if ('latitude'           in body) updateData.latitude           = body.latitude  != null ? Number(body.latitude)  : null;
+    if ('longitude'          in body) updateData.longitude          = body.longitude != null ? Number(body.longitude) : null;
+    if ('yearsOfExperience'  in body) updateData.yearsOfExperience  = body.yearsOfExperience != null ? Number(body.yearsOfExperience) : null;
+    if ('startingRate'       in body) updateData.startingRate       = body.startingRate != null ? Number(body.startingRate) : null;
+    if ('clientsServed'      in body) updateData.clientsServed      = body.clientsServed != null ? Number(body.clientsServed) : null;
+    if ('projectMinimum'     in body) updateData.projectMinimum     = body.projectMinimum != null ? Number(body.projectMinimum) : null;
+    if ('urgentFeePercent'   in body) updateData.urgentFeePercent   = body.urgentFeePercent != null ? Number(body.urgentFeePercent) : 50;
+    const validStatuses = ['AVAILABLE', 'AWAY', 'BUSY', 'VACATION'];
+    if ('availabilityStatus' in body && validStatuses.includes(body.availabilityStatus)) {
+      updateData.availabilityStatus = body.availabilityStatus;
+    }
 
     const expert = await prisma.expert.update({
       where: { email: session.email },

@@ -120,6 +120,21 @@ model Expert {
   blockSlotAfterBooking Boolean @default(true)
   urgentBooking         Boolean @default(false)
   urgentFeePercent      Float   @default(50)
+  // Professional details
+  serviceTitle          String?
+  availabilityStatus    AvailabilityStatus @default(AVAILABLE)
+  yearsOfExperience     Int?
+  responseTime          String?
+  startingRate          Float?
+  startingRateUnit      String?
+  profileVisible        Boolean @default(true)
+  videoIntroUrl         String?
+  clientsServed         Int?
+  projectMinimum        Float?
+  ctaLabel              String?
+  ctaUrl                String?
+  tiktokUrl             String?
+  youtubeUrl            String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -134,12 +149,83 @@ model Expert {
   adCampaigns        AdCampaign[]
   credits            ExpertCredits?
   creditTransactions CreditTransaction[]
+  certifications     ExpertCertification[]
+  skills             ExpertSkill[]
+  testimonials       ExpertTestimonial[]
+  industries         ExpertIndustry[]
+  awards             ExpertAward[]
 
   @@unique([countryCode, profileLink])
   @@index([countryCode])
   @@index([countryCode, verified])
   @@index([countryCode, featured])
   @@index([latitude, longitude])
+  @@index([availabilityStatus])
+  @@index([profileVisible])
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  AWAY
+  BUSY
+  VACATION
+}
+
+model ExpertCertification {
+  id            Int     @id @default(autoincrement())
+  expertId      Int
+  name          String
+  issuer        String?
+  year          Int?
+  credentialUrl String?
+  sortOrder     Int     @default(0)
+  expert        Expert  @relation(fields: [expertId], references: [id], onDelete: Cascade)
+
+  @@index([expertId])
+}
+
+model ExpertSkill {
+  id       Int    @id @default(autoincrement())
+  expertId Int
+  name     String
+  expert   Expert @relation(fields: [expertId], references: [id], onDelete: Cascade)
+
+  @@index([expertId])
+}
+
+model ExpertTestimonial {
+  id            Int     @id @default(autoincrement())
+  expertId      Int
+  clientName    String
+  clientTitle   String?
+  clientCompany String?
+  body          String
+  sortOrder     Int     @default(0)
+  expert        Expert  @relation(fields: [expertId], references: [id], onDelete: Cascade)
+
+  @@index([expertId])
+}
+
+model ExpertIndustry {
+  id       Int    @id @default(autoincrement())
+  expertId Int
+  name     String
+  expert   Expert @relation(fields: [expertId], references: [id], onDelete: Cascade)
+
+  @@index([expertId])
+}
+
+model ExpertAward {
+  id          Int     @id @default(autoincrement())
+  expertId    Int
+  title       String
+  issuer      String?
+  year        Int?
+  description String?
+  sortOrder   Int     @default(0)
+  expert      Expert  @relation(fields: [expertId], references: [id], onDelete: Cascade)
+
+  @@index([expertId])
 }
 
 model Service {

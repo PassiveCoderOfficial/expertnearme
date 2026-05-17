@@ -14,11 +14,16 @@ export async function GET(req: NextRequest) {
     prisma.expert.findMany({
       where: {
         ...(country ? { countryCode: country } : {}),
+        profileVisible: true,
+        verified: true,
         OR: [
           { name: { contains: q, mode: "insensitive" } },
           { businessName: { contains: q, mode: "insensitive" } },
           { shortDesc: { contains: q, mode: "insensitive" } },
+          { serviceTitle: { contains: q, mode: "insensitive" } },
           { categories: { some: { category: { name: { contains: q, mode: "insensitive" } } } } },
+          { skills: { some: { name: { contains: q, mode: "insensitive" } } } },
+          { industries: { some: { name: { contains: q, mode: "insensitive" } } } },
         ],
       },
       include: {
@@ -46,6 +51,11 @@ export async function GET(req: NextRequest) {
     foundingExpert: e.foundingExpert,
     profileLink: e.profileLink || String(e.id),
     categories: e.categories.map((c) => c.category.name),
+    serviceTitle: (e as unknown as { serviceTitle?: string | null }).serviceTitle ?? null,
+    availabilityStatus: (e as unknown as { availabilityStatus?: string }).availabilityStatus ?? 'AVAILABLE',
+    startingRate: (e as unknown as { startingRate?: number | null }).startingRate ?? null,
+    startingRateUnit: (e as unknown as { startingRateUnit?: string | null }).startingRateUnit ?? null,
+    yearsOfExperience: (e as unknown as { yearsOfExperience?: number | null }).yearsOfExperience ?? null,
     avgRating:
       e.reviews.length > 0
         ? e.reviews.reduce((s, r) => s + r.rating, 0) / e.reviews.length
