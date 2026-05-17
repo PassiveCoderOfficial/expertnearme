@@ -18,7 +18,7 @@ const GEO_TO_COUNTRY: Record<string, string> = {
 
 const VALID_COUNTRY_CODES = new Set(Object.values(GEO_TO_COUNTRY));
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const url      = new URL(request.url);
   const path     = url.pathname;
   const segments = path.split('/').filter(Boolean);
