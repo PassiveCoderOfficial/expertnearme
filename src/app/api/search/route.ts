@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     }),
     prisma.adCampaign.findMany({
       where: {
-        spot: "SEARCH_SPONSOR",
+        placement: { spot: "SEARCH_SPONSOR" },
         status: "ACTIVE",
         startsAt: { lte: now },
         endsAt: { gte: now },
