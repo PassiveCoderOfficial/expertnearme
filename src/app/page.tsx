@@ -13,13 +13,18 @@ export default async function GlobalHomePage() {
   let expertCount = 0;
   let categoryCount = 0;
   let reviewCount = 0;
+  let topReviews: {
+    id: number; rating: number; comment: string | null;
+    client: { name: string };
+    expert: { name: string; businessName: string | null; profileLink: string | null; countryCode: string | null; categories: { category: { name: string } }[] };
+  }[] = [];
   let recentWork: {
     id: number; title: string; description: string | null; imageUrl: string | null; tags: string | null;
     expert: { name: string; businessName: string | null; profileLink: string | null; profilePicture: string | null; verified: boolean; countryCode: string | null; categories: { category: { name: string } }[] };
   }[] = [];
 
   try {
-    const [countriesResult, expertCountResult, categoryCountResult, reviewCountResult, recentWorkResult] = await Promise.all([
+    const [countriesResult, expertCountResult, categoryCountResult, reviewCountResult, topReviewsResult, recentWorkResult] = await Promise.all([
       prisma.country.findMany({
         where: { active: true },
         orderBy: { name: "asc" },
@@ -28,6 +33,21 @@ export default async function GlobalHomePage() {
       prisma.expert.count({ where: { verified: true } }),
       prisma.category.count({ where: { active: true } }),
       prisma.review.count(),
+      prisma.review.findMany({
+        where: { rating: 5, comment: { not: null } },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+        select: {
+          id: true, rating: true, comment: true,
+          client: { select: { name: true } },
+          expert: {
+            select: {
+              name: true, businessName: true, profileLink: true, countryCode: true,
+              categories: { take: 1, include: { category: { select: { name: true } } } },
+            },
+          },
+        },
+      }),
       prisma.completedWork.findMany({
         where: { published: true },
         orderBy: { createdAt: "desc" },
@@ -48,6 +68,7 @@ export default async function GlobalHomePage() {
     expertCount = expertCountResult;
     categoryCount = categoryCountResult;
     reviewCount = reviewCountResult;
+    topReviews = topReviewsResult;
     recentWork = recentWorkResult;
   } catch (err) {
     console.error("[Homepage] DB error:", err);
@@ -236,6 +257,58 @@ export default async function GlobalHomePage() {
           ))}
         </div>
       </section>
+
+      {/* ─── Real Reviews / Social Proof ─────────────────────────── */}
+      {topReviews.length > 0 && (
+        <section className="border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-950/40">
+          <div className="max-w-6xl mx-auto px-6 py-16">
+            <div className="text-center mb-10">
+              <p className="text-xs uppercase tracking-widest text-orange-500 mb-2 font-semibold">Real Clients, Real Results</p>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">What Buyers Are Saying</h2>
+              <div className="flex items-center justify-center gap-1 mt-3">
+                {[1,2,3,4,5].map(i => (
+                  <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                ))}
+                <span className="text-sm text-slate-500 dark:text-slate-400 ml-2">{reviewCount.toLocaleString()} verified reviews</span>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {topReviews.slice(0, 6).map((review) => {
+                const expertName = review.expert.businessName || review.expert.name;
+                const category = review.expert.categories[0]?.category.name;
+                const profileHref = review.expert.countryCode && review.expert.profileLink
+                  ? `/${review.expert.countryCode}/expert/${review.expert.profileLink}`
+                  : null;
+                return (
+                  <div key={review.id} className="rounded-2xl border border-slate-100 dark:border-white/8 bg-white dark:bg-slate-800/40 p-6 shadow-sm dark:shadow-none flex flex-col gap-4">
+                    <div className="flex items-center gap-0.5">
+                      {[1,2,3,4,5].map(i => (
+                        <Star key={i} className={`w-3.5 h-3.5 ${i <= review.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-300 dark:text-slate-600"}`} />
+                      ))}
+                    </div>
+                    <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed flex-1 italic">
+                      &ldquo;{review.comment}&rdquo;
+                    </p>
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-white/6">
+                      <div>
+                        <p className="text-xs font-semibold text-slate-800 dark:text-white">{review.client.name}</p>
+                        {profileHref ? (
+                          <Link href={profileHref} className="text-xs text-orange-500 dark:text-orange-400 hover:underline">
+                            {expertName}{category ? ` · ${category}` : ""}
+                          </Link>
+                        ) : (
+                          <p className="text-xs text-slate-400 dark:text-slate-500">{expertName}</p>
+                        )}
+                      </div>
+                      <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── Sponsored Featured Experts ───────────────────────────── */}
       <section className="max-w-6xl mx-auto px-6 py-12">

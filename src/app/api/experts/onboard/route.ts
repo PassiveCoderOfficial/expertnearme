@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
+import { sendExpertWelcome } from '@/lib/email';
 
 function slugify(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'expert';
@@ -130,6 +131,8 @@ export async function POST(request: NextRequest) {
     jar.set('userId', String(user.id), cookieOpts);
     jar.set('role',   user.role,       cookieOpts);
     jar.set('email',  user.email,      cookieOpts);
+
+    sendExpertWelcome(email, displayName).catch(() => {});
 
     return NextResponse.json({
       ok: true,

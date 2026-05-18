@@ -10,7 +10,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ sponsored: null, providers: [], categories: [] });
   }
 
-  const [expertResults, categoryResults] = await Promise.all([
+  const now = new Date();
+  const [expertResults, categoryResults, sponsorCampaigns] = await Promise.all([
     prisma.expert.findMany({
       where: {
         ...(country ? { countryCode: country } : {}),
@@ -41,6 +42,26 @@ export async function GET(req: NextRequest) {
       },
       take: 5,
     }),
+    prisma.adCampaign.findMany({
+      where: {
+        spot: "SEARCH_SPONSOR",
+        status: "ACTIVE",
+        startsAt: { lte: now },
+        endsAt: { gte: now },
+        ...(country ? {
+          OR: [{ targetCountry: null }, { targetCountry: country.toUpperCase() }],
+        } : {}),
+      },
+      include: {
+        expert: {
+          include: {
+            categories: { include: { category: true } },
+            reviews: { select: { rating: true } },
+          },
+        },
+      },
+      take: 3,
+    }).catch(() => []),
   ]);
 
   const toItem = (e: (typeof expertResults)[0]) => ({
@@ -62,11 +83,27 @@ export async function GET(req: NextRequest) {
         : null,
   });
 
-  const sponsored = expertResults.find((e) => e.featured) ?? null;
+  // Pick sponsored: active SEARCH_SPONSOR campaign first, fall back to featured expert
+  const sponsorExpert = sponsorCampaigns.length > 0
+    ? sponsorCampaigns[Math.floor(Math.random() * sponsorCampaigns.length)].expert
+    : null;
+  const sponsored = sponsorExpert ?? expertResults.find((e) => e.featured) ?? null;
+  const sponsoredId = sponsored?.id ?? null;
   const providers = expertResults
-    .filter((e) => !e.featured)
+    .filter((e) => e.id !== sponsoredId)
     .slice(0, 6)
     .map(toItem);
+
+  // Fire-and-forget impression tracking for ad campaign
+  if (sponsorCampaigns.length > 0 && sponsorExpert) {
+    const campaign = sponsorCampaigns.find(c => c.expert.id === sponsorExpert.id);
+    if (campaign) {
+      prisma.adCampaign.update({
+        where: { id: campaign.id },
+        data: { impressions: { increment: 1 } },
+      }).catch(() => {});
+    }
+  }
 
   return NextResponse.json({
     sponsored: sponsored ? toItem(sponsored) : null,

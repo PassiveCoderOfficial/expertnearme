@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { sendWaitlistConfirmation } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,11 +12,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
     }
 
+    const prev = await prisma.waitlist.findUnique({ where: { email } });
     const entry = await prisma.waitlist.upsert({
       where: { email },
       update: { source },
       create: { email, source },
     });
+
+    // Only send confirmation email on first signup (not re-submissions)
+    if (!prev) sendWaitlistConfirmation(email).catch(() => {});
 
     return NextResponse.json({ ok: true, id: entry.id });
   } catch (error) {

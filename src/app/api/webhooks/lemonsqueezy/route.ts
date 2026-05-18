@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/db';
+import { sendFoundingExpertConfirmation } from '@/lib/email';
 
 // LemonSqueezy signs webhook payloads with HMAC-SHA256
 function verifySignature(payload: string, signature: string, secret: string): boolean {
@@ -77,6 +78,8 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      const expertName = customData.expert_name || 'Founding Expert';
+      sendFoundingExpertConfirmation(customerEmail, expertName).catch(() => {});
       console.log(`Founding expert marked: ${customerEmail}`);
     } catch (err) {
       console.error('Failed to mark founding expert:', err);
