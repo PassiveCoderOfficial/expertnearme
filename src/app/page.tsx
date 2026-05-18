@@ -9,7 +9,7 @@ import HomepageSearch from "@/components/HomepageSearch";
 export const revalidate = 300;
 
 export default async function GlobalHomePage() {
-  let countries: { code: string; name: string; flagEmoji: string | null; metaDesc: string | null; _count: { experts: number } }[] = [];
+  let countries: { code: string; name: string; flagEmoji: string | null; metaDesc: string | null; expertCount: number }[] = [];
   let expertCount = 0;
   let categoryCount = 0;
   let reviewCount = 0;
@@ -24,11 +24,16 @@ export default async function GlobalHomePage() {
   }[] = [];
 
   try {
-    const [countriesResult, expertCountResult, categoryCountResult, reviewCountResult, topReviewsResult, recentWorkResult] = await Promise.all([
+    const [countriesResult, expertCountsResult, expertCountResult, categoryCountResult, reviewCountResult, topReviewsResult, recentWorkResult] = await Promise.all([
       prisma.country.findMany({
         where: { active: true },
         orderBy: { name: "asc" },
-        select: { code: true, name: true, flagEmoji: true, metaDesc: true, _count: { select: { experts: true } } },
+        select: { code: true, name: true, flagEmoji: true, metaDesc: true },
+      }),
+      prisma.expert.groupBy({
+        by: ["countryCode"],
+        where: { verified: true, countryCode: { not: null } },
+        _count: { id: true },
       }),
       prisma.expert.count({ where: { verified: true } }),
       prisma.category.count({ where: { active: true } }),
@@ -64,7 +69,11 @@ export default async function GlobalHomePage() {
       }),
     ]);
 
-    countries = countriesResult;
+    const countsByCode: Record<string, number> = {};
+    for (const row of expertCountsResult) {
+      if (row.countryCode) countsByCode[row.countryCode] = row._count.id;
+    }
+    countries = countriesResult.map(c => ({ ...c, expertCount: countsByCode[c.code] ?? 0 }));
     expertCount = expertCountResult;
     categoryCount = categoryCountResult;
     reviewCount = reviewCountResult;
@@ -206,8 +215,8 @@ export default async function GlobalHomePage() {
                     {country.name}
                   </h3>
                   <p className="text-xs text-slate-400 dark:text-slate-500 truncate">
-                    {country._count.experts > 0
-                      ? `${country._count.experts} expert${country._count.experts !== 1 ? "s" : ""}`
+                    {country.expertCount > 0
+                      ? `${country.expertCount} expert${country.expertCount !== 1 ? "s" : ""}`
                       : country.metaDesc || `Verified experts in ${country.name}`}
                   </p>
                 </div>
