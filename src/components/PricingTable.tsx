@@ -56,12 +56,6 @@ function priceLabel(plan: Plan): { amount: string; period: string } {
   return { amount: `$${plan.price}`, period: `/ ${plan.duration} days` };
 }
 
-const FOUNDING_EXPERTS_PREVIEW = [
-  { name: 'Ahmad K.', country: '🇸🇬 Singapore', category: 'Interior Design' },
-  { name: 'Sara M.', country: '🇦🇪 UAE', category: 'Fashion' },
-  { name: 'Raj P.', country: '🇧🇩 Bangladesh', category: 'Engineering' },
-  { name: 'You?', country: '🌍 Your Country', category: 'Your Category' },
-];
 
 export default function PricingTable({ asSection = false }: { asSection?: boolean }) {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
@@ -76,6 +70,10 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
   const [paymentTab, setPaymentTab] = useState<'lemonsqueezy' | 'surjopay' | 'manual'>('manual');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
+  const [foundingExperts, setFoundingExperts] = useState<{
+    name: string; businessName: string | null; countryCode: string | null;
+    profileLink: string | null; categories: { category: { name: string } }[];
+  }[]>([]);
   const [paymentConfig, setPaymentConfig] = useState<{
     whatsapp: string; defaultTab: string; tabOrder: string[];
     methods: { title: string; details: string; icon?: string }[];
@@ -112,6 +110,11 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
           setPaymentTab((d.defaultTab as 'lemonsqueezy' | 'surjopay' | 'manual') || 'manual');
         }
       })
+      .catch(() => {});
+
+    fetch('/api/founding-experts')
+      .then(r => r.json())
+      .then(d => { if (d.experts) setFoundingExperts(d.experts); })
       .catch(() => {});
   }, []);
 
@@ -391,21 +394,30 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
             Every Founding Expert gets a permanent listing on our dedicated page — your name, profile link, and contribution to building ExpertNear.Me, honored forever.
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto mb-8">
-            {FOUNDING_EXPERTS_PREVIEW.map((expert) => (
-              <div key={expert.name} className={`rounded-xl border p-4 text-sm ${expert.name === 'You?' ? 'border-orange-500/40 bg-orange-500/10 border-dashed' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50'}`}>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white font-bold text-sm mx-auto mb-2">
-                  {expert.name === 'You?' ? '?' : expert.name[0]}
-                </div>
-                <p className="font-semibold text-slate-900 dark:text-white text-xs">{expert.name}</p>
-                <p className="text-slate-400 text-xs mt-0.5">{expert.country}</p>
-                <p className="text-orange-500 dark:text-orange-300 text-xs mt-0.5">{expert.category}</p>
-                {expert.name !== 'You?' && (
+            {foundingExperts.slice(0, 3).map((expert) => {
+              const displayName = expert.businessName || expert.name;
+              const category = expert.categories[0]?.category.name ?? '';
+              return (
+                <div key={expert.name} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-4 text-sm">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white font-bold text-sm mx-auto mb-2">
+                    {displayName[0].toUpperCase()}
+                  </div>
+                  <p className="font-semibold text-slate-900 dark:text-white text-xs truncate">{displayName}</p>
+                  <p className="text-slate-400 text-xs mt-0.5 truncate">{expert.countryCode?.toUpperCase() ?? ''}</p>
+                  <p className="text-orange-500 dark:text-orange-300 text-xs mt-0.5 truncate">{category}</p>
                   <div className="mt-2 inline-flex items-center gap-1 bg-orange-500/15 text-orange-600 dark:text-orange-300 text-xs px-2 py-0.5 rounded-full border border-orange-500/25">
                     <Crown className="h-2.5 w-2.5" /> Founding
                   </div>
-                )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
+            {/* "You?" slot — always shown */}
+            <div className="rounded-xl border border-orange-500/40 bg-orange-500/10 border-dashed p-4 text-sm">
+              <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-400 font-bold text-sm mx-auto mb-2">?</div>
+              <p className="font-semibold text-slate-900 dark:text-white text-xs">You?</p>
+              <p className="text-slate-400 text-xs mt-0.5">Your Country</p>
+              <p className="text-orange-500 dark:text-orange-300 text-xs mt-0.5">Your Category</p>
+            </div>
           </div>
           <div className="flex flex-wrap justify-center gap-3">
             {['Founding Expert', 'Early Believer', 'Platform Builder', 'Legacy Member'].map(tag => (

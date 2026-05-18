@@ -1,30 +1,33 @@
 import Link from "next/link";
-import { ArrowRight, Shield, MapPin, Star, Users, CheckCircle, ChevronRight, CheckCircle2, ExternalLink } from "lucide-react";
+import { ArrowRight, Shield, MapPin, Star, Users, CheckCircle, ChevronRight, CheckCircle2 } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { LogoMark } from "@/components/Logo";
 import FlagIcon from "@/components/FlagIcon";
 import AdFeaturedExperts from "@/components/ads/AdFeaturedExperts";
+import HomepageSearch from "@/components/HomepageSearch";
 
 export const revalidate = 300;
 
 export default async function GlobalHomePage() {
-  let countries: { code: string; name: string; flagEmoji: string | null; metaDesc: string | null }[] = [];
+  let countries: { code: string; name: string; flagEmoji: string | null; metaDesc: string | null; _count: { experts: number } }[] = [];
   let expertCount = 0;
   let categoryCount = 0;
+  let reviewCount = 0;
   let recentWork: {
     id: number; title: string; description: string | null; imageUrl: string | null; tags: string | null;
     expert: { name: string; businessName: string | null; profileLink: string | null; profilePicture: string | null; verified: boolean; countryCode: string | null; categories: { category: { name: string } }[] };
   }[] = [];
 
   try {
-    const [countriesResult, expertCountResult, categoryCountResult, recentWorkResult] = await Promise.all([
+    const [countriesResult, expertCountResult, categoryCountResult, reviewCountResult, recentWorkResult] = await Promise.all([
       prisma.country.findMany({
         where: { active: true },
         orderBy: { name: "asc" },
-        select: { code: true, name: true, flagEmoji: true, metaDesc: true },
+        select: { code: true, name: true, flagEmoji: true, metaDesc: true, _count: { select: { experts: true } } },
       }),
-      prisma.expert.count(),
+      prisma.expert.count({ where: { verified: true } }),
       prisma.category.count({ where: { active: true } }),
+      prisma.review.count(),
       prisma.completedWork.findMany({
         where: { published: true },
         orderBy: { createdAt: "desc" },
@@ -44,6 +47,7 @@ export default async function GlobalHomePage() {
     countries = countriesResult;
     expertCount = expertCountResult;
     categoryCount = categoryCountResult;
+    reviewCount = reviewCountResult;
     recentWork = recentWorkResult;
   } catch (err) {
     console.error("[Homepage] DB error:", err);
@@ -51,10 +55,12 @@ export default async function GlobalHomePage() {
 
   const stats = [
     { value: expertCount.toString(), label: "Verified Experts" },
-    { value: countries.length.toString(), label: "Countries" },
+    { value: reviewCount.toString(), label: "Reviews" },
     { value: categoryCount.toString(), label: "Categories" },
-    { value: "Free", label: "To Browse" },
+    { value: countries.length.toString(), label: "Countries" },
   ];
+
+  const firstCountryCode = countries[0]?.code ?? "bd";
 
   const howItWorks = [
     {
@@ -122,12 +128,14 @@ export default async function GlobalHomePage() {
             tailored for expats and locals in Asia &amp; the Middle East.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <HomepageSearch firstCountryCode={firstCountryCode} countries={countries.map(c => ({ code: c.code, name: c.name }))} />
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
             <Link
-              href={`/${countries[0]?.code || "bd"}`}
+              href={`/${firstCountryCode}`}
               className="group inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white font-bold px-8 py-4 rounded-xl transition-colors text-base shadow-lg shadow-orange-500/20"
             >
-              Find Experts Near You
+              Browse All Experts
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
             <Link
@@ -177,7 +185,9 @@ export default async function GlobalHomePage() {
                     {country.name}
                   </h3>
                   <p className="text-xs text-slate-400 dark:text-slate-500 truncate">
-                    {country.metaDesc || `Verified experts in ${country.name}`}
+                    {country._count.experts > 0
+                      ? `${country._count.experts} expert${country._count.experts !== 1 ? "s" : ""}`
+                      : country.metaDesc || `Verified experts in ${country.name}`}
                   </p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-orange-500 dark:group-hover:text-orange-400 shrink-0 transition-colors" />

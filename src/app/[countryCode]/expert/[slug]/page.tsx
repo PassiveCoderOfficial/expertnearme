@@ -13,6 +13,7 @@ import AdFeaturedExperts from "@/components/ads/AdFeaturedExperts";
 import BookingWidget from "@/components/BookingWidget";
 import MessageButton from "@/components/MessageButton";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
+import ShareProfileButton from "@/components/ShareProfileButton";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
 
@@ -289,17 +290,16 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                 </span>
               </div>
 
-              {/* Social links */}
-              {socialLinks.length > 0 && (
-                <div className="flex items-center gap-3 mb-5">
-                  {socialLinks.map(({ url, icon: Icon, label, color }) => (
-                    <a key={label} href={url!} target="_blank" rel="noopener noreferrer"
-                      className={`${color} transition-colors`} title={label}>
-                      <Icon className="w-5 h-5" />
-                    </a>
-                  ))}
-                </div>
-              )}
+              {/* Social links + share */}
+              <div className="flex items-center gap-3 mb-5">
+                {socialLinks.map(({ url, icon: Icon, label, color }) => (
+                  <a key={label} href={url!} target="_blank" rel="noopener noreferrer"
+                    className={`${color} transition-colors`} title={label}>
+                    <Icon className="w-5 h-5" />
+                  </a>
+                ))}
+                <ShareProfileButton name={displayName} />
+              </div>
 
               {/* Contact / action buttons — prominent row below profile info */}
               {(expert.phone || expert.whatsapp || expert.email || expert.webAddress || expert.ctaLabel || (!isOwner && expertUser)) && (
