@@ -27,7 +27,7 @@ export default async function CountryPage({ params }: Props) {
   const { countryCode } = await params;
   const code = countryCode.toLowerCase();
 
-  const [country, experts, categories, reviewAgg, sponsoredExperts] = await Promise.all([
+  const [country, expertsRaw, categories, reviewAgg, sponsoredExperts] = await Promise.all([
     prisma.country.findFirst({ where: { code, active: true } }),
     prisma.expert.findMany({
       where: { countryCode: code, verified: true },
@@ -40,7 +40,6 @@ export default async function CountryPage({ params }: Props) {
         categories: {
           select: { category: { select: { id: true, name: true, icon: true, color: true } } },
         },
-        reviews: { select: { rating: true } },
       },
       orderBy: [{ featured: 'desc' }, { foundingExpert: 'desc' }, { createdAt: 'desc' }],
     }),
@@ -55,6 +54,18 @@ export default async function CountryPage({ params }: Props) {
     }),
     fetchFeaturedExperts("COUNTRY_FEATURED", { country: code }),
   ]);
+
+  const expertIds = expertsRaw.map(e => e.id);
+  const ratingsRaw = expertIds.length > 0 ? await prisma.review.groupBy({
+    by: ['expertId'],
+    where: { expertId: { in: expertIds } },
+    _avg: { rating: true },
+  }) : [];
+  const ratingMap = new Map(ratingsRaw.map(r => [r.expertId, r._avg.rating]));
+  const experts = expertsRaw.map(e => ({
+    ...e,
+    reviews: ratingMap.get(e.id) != null ? [{ rating: ratingMap.get(e.id)! }] : [],
+  }));
 
   if (!country) notFound();
 

@@ -15,8 +15,8 @@ import BookingWidget from "@/components/BookingWidget";
 import MessageButton from "@/components/MessageButton";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
 import ShareProfileButton from "@/components/ShareProfileButton";
+import OwnerEditButton from "@/components/OwnerEditButton";
 import { notFound } from "next/navigation";
-import { getSession } from "@/lib/auth";
 
 export const revalidate = 3600;
 
@@ -58,8 +58,7 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
   const { slug, countryCode } = await params;
 
   try {
-    // Fetch expert + session in parallel (session doesn't need expert data)
-    const [expert, session, sidebarSponsored] = await Promise.all([
+    const [expert, sidebarSponsored] = await Promise.all([
       prisma.expert.findFirst({
         where: { profileLink: slug, countryCode },
         include: {
@@ -69,6 +68,7 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
           reviews: {
             include: { client: { select: { id: true, name: true } } },
             orderBy: { createdAt: "desc" },
+            take: 30,
           },
           certifications: { orderBy: { sortOrder: 'asc' } },
           skills:         true,
@@ -77,7 +77,6 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
           awards:         { orderBy: { sortOrder: 'asc' } },
         },
       }),
-      getSession(),
       fetchFeaturedExperts("PROFILE_SIDEBAR", { country: countryCode }),
     ]);
 
@@ -107,7 +106,7 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
       }).catch(() => []),
     ]);
 
-    const isOwner = session.authenticated && session.email === expert.email;
+    const isOwner = false;
     const displayName = expert.businessName || expert.name;
 
     const ratingDist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -189,19 +188,7 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                   <span className={`absolute -bottom-1.5 -right-1.5 w-5 h-5 rounded-full border-2 border-white dark:border-slate-800 ${avail.color}`} title={avail.label} />
                 </div>
 
-                {/* Owner edit actions */}
-                {isOwner && (
-                  <div className="flex flex-wrap gap-2 pb-1">
-                    <Link href="/dashboard/profile"
-                      className="inline-flex items-center gap-2 border border-orange-500/40 hover:border-orange-500/70 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 font-medium px-4 py-2 rounded-xl transition-colors text-sm">
-                      <Pencil className="w-4 h-4" /> Edit Profile
-                    </Link>
-                    <Link href="/dashboard/completed-work"
-                      className="inline-flex items-center gap-2 border border-slate-200 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:text-orange-500 font-medium px-4 py-2 rounded-xl transition-colors text-sm">
-                      + Post Work
-                    </Link>
-                  </div>
-                )}
+                <OwnerEditButton expertEmail={expert.email} />
               </div>
 
               {/* Name + badges */}

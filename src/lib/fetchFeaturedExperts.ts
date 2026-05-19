@@ -39,7 +39,7 @@ export async function fetchFeaturedExperts(
             profilePicture: true,
             countryCode: true,
             categories: { select: { category: { select: { name: true } } } },
-            reviews: { select: { rating: true } },
+            reviews: { select: { rating: true }, take: 100 },
           },
         },
       },

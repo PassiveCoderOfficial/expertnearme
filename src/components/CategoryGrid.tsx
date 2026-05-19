@@ -36,7 +36,7 @@ export default function CategoryGrid({
           <Link
             key={cat.id}
             href={`/${countryCode}/categories/${cat.slug}`}
-            prefetch
+            prefetch={false}
             className="rounded-2xl border border-slate-100 dark:border-white/8 bg-white dark:bg-slate-800/50 hover:border-orange-200 dark:hover:border-orange-500/30 hover:bg-orange-50 dark:hover:bg-slate-800/80 p-4 text-center transition-all group shadow-sm dark:shadow-none"
           >
             <div className="text-2xl mb-2">{cat.icon || '🏢'}</div>

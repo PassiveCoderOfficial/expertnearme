@@ -61,10 +61,6 @@ export default async function CountryCategoryPage({ params }: Props) {
               startingRate: true,
               startingRateUnit: true,
               _count: { select: { reviews: true } },
-              reviews: {
-                select: { rating: true },
-                take: 500,
-              },
               categories: {
                 select: {
                   category: { select: { name: true, icon: true, color: true } },
@@ -81,9 +77,16 @@ export default async function CountryCategoryPage({ params }: Props) {
 
     if (!category) notFound();
 
+    const expertIds = expertCategories.map(({ expert }) => expert.id);
+    const ratingAgg = expertIds.length > 0 ? await prisma.review.groupBy({
+      by: ['expertId'],
+      where: { expertId: { in: expertIds } },
+      _avg: { rating: true },
+    }) : [];
+    const ratingMap = new Map(ratingAgg.map(r => [r.expertId, r._avg.rating]));
+
     const experts = expertCategories.map(({ expert }) => {
-      const ratings = expert.reviews.map((r) => r.rating);
-      const avg = ratings.length > 0 ? ratings.reduce((s, r) => s + r, 0) / ratings.length : null;
+      const avg = ratingMap.get(expert.id) ?? null;
       return {
         id: expert.id,
         name: expert.businessName || expert.name,
