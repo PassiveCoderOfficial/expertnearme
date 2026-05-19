@@ -17,16 +17,7 @@ export const revalidate = 3600;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
-  try {
-    const categories = await prisma.category.findMany({
-      where: { active: true },
-      select: { slug: true, countryCode: true },
-      take: 200,
-    });
-    return categories.map(c => ({ countryCode: c.countryCode, slug: c.slug }));
-  } catch {
-    return [];
-  }
+  return [];
 }
 
 type Props = { params: Promise<{ countryCode: string; slug: string }> };

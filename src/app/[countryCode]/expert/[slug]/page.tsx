@@ -22,19 +22,7 @@ export const revalidate = 3600;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
-  try {
-    const experts = await prisma.expert.findMany({
-      where: { verified: true, profileLink: { not: null }, countryCode: { not: null } },
-      select: { profileLink: true, countryCode: true },
-      orderBy: [{ featured: 'desc' }, { foundingExpert: 'desc' }, { createdAt: 'desc' }],
-      take: 200,
-    });
-    return experts
-      .filter(e => e.profileLink && e.countryCode)
-      .map(e => ({ countryCode: e.countryCode!, slug: e.profileLink! }));
-  } catch {
-    return [];
-  }
+  return [];
 }
 
 interface ExpertProfilePageProps {
