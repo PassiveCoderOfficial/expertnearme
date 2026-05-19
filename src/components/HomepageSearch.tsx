@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, ChevronDown } from 'lucide-react';
+import Link from 'next/link';
 
 type CountryOption = { code: string; name: string };
 
@@ -19,6 +20,19 @@ export default function HomepageSearch({
   const router = useRouter();
 
   const selected = countries.find(c => c.code === country) ?? countries[0];
+
+  // Prefetch destination as user types so navigation is instant on submit
+  useEffect(() => {
+    const path = query.trim()
+      ? `/${country}?search=${encodeURIComponent(query.trim())}`
+      : `/${country}`;
+    router.prefetch(path);
+  }, [query, country, router]);
+
+  // Prefetch on country change too
+  useEffect(() => {
+    router.prefetch(`/${country}`);
+  }, [country, router]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
