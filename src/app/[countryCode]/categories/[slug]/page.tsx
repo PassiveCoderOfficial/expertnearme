@@ -26,7 +26,7 @@ export default async function CountryCategoryPage({ params }: Props) {
   const countryCode = raw.toLowerCase();
 
   try {
-    // All three queries in parallel — no serial waterfall
+    // Fetch category & experts in parallel, skip reviews for now (load separately)
     const [category, expertCategories, sponsoredExperts] = await Promise.all([
       prisma.category.findFirst({
         where: { slug, countryCode, active: true },
@@ -60,7 +60,11 @@ export default async function CountryCategoryPage({ params }: Props) {
               yearsOfExperience: true,
               startingRate: true,
               startingRateUnit: true,
-              reviews: { select: { rating: true } },
+              _count: { select: { reviews: true } },
+              reviews: {
+                select: { rating: true },
+                take: 500,
+              },
               categories: {
                 select: {
                   category: { select: { name: true, icon: true, color: true } },
@@ -85,7 +89,7 @@ export default async function CountryCategoryPage({ params }: Props) {
         name: expert.businessName || expert.name,
         avatar: expert.profilePicture || null,
         avg,
-        reviewCount: ratings.length,
+        reviewCount: expert._count.reviews,
         shortDesc: expert.shortDesc || null,
         serviceTitle: expert.serviceTitle || null,
         verified: expert.verified,
