@@ -175,7 +175,7 @@ export default function InvoiceForm({ invoiceId }: { invoiceId?: string }) {
 
   function updateItem(index: number, field: keyof InvoiceItem, value: any) {
     const newItems = [...items];
-    newItems[index][field] = value;
+    (newItems[index] as any)[field] = value;
     if (field === 'quantity' || field === 'unitPrice') {
       newItems[index].amount = newItems[index].quantity * newItems[index].unitPrice;
     }

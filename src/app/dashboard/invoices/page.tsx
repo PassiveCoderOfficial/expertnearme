@@ -11,10 +11,10 @@ interface Invoice {
   invoiceNumber: string;
   clientName: string;
   status: string;
+  currency?: string;
   dueDate?: string;
   totalAmount: number;
   paidAmount: number;
-  items: { amount: number }[];
   createdAt: string;
 }
 
@@ -176,13 +176,15 @@ export default function InvoicesPage() {
                             >
                               <Download size={18} />
                             </Link>
-                            <button
-                              onClick={() => handleDeleteInvoice(invoice.id)}
-                              className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                              title="Delete (Draft only)"
-                            >
-                              <MdDelete size={18} />
-                            </button>
+                            {invoice.status === 'DRAFT' && (
+                              <button
+                                onClick={() => handleDeleteInvoice(invoice.id)}
+                                className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                title="Delete draft"
+                              >
+                                <MdDelete size={18} />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

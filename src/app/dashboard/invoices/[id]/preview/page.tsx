@@ -2,45 +2,34 @@ import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { format } from 'date-fns';
 import { redirect } from 'next/navigation';
+import PrintButtons from './PrintButtons';
 
 export default async function InvoicePreviewPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
   if (!session?.userId) redirect('/login');
 
   const { id } = await params;
-  const expert = await prisma.expert.findUnique({ where: { userId: session.userId } });
+  const expert = await prisma.expert.findUnique({ where: { email: session.email } });
   if (!expert) redirect('/login');
 
   const invoice = await prisma.invoice.findFirst({
     where: { id: parseInt(id), expertId: expert.id },
-    include: { items: true, payments: true },
+    include: { items: { orderBy: { sortOrder: 'asc' } }, payments: { orderBy: { paidAt: 'desc' } } },
   });
 
   if (!invoice) redirect('/dashboard/invoices');
 
   const subtotal = invoice.items.reduce((s, i) => s + i.amount, 0);
-  const tax = (subtotal - (invoice.discount || 0)) * ((invoice.taxRate || 0) / 100);
-  const total = subtotal - (invoice.discount || 0) + tax;
+  const discount = invoice.discount ?? 0;
+  const taxRate = invoice.taxRate ?? 0;
+  const tax = (subtotal - discount) * (taxRate / 100);
+  const total = subtotal - discount + tax;
   const paidAmount = invoice.payments.reduce((s, p) => s + p.amount, 0);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        {/* Print Button */}
-        <div className="mb-6 flex justify-end gap-2">
-          <button
-            onClick={() => window.print()}
-            className="px-6 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors font-medium"
-          >
-            Print / Save as PDF
-          </button>
-          <button
-            onClick={() => window.history.back()}
-            className="px-6 py-2 bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white rounded-xl hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors font-medium"
-          >
-            Back
-          </button>
-        </div>
+        <PrintButtons />
 
         {/* Invoice Document */}
         <div className="bg-white text-slate-900 p-12 shadow-xl">
@@ -136,18 +125,18 @@ export default async function InvoicePreviewPage({ params }: { params: Promise<{
                 </span>
               </div>
 
-              {invoice.discount > 0 && (
+              {discount > 0 && (
                 <div className="flex justify-between py-2 border-b border-slate-300">
                   <span className="text-slate-600">Discount</span>
                   <span className="font-semibold">
-                    -{invoice.currency} {invoice.discount.toFixed(2)}
+                    -{invoice.currency} {discount.toFixed(2)}
                   </span>
                 </div>
               )}
 
-              {invoice.taxRate > 0 && (
+              {taxRate > 0 && (
                 <div className="flex justify-between py-2 border-b border-slate-300">
-                  <span className="text-slate-600">Tax ({invoice.taxRate}%)</span>
+                  <span className="text-slate-600">Tax ({taxRate}%)</span>
                   <span className="font-semibold">
                     {invoice.currency} {tax.toFixed(2)}
                   </span>

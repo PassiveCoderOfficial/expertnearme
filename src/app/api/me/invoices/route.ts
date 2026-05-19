@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session?.userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const expert = await prisma.expert.findUnique({ where: { userId: session.userId } });
+  const expert = await prisma.expert.findUnique({ where: { email: session.email } });
   if (!expert) return NextResponse.json({ error: 'Not an expert' }, { status: 403 });
 
   const { searchParams } = new URL(req.url);
@@ -26,6 +26,10 @@ export async function GET(req: NextRequest) {
         invoiceNumber: true,
         clientName: true,
         status: true,
+        currency: true,
+        dueDate: true,
+        taxRate: true,
+        discount: true,
         createdAt: true,
         items: { select: { amount: true } },
         payments: { select: { amount: true } },
@@ -38,11 +42,19 @@ export async function GET(req: NextRequest) {
   ]);
 
   return NextResponse.json({
-    invoices: invoices.map(inv => ({
-      ...inv,
-      total: inv.items.reduce((s, i) => s + i.amount, 0),
-      paid: inv.payments.reduce((s, p) => s + p.amount, 0),
-    })),
+    invoices: invoices.map(inv => {
+      const subtotal = inv.items.reduce((s, i) => s + i.amount, 0);
+      const discount = inv.discount ?? 0;
+      const taxRate = inv.taxRate ?? 0;
+      const tax = (subtotal - discount) * (taxRate / 100);
+      const totalAmount = subtotal - discount + tax;
+      const paidAmount = inv.payments.reduce((s, p) => s + p.amount, 0);
+      return {
+        ...inv,
+        totalAmount,
+        paidAmount,
+      };
+    }),
     total,
     page,
     pages: Math.ceil(total / limit),
@@ -53,12 +65,14 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session?.userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const expert = await prisma.expert.findUnique({ where: { userId: session.userId } });
+  const expert = await prisma.expert.findUnique({ where: { email: session.email } });
   if (!expert) return NextResponse.json({ error: 'Not an expert' }, { status: 403 });
 
   const body = await req.json();
   const year = new Date().getFullYear();
   const seq = await prisma.invoice.count({ where: { expertId: expert.id, createdAt: { gte: new Date(`${year}-01-01`) } } });
+
+  const items = Array.isArray(body.items) ? body.items : [];
 
   const invoice = await prisma.invoice.create({
     data: {
@@ -79,7 +93,17 @@ export async function POST(req: NextRequest) {
       fromEmail: body.fromEmail,
       fromPhone: body.fromPhone,
       logoUrl: body.logoUrl,
+      items: items.length > 0 ? {
+        create: items.map((it: any, idx: number) => ({
+          description: it.description || '',
+          quantity: it.quantity || 0,
+          unitPrice: it.unitPrice || 0,
+          amount: (it.quantity || 0) * (it.unitPrice || 0),
+          sortOrder: idx,
+        })),
+      } : undefined,
     },
+    include: { items: true, payments: true },
   });
 
   return NextResponse.json(invoice, { status: 201 });

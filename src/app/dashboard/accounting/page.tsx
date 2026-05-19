@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { format, subMonths } from 'date-fns';
+import { format } from 'date-fns';
 import { MdAdd, MdEdit, MdDelete, MdDownload } from 'react-icons/md';
 import { Calendar, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 
@@ -31,7 +31,6 @@ export default function AccountingPage() {
   const [tab, setTab] = useState<'all' | 'income' | 'expenses' | 'reports'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [filterType, setFilterType] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [filterFrom, setFilterFrom] = useState('');
   const [filterTo, setFilterTo] = useState('');
@@ -50,17 +49,18 @@ export default function AccountingPage() {
 
   useEffect(() => {
     loadData();
-  }, [tab, page, filterType, filterCategory, filterFrom, filterTo]);
+  }, [tab, page, filterCategory, filterFrom, filterTo]);
 
   async function loadData() {
     try {
       setLoading(true);
+      const typeFilter = tab === 'income' ? 'CREDIT' : tab === 'expenses' ? 'DEBIT' : '';
       const [summaryRes, entriesRes] = await Promise.all([
         fetch('/api/me/accounting/summary'),
         fetch(
           `/api/me/accounting/entries?${new URLSearchParams({
             page: String(page),
-            ...(filterType && { type: filterType }),
+            ...(typeFilter && { type: typeFilter }),
             ...(filterCategory && { category: filterCategory }),
             ...(filterFrom && { from: filterFrom }),
             ...(filterTo && { to: filterTo }),
@@ -75,9 +75,8 @@ export default function AccountingPage() {
       setEntries(entriesData.entries || []);
       setTotalPages(entriesData.pages || 1);
 
-      // Extract unique categories for autocomplete
       if (entriesData.entries) {
-        const cats = [...new Set(entriesData.entries.map((e: AccountEntry) => e.category).filter(Boolean))];
+        const cats = [...new Set(entriesData.entries.map((e: AccountEntry) => e.category).filter(Boolean))] as string[];
         setCategories(cats);
       }
     } catch (err) {
@@ -181,11 +180,7 @@ export default function AccountingPage() {
 
   if (loading && !summary) return <div className="p-8">Loading...</div>;
 
-  const displayTab = tab === 'all' ? filterType || 'all' : tab;
-  const filteredEntries =
-    displayTab === 'all'
-      ? entries
-      : entries.filter(e => (displayTab === 'income' ? e.type === 'CREDIT' : e.type === 'DEBIT'));
+  const filteredEntries = entries;
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900 p-4 md:p-8">

@@ -6,7 +6,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const session = await getSession();
   if (!session?.userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const expert = await prisma.expert.findUnique({ where: { userId: session.userId } });
+  const expert = await prisma.expert.findUnique({ where: { email: session.email } });
   if (!expert) return NextResponse.json({ error: 'Not an expert' }, { status: 403 });
 
   const { id } = await params;
@@ -35,7 +35,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const session = await getSession();
   if (!session?.userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const expert = await prisma.expert.findUnique({ where: { userId: session.userId } });
+  const expert = await prisma.expert.findUnique({ where: { email: session.email } });
   if (!expert) return NextResponse.json({ error: 'Not an expert' }, { status: 403 });
 
   const { id } = await params;
@@ -64,7 +64,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const session = await getSession();
   if (!session?.userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const expert = await prisma.expert.findUnique({ where: { userId: session.userId } });
+  const expert = await prisma.expert.findUnique({ where: { email: session.email } });
   if (!expert) return NextResponse.json({ error: 'Not an expert' }, { status: 403 });
 
   const body = await req.json();

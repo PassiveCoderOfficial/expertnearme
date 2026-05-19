@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session?.userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const expert = await prisma.expert.findUnique({ where: { userId: session.userId } });
+  const expert = await prisma.expert.findUnique({ where: { email: session.email } });
   if (!expert) return NextResponse.json({ error: 'Not an expert' }, { status: 403 });
 
   const book = await prisma.accountBook.findUnique({ where: { expertId: expert.id } });

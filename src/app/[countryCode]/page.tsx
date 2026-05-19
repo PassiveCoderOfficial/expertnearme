@@ -372,7 +372,6 @@ export default async function CountryPage({ params }: Props) {
                     </div>
                   </div>
                 </Link>
-                )}
               );
             })}
           </div>
