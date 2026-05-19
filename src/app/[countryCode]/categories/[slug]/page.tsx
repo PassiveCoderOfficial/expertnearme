@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
-import { Star, Shield, Crown, CheckCircle, Briefcase, DollarSign } from "lucide-react";
+import { Star, CheckCircle, Briefcase, DollarSign } from "lucide-react";
 import ExpertMap, { MapExpert } from "@/components/ExpertMap";
 import AdFeaturedExpertsStatic from "@/components/ads/AdFeaturedExpertsStatic";
 import { fetchFeaturedExperts } from "@/lib/fetchFeaturedExperts";
@@ -26,30 +26,56 @@ export default async function CountryCategoryPage({ params }: Props) {
   const countryCode = raw.toLowerCase();
 
   try {
-    const category = await prisma.category.findFirst({
-      where: { slug, countryCode, active: true },
-      include: { _count: { select: { experts: true } } },
-    });
-
-    if (!category) notFound();
-
-    const [expertCategories, sponsoredExperts] = await Promise.all([prisma.expertCategory.findMany({
-      where: { categoryId: category.id, expert: { countryCode, verified: true } },
-      include: {
-        expert: {
-          include: {
-            categories: { include: { category: { select: { name: true, icon: true, color: true } } } },
-            reviews: { select: { rating: true } },
+    // All three queries in parallel — no serial waterfall
+    const [category, expertCategories, sponsoredExperts] = await Promise.all([
+      prisma.category.findFirst({
+        where: { slug, countryCode, active: true },
+        select: {
+          id: true, name: true, slug: true, icon: true, description: true,
+          _count: { select: { experts: true } },
+        },
+      }),
+      prisma.expertCategory.findMany({
+        where: {
+          category: { slug, countryCode, active: true },
+          expert: { countryCode, verified: true },
+        },
+        select: {
+          expert: {
+            select: {
+              id: true,
+              name: true,
+              businessName: true,
+              profilePicture: true,
+              shortDesc: true,
+              serviceTitle: true,
+              verified: true,
+              foundingExpert: true,
+              featured: true,
+              mapFeatured: true,
+              latitude: true,
+              longitude: true,
+              profileLink: true,
+              availabilityStatus: true,
+              yearsOfExperience: true,
+              startingRate: true,
+              startingRateUnit: true,
+              reviews: { select: { rating: true } },
+              categories: {
+                select: {
+                  category: { select: { name: true, icon: true, color: true } },
+                },
+                take: 3,
+              },
+            },
           },
         },
-      },
-      orderBy: { expert: { featured: "desc" } },
-    }).catch((err) => {
-      console.error("[CategoryPage] experts query error:", err);
-      return [];
-    }),
-    fetchFeaturedExperts("CATEGORY_FEATURED", { country: countryCode, category: slug }),
+        orderBy: { expert: { featured: "desc" } },
+      }),
+      fetchFeaturedExperts("CATEGORY_FEATURED", { country: countryCode, category: slug }),
     ]);
+
+    if (!category) notFound();
 
     const experts = expertCategories.map(({ expert }) => {
       const ratings = expert.reviews.map((r) => r.rating);
@@ -61,7 +87,7 @@ export default async function CountryCategoryPage({ params }: Props) {
         avg,
         reviewCount: ratings.length,
         shortDesc: expert.shortDesc || null,
-        serviceTitle: (expert as unknown as { serviceTitle?: string | null }).serviceTitle || null,
+        serviceTitle: expert.serviceTitle || null,
         verified: expert.verified,
         foundingExpert: expert.foundingExpert,
         featured: expert.featured,
@@ -69,21 +95,21 @@ export default async function CountryCategoryPage({ params }: Props) {
         latitude: expert.latitude || null,
         longitude: expert.longitude || null,
         profileLink: expert.profileLink || String(expert.id),
-        availabilityStatus: (expert as unknown as { availabilityStatus?: string }).availabilityStatus || 'AVAILABLE',
-        yearsOfExperience: (expert as unknown as { yearsOfExperience?: number | null }).yearsOfExperience ?? null,
-        startingRate: (expert as unknown as { startingRate?: number | null }).startingRate ?? null,
-        startingRateUnit: (expert as unknown as { startingRateUnit?: string | null }).startingRateUnit ?? null,
-        categories: expert.categories.map((c) => ({ name: c.category.name, icon: c.category.icon, color: c.category.color })),
+        availabilityStatus: expert.availabilityStatus || 'AVAILABLE',
+        yearsOfExperience: expert.yearsOfExperience ?? null,
+        startingRate: expert.startingRate ?? null,
+        startingRateUnit: expert.startingRateUnit ?? null,
+        categories: expert.categories.map((c) => ({
+          name: c.category.name,
+          icon: c.category.icon,
+          color: c.category.color,
+        })),
       };
     });
 
     const mapExperts: MapExpert[] = experts
       .filter(e => e.latitude && e.longitude)
-      .sort((a, b) => {
-        const aF = (a.mapFeatured || a.featured) ? 1 : 0;
-        const bF = (b.mapFeatured || b.featured) ? 1 : 0;
-        return bF - aF;
-      })
+      .sort((a, b) => ((b.mapFeatured || b.featured) ? 1 : 0) - ((a.mapFeatured || a.featured) ? 1 : 0))
       .map(e => ({
         id:          e.id,
         name:        e.name,
@@ -98,13 +124,13 @@ export default async function CountryCategoryPage({ params }: Props) {
       }));
 
     return (
-      <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white ">
+      <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white">
         <div className="max-w-6xl mx-auto px-6 pt-10 pb-20">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm text-slate-400 dark:text-slate-500 mb-8">
-            <Link href={`/${countryCode}`} className="hover:text-orange-500 dark:hover:text-orange-400 transition-colors">{countryCode.toUpperCase()}</Link>
+            <Link href={`/${countryCode}`} prefetch className="hover:text-orange-500 dark:hover:text-orange-400 transition-colors">{countryCode.toUpperCase()}</Link>
             <span>/</span>
-            <Link href={`/${countryCode}/categories`} className="hover:text-orange-500 dark:hover:text-orange-400 transition-colors">Categories</Link>
+            <Link href={`/${countryCode}/categories`} prefetch className="hover:text-orange-500 dark:hover:text-orange-400 transition-colors">Categories</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white">{category.name}</span>
           </div>
@@ -113,7 +139,9 @@ export default async function CountryCategoryPage({ params }: Props) {
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-1">
             {category.description || `Browse verified ${category.name.toLowerCase()} experts in ${countryCode.toUpperCase()}.`}
           </p>
-          <p className="text-slate-400 dark:text-slate-500 text-xs mb-10">{experts.length} verified expert{experts.length !== 1 ? "s" : ""} found</p>
+          <p className="text-slate-400 dark:text-slate-500 text-xs mb-10">
+            {experts.length} verified expert{experts.length !== 1 ? "s" : ""} found
+          </p>
 
           {mapExperts.length > 0 && (
             <div className="mb-10">
@@ -123,7 +151,9 @@ export default async function CountryCategoryPage({ params }: Props) {
 
           {experts.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-200 dark:border-white/10 p-14 text-center">
-              <p className="text-slate-400 dark:text-slate-400 text-sm mb-4">No verified experts in this category yet for {countryCode.toUpperCase()}.</p>
+              <p className="text-slate-400 dark:text-slate-400 text-sm mb-4">
+                No verified experts in this category yet for {countryCode.toUpperCase()}.
+              </p>
               <Link href="/for-experts" className="text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 text-sm transition-colors">
                 Be the first to list here →
               </Link>
@@ -138,17 +168,13 @@ export default async function CountryCategoryPage({ params }: Props) {
                   <Link
                     key={expert.id}
                     href={`/${countryCode}/expert/${expert.profileLink}`}
+                    prefetch
                     className="group relative flex flex-col rounded-2xl border border-slate-100 dark:border-white/8 bg-white dark:bg-slate-800/50 hover:-translate-y-1 hover:shadow-xl dark:hover:border-orange-500/20 transition-all duration-200 overflow-hidden shadow-sm"
                   >
                     {/* Cover banner */}
                     <div className="relative h-20 bg-gradient-to-br from-slate-100 via-slate-50 to-orange-50 dark:from-slate-700 dark:via-slate-600 dark:to-slate-700 overflow-hidden">
                       {expert.avatar && (
-                        <img
-                          src={expert.avatar}
-                          alt=""
-                          className="absolute inset-0 w-full h-full object-cover scale-110 blur-md opacity-30"
-                          aria-hidden
-                        />
+                        <img src={expert.avatar} alt="" className="absolute inset-0 w-full h-full object-cover scale-110 blur-md opacity-30" aria-hidden />
                       )}
                       {expert.featured && (
                         <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/90 text-amber-900 uppercase tracking-wide">
@@ -166,11 +192,7 @@ export default async function CountryCategoryPage({ params }: Props) {
                     <div className="-mt-7 mb-2 px-4 flex items-end justify-between">
                       <div className="relative">
                         {expert.avatar ? (
-                          <img
-                            src={expert.avatar}
-                            alt={expert.name}
-                            className="w-14 h-14 rounded-2xl object-cover border-2 border-white dark:border-slate-900 shadow-md"
-                          />
+                          <img src={expert.avatar} alt={expert.name} className="w-14 h-14 rounded-2xl object-cover border-2 border-white dark:border-slate-900 shadow-md" />
                         ) : (
                           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white font-bold text-lg border-2 border-white dark:border-slate-900 shadow-md">
                             {initials(expert.name)}
@@ -199,7 +221,6 @@ export default async function CountryCategoryPage({ params }: Props) {
                         <p className="font-bold text-slate-900 dark:text-white text-sm leading-tight group-hover:text-orange-500 dark:group-hover:text-orange-300 transition-colors">
                           {expert.name}
                         </p>
-                        {/* Availability dot */}
                         <span className={`mt-1 w-2 h-2 rounded-full shrink-0 ${AVAIL_DOT[expert.availabilityStatus] ?? 'bg-green-500'}`} title={expert.availabilityStatus} />
                       </div>
 
@@ -228,7 +249,6 @@ export default async function CountryCategoryPage({ params }: Props) {
                         </p>
                       )}
 
-                      {/* Quick stats row */}
                       <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-slate-500 mb-3">
                         {expert.yearsOfExperience != null && (
                           <span className="flex items-center gap-0.5">
@@ -237,7 +257,7 @@ export default async function CountryCategoryPage({ params }: Props) {
                         )}
                         {expert.startingRate != null && (
                           <span className="flex items-center gap-0.5 text-green-600 dark:text-green-400 font-semibold">
-                            <DollarSign className="w-3 h-3" /> From ${expert.startingRate.toLocaleString()}{expert.startingRateUnit ? expert.startingRateUnit : ''}
+                            <DollarSign className="w-3 h-3" /> From ${expert.startingRate.toLocaleString()}{expert.startingRateUnit ?? ''}
                           </span>
                         )}
                       </div>
