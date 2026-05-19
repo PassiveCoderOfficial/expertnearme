@@ -5,6 +5,7 @@ import { LogoMark } from "@/components/Logo";
 import FlagIcon from "@/components/FlagIcon";
 import AdFeaturedExpertsStatic, { StaticFeaturedExpert } from "@/components/ads/AdFeaturedExpertsStatic";
 import HomepageSearch from "@/components/HomepageSearch";
+import CategoryGrid, { CategoryItem } from "@/components/CategoryGrid";
 
 export const revalidate = 300;
 
@@ -19,6 +20,7 @@ export default async function GlobalHomePage() {
     expert: { name: string; businessName: string | null; profileLink: string | null; countryCode: string | null; categories: { category: { name: string } }[] };
   }[] = [];
   let featuredExperts: StaticFeaturedExpert[] = [];
+  let globalCategories: CategoryItem[] = [];
 
   const now = new Date();
 
@@ -31,6 +33,7 @@ export default async function GlobalHomePage() {
       reviewCountResult,
       topReviewsResult,
       featuredCampaigns,
+      allCategoriesResult,
     ] = await Promise.all([
       prisma.country.findMany({
         where: { active: true },
@@ -82,6 +85,18 @@ export default async function GlobalHomePage() {
           },
         },
       }),
+      prisma.category.findMany({
+        where: { active: true },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          icon: true,
+          countryCode: true,
+          _count: { select: { experts: true } },
+        },
+        orderBy: [{ experts: { _count: "desc" } }, { name: "asc" }],
+      }),
     ]);
 
     const countsByCode: Record<string, number> = {};
@@ -109,6 +124,22 @@ export default async function GlobalHomePage() {
         avgRating,
       };
     });
+
+    // Deduplicate categories by slug — pick the one with most experts
+    const catMap = new Map<string, CategoryItem>();
+    for (const c of allCategoriesResult) {
+      const existing = catMap.get(c.slug);
+      if (!existing || c._count.experts > existing.expertCount) {
+        catMap.set(c.slug, {
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          icon: c.icon,
+          expertCount: c._count.experts,
+        });
+      }
+    }
+    globalCategories = Array.from(catMap.values()).sort((a, b) => b.expertCount - a.expertCount);
   } catch (err) {
     console.error("[Homepage] DB error:", err);
   }
@@ -268,6 +299,24 @@ export default async function GlobalHomePage() {
           </div>
         )}
       </section>
+
+      {/* ─── Categories ──────────────────────────────────────────── */}
+      {globalCategories.length > 0 && (
+        <section className="border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-950/40">
+          <div className="max-w-6xl mx-auto px-6 py-16">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <p className="text-xs uppercase tracking-widest text-orange-500 mb-1 font-semibold">All Expertise</p>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Browse by Category</h2>
+              </div>
+              <Link href={`/${firstCountryCode}/categories`} prefetch className="hidden sm:flex items-center gap-1.5 text-sm text-orange-500 hover:text-orange-400 font-semibold transition-colors">
+                All categories <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            <CategoryGrid categories={globalCategories} countryCode={firstCountryCode} initialCount={20} batchSize={20} />
+          </div>
+        </section>
+      )}
 
       {/* ─── Social Proof / Reviews ───────────────────────────────── */}
       {topReviews.length > 0 && (

@@ -14,18 +14,21 @@ export async function fetchFeaturedExperts(
 ): Promise<StaticFeaturedExpert[]> {
   const now = new Date();
   try {
+    const andClauses: object[] = [];
+    if (options.country) {
+      andClauses.push({ OR: [{ targetCountry: null }, { targetCountry: options.country }] });
+    }
+    if (options.category) {
+      andClauses.push({ OR: [{ targetCategory: null }, { targetCategory: options.category }] });
+    }
+
     const campaigns = await prisma.adCampaign.findMany({
       where: {
         status: "ACTIVE",
         startsAt: { lte: now },
         endsAt: { gte: now },
         placement: { spot },
-        ...(options.country
-          ? { OR: [{ targetCountry: null }, { targetCountry: options.country }] }
-          : {}),
-        ...(options.category
-          ? { OR: [{ targetCategory: null }, { targetCategory: options.category }] }
-          : {}),
+        ...(andClauses.length > 0 ? { AND: andClauses } : {}),
       },
       take: 8,
       include: {

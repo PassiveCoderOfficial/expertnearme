@@ -5,6 +5,9 @@ import { Wrapper, Status } from '@googlemaps/react-wrapper';
 import { MapPin } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
+// Deferred mount flag — prevents Maps JS from blocking initial page render
+let mapsScriptStarted = false;
+
 export interface MapExpert {
   id: number;
   name: string;
@@ -209,10 +212,29 @@ function MapPlaceholder({ status }: { status: Status }) {
 export default function ExpertMap({ experts, countryCode, center, zoom, className = '', height }: ExpertMapProps) {
   const apiKey      = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
   const [selected, setSelected] = useState<MapExpert | null>(null);
+  const [mapMounted, setMapMounted] = useState(mapsScriptStarted);
   const { resolvedTheme, theme } = useTheme();
   const isDark = (resolvedTheme ?? theme ?? 'light') === 'dark';
   const withCoords = experts.filter(e => e.latitude && e.longitude);
   const containerStyle = height ? { height } : undefined;
+
+  // Defer mounting the Google Maps Wrapper until after first paint
+  // so it never blocks page render / hydration
+  useEffect(() => {
+    if (mapMounted) return;
+    const hasRIC = typeof requestIdleCallback !== 'undefined';
+    let id: number | ReturnType<typeof setTimeout>;
+    if (hasRIC) {
+      id = requestIdleCallback(() => { mapsScriptStarted = true; setMapMounted(true); });
+    } else {
+      id = setTimeout(() => { mapsScriptStarted = true; setMapMounted(true); }, 100);
+    }
+    return () => {
+      if (hasRIC) cancelIdleCallback(id as number);
+      else clearTimeout(id as ReturnType<typeof setTimeout>);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!apiKey) {
     return (
@@ -241,16 +263,20 @@ export default function ExpertMap({ experts, countryCode, center, zoom, classNam
 
   return (
     <div className={`relative rounded-2xl overflow-hidden border border-slate-200 dark:border-white/8 ${className}`} style={containerStyle}>
-      <Wrapper apiKey={apiKey} render={(status) => <MapPlaceholder status={status} />}>
-        <MapInner
-          experts={withCoords}
-          countryCode={countryCode}
-          center={center}
-          zoom={zoom}
-          onExpertClick={setSelected}
-          isDark={isDark}
-        />
-      </Wrapper>
+      {!mapMounted ? (
+        <MapPlaceholder status={Status.LOADING} />
+      ) : (
+        <Wrapper apiKey={apiKey} render={(status) => <MapPlaceholder status={status} />}>
+          <MapInner
+            experts={withCoords}
+            countryCode={countryCode}
+            center={center}
+            zoom={zoom}
+            onExpertClick={setSelected}
+            isDark={isDark}
+          />
+        </Wrapper>
+      )}
 
       {/* Legend */}
       <div className="absolute bottom-3 left-3 flex items-center gap-3 bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-500 dark:text-slate-400 backdrop-blur-sm pointer-events-none shadow-sm">

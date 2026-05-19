@@ -6,6 +6,7 @@ import ExpertMap, { MapExpert } from "@/components/ExpertMap";
 import { prisma } from "@/lib/db";
 import AdFeaturedExpertsStatic from "@/components/ads/AdFeaturedExpertsStatic";
 import { fetchFeaturedExperts } from "@/lib/fetchFeaturedExperts";
+import CategoryGrid, { CategoryItem } from "@/components/CategoryGrid";
 
 export const revalidate = 3600;
 
@@ -45,9 +46,8 @@ export default async function CountryPage({ params }: Props) {
     }),
     prisma.category.findMany({
       where: { countryCode: code, active: true },
-      include: { _count: { select: { experts: true } } },
-      orderBy: { name: 'asc' },
-      take: 10,
+      select: { id: true, name: true, slug: true, icon: true, _count: { select: { experts: true } } },
+      orderBy: [{ experts: { _count: 'desc' } }, { name: 'asc' }],
     }),
     prisma.review.aggregate({
       where: { expert: { countryCode: code } },
@@ -262,21 +262,20 @@ export default async function CountryPage({ params }: Props) {
       {categories.length > 0 && (
         <section className="max-w-6xl mx-auto px-6 pb-14">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white">Browse by Category</h2>
-            <Link href={`/${code}/categories`} className="text-sm text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 transition-colors flex items-center gap-1">
-              All categories <ArrowRight className="w-3.5 h-3.5" />
+            <div>
+              <p className="text-xs uppercase tracking-widest text-orange-500 dark:text-orange-400 mb-1 font-semibold">What we cover</p>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">Browse by Category</h2>
+            </div>
+            <Link href={`/${code}/categories`} prefetch className="text-sm text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 transition-colors flex items-center gap-1">
+              View all <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {categories.map((cat) => (
-              <Link key={cat.id} href={`/${code}/categories/${cat.slug}`}
-                className="rounded-xl border border-slate-100 dark:border-white/8 bg-white dark:bg-slate-800/50 hover:border-orange-200 dark:hover:border-orange-500/30 hover:bg-orange-50 dark:hover:bg-slate-800/80 p-4 text-center transition-colors group shadow-sm dark:shadow-none">
-                <div className="text-2xl mb-2">{cat.icon || "🏢"}</div>
-                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 group-hover:text-orange-600 dark:group-hover:text-white transition-colors leading-tight">{cat.name}</p>
-                <p className="text-xs text-slate-400 dark:text-slate-600 mt-1">{cat._count.experts} experts</p>
-              </Link>
-            ))}
-          </div>
+          <CategoryGrid
+            categories={categories.map(c => ({ id: c.id, name: c.name, slug: c.slug, icon: c.icon, expertCount: c._count.experts }))}
+            countryCode={code}
+            initialCount={20}
+            batchSize={20}
+          />
         </section>
       )}
 
