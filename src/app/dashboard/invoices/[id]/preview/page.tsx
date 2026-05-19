@@ -222,24 +222,6 @@ export default async function InvoicePreviewPage({ params }: { params: Promise<{
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @media print {
-          body {
-            background: white;
-          }
-          .max-w-4xl {
-            max-width: 100%;
-          }
-          button {
-            display: none;
-          }
-          .invoice-document {
-            box-shadow: none;
-            page-break-inside: avoid;
-          }
-        }
-      `}</style>
     </div>
   );
 }

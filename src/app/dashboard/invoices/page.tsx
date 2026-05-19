@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { MdAdd, MdEye, MdDelete, MdDownload } from 'react-icons/md';
+import { MdAdd, MdDelete } from 'react-icons/md';
+import { Eye, Download } from 'lucide-react';
 import Link from 'next/link';
 
 interface Invoice {
@@ -166,14 +167,14 @@ export default function InvoicesPage() {
                               className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                               title="Edit"
                             >
-                              <MdEye size={18} />
+                              <Eye size={18} />
                             </Link>
                             <Link
                               href={`/dashboard/invoices/${invoice.id}/preview`}
                               className="p-2 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
                               title="Preview"
                             >
-                              <MdDownload size={18} />
+                              <Download size={18} />
                             </Link>
                             <button
                               onClick={() => handleDeleteInvoice(invoice.id)}

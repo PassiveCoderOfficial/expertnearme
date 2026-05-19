@@ -905,3 +905,12 @@ h1, h2, h3, h4, h5, h6 {
   height: 1.25rem;
   color: var(--accent-500);
 }
+
+@media print {
+  body {
+    background: white;
+  }
+  button {
+    display: none;
+  }
+}

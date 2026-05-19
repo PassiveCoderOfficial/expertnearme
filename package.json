@@ -28,6 +28,7 @@
     "@tiptap/starter-kit": "^3.22.5",
     "bcryptjs": "^3.0.3",
     "country-flag-icons": "^1.6.16",
+    "date-fns": "^4.2.1",
     "formidable": "^3.5.4",
     "framer-motion": "^12.35.1",
     "jsonwebtoken": "^9.0.3",
