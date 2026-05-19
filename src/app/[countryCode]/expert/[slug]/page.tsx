@@ -27,7 +27,7 @@ export async function generateStaticParams() {
       where: { verified: true, profileLink: { not: null }, countryCode: { not: null } },
       select: { profileLink: true, countryCode: true },
       orderBy: [{ featured: 'desc' }, { foundingExpert: 'desc' }, { createdAt: 'desc' }],
-      take: 1000,
+      take: 200,
     });
     return experts
       .filter(e => e.profileLink && e.countryCode)

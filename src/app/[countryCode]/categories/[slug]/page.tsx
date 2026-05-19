@@ -21,7 +21,7 @@ export async function generateStaticParams() {
     const categories = await prisma.category.findMany({
       where: { active: true },
       select: { slug: true, countryCode: true },
-      take: 1000,
+      take: 200,
     });
     return categories.map(c => ({ countryCode: c.countryCode, slug: c.slug }));
   } catch {
