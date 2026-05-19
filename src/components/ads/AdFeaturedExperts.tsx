@@ -87,7 +87,7 @@ export default function AdFeaturedExperts({
             key={e.campaignId}
             href={profileUrl(e)}
             onClick={() => trackClick(e.campaignId)}
-            className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-800/60 dark:hover:bg-slate-800/60 hover:bg-slate-100 transition-colors group"
+            className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors group"
           >
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white font-bold text-xs shrink-0 overflow-hidden">
               {e.profilePic ? (
@@ -97,7 +97,7 @@ export default function AdFeaturedExperts({
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white dark:text-white text-slate-900 truncate group-hover:text-orange-400 transition-colors">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white truncate group-hover:text-orange-400 transition-colors">
                 {e.expertName}
               </p>
               {e.categories[0] && (
@@ -118,7 +118,7 @@ export default function AdFeaturedExperts({
           <h3 className="text-sm font-semibold text-white dark:text-white text-slate-900 flex items-center gap-1.5">
             <Crown className="w-4 h-4 text-amber-400" /> {title}
           </h3>
-          <span className="text-xs text-slate-500 bg-slate-800/40 dark:bg-slate-800/40 bg-slate-100 px-2 py-0.5 rounded-full">Sponsored</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/40 px-2 py-0.5 rounded-full">Sponsored</span>
         </div>
         <div className="space-y-2">
           {experts.map((e) => (
@@ -136,7 +136,7 @@ export default function AdFeaturedExperts({
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white dark:text-white text-slate-900 group-hover:text-orange-400 transition-colors truncate">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-orange-400 transition-colors truncate">
                   {e.expertName}
                 </p>
                 {e.categories.length > 0 && (
@@ -160,7 +160,7 @@ export default function AdFeaturedExperts({
   return (
     <div className={className}>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-white dark:text-white text-slate-900 flex items-center gap-2">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <Crown className="w-5 h-5 text-amber-400" /> {title}
         </h2>
         <span className="text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full font-medium">
@@ -173,7 +173,7 @@ export default function AdFeaturedExperts({
             key={e.campaignId}
             href={profileUrl(e)}
             onClick={() => trackClick(e.campaignId)}
-            className="group rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/5 bg-amber-50 hover:border-amber-500/40 hover:bg-amber-500/10 transition-all p-4 flex flex-col items-center text-center gap-2"
+            className="group rounded-2xl border border-amber-500/20 bg-amber-50 dark:bg-amber-500/5 hover:border-amber-500/40 hover:bg-amber-500/10 dark:hover:bg-amber-500/10 transition-all p-4 flex flex-col items-center text-center gap-2"
           >
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-white font-bold text-lg overflow-hidden">
               {e.profilePic ? (
@@ -183,7 +183,7 @@ export default function AdFeaturedExperts({
               )}
             </div>
             <div>
-              <p className="text-sm font-semibold text-white dark:text-white text-slate-900 group-hover:text-orange-400 transition-colors line-clamp-1">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-orange-400 transition-colors line-clamp-1">
                 {e.expertName}
               </p>
               {e.categories[0] && (

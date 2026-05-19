@@ -149,7 +149,7 @@ export default function PricingPage() {
       </section>
 
       {/* Stats bar */}
-      <section className="border-y border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/3 dark:backdrop-blur-sm">
+      <section className="border-y border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800/40 dark:backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 py-8">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             {STATS.map((s, i) => (
@@ -181,7 +181,7 @@ export default function PricingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08 }}
-              className="rounded-2xl border border-slate-100 dark:border-white/8 bg-white dark:bg-white/4 p-7 hover:border-orange-200 dark:hover:border-orange-500/30 hover:shadow-md dark:hover:bg-white/6 transition-all shadow-sm dark:shadow-none"
+              className="rounded-2xl border border-slate-100 dark:border-white/8 bg-white dark:bg-slate-800/50 p-7 hover:border-orange-200 dark:hover:border-orange-500/30 hover:shadow-md dark:hover:bg-slate-800/70 transition-all shadow-sm dark:shadow-none"
             >
               <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-500/15 border border-orange-100 dark:border-orange-500/25 flex items-center justify-center mb-4">
                 <b.icon className="h-5 w-5 text-orange-500 dark:text-orange-400" />
@@ -194,7 +194,7 @@ export default function PricingPage() {
       </section>
 
       {/* How it works */}
-      <section className="border-y border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/3">
+      <section className="border-y border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800/40">
         <div className="max-w-6xl mx-auto px-6 py-24">
           <div className="text-center mb-14">
             <p className="text-xs text-orange-500 uppercase tracking-widest mb-3 font-semibold">How it works</p>

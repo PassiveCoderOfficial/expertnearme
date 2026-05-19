@@ -13,8 +13,23 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "ExpertNear.Me",
-  description: "Your local expert directory",
+  title: 'ExpertNear.Me — Find Local Experts in Asia & Middle East',
+  description: 'Discover verified local experts across Singapore, UAE, Bangladesh, and Saudi Arabia. No commissions, direct contact.',
+  keywords: 'local experts, service providers, freelancers, Singapore, UAE, Bangladesh, Saudi Arabia',
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://expertnear.me',
+    siteName: 'ExpertNear.Me',
+    title: 'ExpertNear.Me — Find Local Experts in Asia & Middle East',
+    description: 'Discover verified local experts across Singapore, UAE, Bangladesh, and Saudi Arabia. No commissions, direct contact.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ExpertNear.Me — Find Local Experts',
+    description: 'Discover verified local experts across Singapore, UAE, Bangladesh, and Saudi Arabia.',
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
