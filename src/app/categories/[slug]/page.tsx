@@ -106,10 +106,10 @@ export default function CategorySlugPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {experts.map((expert) => {
               const displayName = expert.businessName || expert.name;
-              return (
+              return !expert.profileLink ? null : (
                 <Link
                   key={expert.id}
-                  href={`/bd/expert/${expert.profileLink || expert.id}`}
+                  href={`/bd/expert/${expert.profileLink}`}
                   className="rounded-2xl border border-white/8 bg-slate-800/50 hover:border-orange-500/30 hover:bg-slate-800/70 transition-colors group p-5 flex items-center gap-3"
                 >
                   {expert.profilePicture ? (

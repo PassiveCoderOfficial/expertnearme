@@ -178,8 +178,8 @@ export default async function CountryPage({ params }: Props) {
             {featured.map((expert) => {
               const displayName = expert.businessName || expert.name;
               const avg = avgRatingOf(expert.reviews);
-              return (
-                <Link key={expert.id} href={`/${code}/expert/${expert.profileLink || expert.id}`}
+              return !expert.profileLink ? null : (
+                <Link key={expert.id} href={`/${code}/expert/${expert.profileLink}`}
                   className="group relative flex flex-col rounded-2xl border border-slate-100 dark:border-white/8 bg-white dark:bg-slate-800/50 hover:border-orange-200 dark:hover:border-orange-500/30 hover:-translate-y-1 hover:shadow-xl dark:hover:shadow-orange-500/5 transition-all duration-200 overflow-hidden shadow-sm dark:shadow-none touch-manipulation">
 
                   {/* Cover / banner */}
@@ -252,6 +252,7 @@ export default async function CountryPage({ params }: Props) {
                     </div>
                   </div>
                 </Link>
+                )}
               );
             })}
           </div>
@@ -292,7 +293,7 @@ export default async function CountryPage({ params }: Props) {
           <div className="rounded-2xl border border-slate-100 dark:border-white/8 bg-slate-50 dark:bg-slate-800/40 p-14 text-center">
             <Users className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
             <p className="text-slate-400 mb-3">No experts listed in {countryName} yet.</p>
-            <Link href="/for-experts" className="text-sm text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 transition-colors">
+            <Link href="/pricing" className="text-sm text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 transition-colors">
               Be the first to list here →
             </Link>
           </div>
@@ -331,7 +332,7 @@ export default async function CountryPage({ params }: Props) {
                           </div>
                         )}
                         {expert.foundingExpert && (
-                          <span className="absolute -bottom-1 -right-1 w-4.5 h-4.5 bg-amber-400 rounded-full flex items-center justify-center border border-white dark:border-slate-800" title="Founding Expert">
+                          <span className="absolute -bottom-1 -right-1 w-[18px] h-[18px] bg-amber-400 rounded-full flex items-center justify-center border border-white dark:border-slate-800" title="Founding Expert">
                             <Crown className="w-2.5 h-2.5 text-white" />
                           </span>
                         )}
@@ -372,6 +373,7 @@ export default async function CountryPage({ params }: Props) {
                     </div>
                   </div>
                 </Link>
+                )}
               );
             })}
           </div>
@@ -385,7 +387,7 @@ export default async function CountryPage({ params }: Props) {
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Are you an expert in {countryName}?</h3>
             <p className="text-slate-500 dark:text-slate-400 text-sm">List your business and get discovered by local clients.</p>
           </div>
-          <Link href="/for-experts" className="shrink-0 bg-orange-500 hover:bg-orange-400 text-white font-bold px-6 py-3 rounded-xl transition-colors text-sm shadow-sm shadow-orange-500/20">
+          <Link href="/pricing" className="shrink-0 bg-orange-500 hover:bg-orange-400 text-white font-bold px-6 py-3 rounded-xl transition-colors text-sm shadow-sm shadow-orange-500/20">
             List Your Business →
           </Link>
         </div>

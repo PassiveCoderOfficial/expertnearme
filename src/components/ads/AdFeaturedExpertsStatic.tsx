@@ -24,8 +24,10 @@ export default function AdFeaturedExpertsStatic({
 }: Props) {
   if (experts.length === 0) return null;
 
-  const profileUrl = (e: StaticFeaturedExpert) =>
-    `/${e.countryCode ?? 'bd'}/expert/${e.expertSlug}`;
+  const profileUrl = (e: StaticFeaturedExpert) => {
+    if (!e.countryCode) return null;
+    return `/${e.countryCode}/expert/${e.expertSlug}`;
+  };
 
   return (
     <div className={className}>
@@ -38,10 +40,12 @@ export default function AdFeaturedExpertsStatic({
         </span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        {experts.map((e) => (
+        {experts.map((e) => {
+          const url = profileUrl(e);
+          return !url ? null : (
           <Link
             key={e.campaignId}
-            href={profileUrl(e)}
+            href={url}
             prefetch
             className="group rounded-2xl border border-amber-500/20 bg-amber-50 dark:bg-amber-500/5 hover:border-amber-500/40 hover:bg-amber-500/10 transition-all p-4 flex flex-col items-center text-center gap-2"
           >
@@ -67,7 +71,8 @@ export default function AdFeaturedExpertsStatic({
               </div>
             )}
           </Link>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

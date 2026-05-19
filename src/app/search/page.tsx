@@ -245,10 +245,10 @@ function SearchPageContent() {
                     const displayName = e.businessName || e.name;
                     const rating = avgRating(e.reviews);
                     const cat = primaryCat(e);
-                    return (
+                    return !e.profileLink ? null : (
                       <Link
                         key={e.id}
-                        href={`/${countryCode}/expert/${e.profileLink || e.id}`}
+                        href={`/${countryCode}/expert/${e.profileLink}`}
                         className="group rounded-2xl border border-white/8 bg-slate-800/50 hover:border-orange-500/30 transition-colors p-5 block"
                       >
                         <div className="flex items-center gap-3 mb-3">
