@@ -3,7 +3,8 @@ import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { Star, Shield, Crown, CheckCircle, Briefcase, DollarSign } from "lucide-react";
 import ExpertMap, { MapExpert } from "@/components/ExpertMap";
-import AdFeaturedExperts from "@/components/ads/AdFeaturedExperts";
+import AdFeaturedExpertsStatic from "@/components/ads/AdFeaturedExpertsStatic";
+import { fetchFeaturedExperts } from "@/lib/fetchFeaturedExperts";
 
 const AVAIL_DOT: Record<string, string> = {
   AVAILABLE: 'bg-green-500',
@@ -32,7 +33,7 @@ export default async function CountryCategoryPage({ params }: Props) {
 
     if (!category) notFound();
 
-    const expertCategories = await prisma.expertCategory.findMany({
+    const [expertCategories, sponsoredExperts] = await Promise.all([prisma.expertCategory.findMany({
       where: { categoryId: category.id, expert: { countryCode, verified: true } },
       include: {
         expert: {
@@ -46,7 +47,9 @@ export default async function CountryCategoryPage({ params }: Props) {
     }).catch((err) => {
       console.error("[CategoryPage] experts query error:", err);
       return [];
-    });
+    }),
+    fetchFeaturedExperts("CATEGORY_FEATURED", { country: countryCode, category: slug }),
+    ]);
 
     const experts = expertCategories.map(({ expert }) => {
       const ratings = expert.reviews.map((r) => r.rating);
@@ -127,14 +130,9 @@ export default async function CountryCategoryPage({ params }: Props) {
             </div>
           ) : (
             <>
-              <AdFeaturedExperts
-                spot="CATEGORY_FEATURED"
-                country={countryCode}
-                category={slug}
-                title="Sponsored in this Category"
-                layout="list"
-                className="mb-6"
-              />
+              {sponsoredExperts.length > 0 && (
+                <AdFeaturedExpertsStatic experts={sponsoredExperts} title="Sponsored in this Category" className="mb-6" />
+              )}
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {experts.map((expert) => (
                   <Link

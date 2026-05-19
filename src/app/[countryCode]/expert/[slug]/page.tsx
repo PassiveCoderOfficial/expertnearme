@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import ExpertMap, { MapExpert } from "@/components/ExpertMap";
-import AdFeaturedExperts from "@/components/ads/AdFeaturedExperts";
+import AdFeaturedExpertsStatic from "@/components/ads/AdFeaturedExpertsStatic";
+import { fetchFeaturedExperts } from "@/lib/fetchFeaturedExperts";
 import BookingWidget from "@/components/BookingWidget";
 import MessageButton from "@/components/MessageButton";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
@@ -58,7 +59,7 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
 
   try {
     // Fetch expert + session in parallel (session doesn't need expert data)
-    const [expert, session] = await Promise.all([
+    const [expert, session, sidebarSponsored] = await Promise.all([
       prisma.expert.findFirst({
         where: { profileLink: slug, countryCode },
         include: {
@@ -77,6 +78,7 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
         },
       }),
       getSession(),
+      fetchFeaturedExperts("PROFILE_SIDEBAR", { country: countryCode }),
     ]);
 
     if (!expert) notFound();
@@ -743,7 +745,9 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
               )}
 
               {/* Sponsored */}
-              <AdFeaturedExperts spot="PROFILE_SIDEBAR" country={countryCode} title="Sponsored Experts" layout="list" />
+              {sidebarSponsored.length > 0 && (
+                <AdFeaturedExpertsStatic experts={sidebarSponsored} title="Sponsored Experts" />
+              )}
             </div>
           </div>
 

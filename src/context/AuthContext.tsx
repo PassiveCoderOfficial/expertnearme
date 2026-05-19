@@ -2,16 +2,6 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 
-interface Session {
-  ok: boolean;
-  authenticated: boolean;
-  role?: string;
-  activeRole?: string;
-  roles?: string[];
-  userId?: number;
-  email?: string;
-}
-
 interface User {
   id: number;
   email: string;
@@ -21,6 +11,17 @@ interface User {
   activeRole: string;
   defaultRole: string;
   verified: boolean;
+}
+
+interface Session {
+  ok: boolean;
+  authenticated: boolean;
+  role?: string;
+  activeRole?: string;
+  roles?: string[];
+  userId?: number;
+  email?: string;
+  user?: User;
 }
 
 interface AuthContextType {
@@ -44,29 +45,18 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Start false — render immediately, auth state fills in async
+  const [loading, setLoading] = useState(false);
 
   const refresh = async () => {
-    setLoading(true);
     try {
+      // Single fetch — session route now returns full user data
       const res = await fetch("/api/auth/session");
-      const data = await res.json();
+      const data: Session = await res.json();
       setSession(data);
-
-      if (data.authenticated) {
-        const meRes = await fetch("/api/auth/me");
-        const meData = await meRes.json();
-        if (meData.ok) {
-          setUser(meData.user);
-        } else {
-          setUser(null);
-        }
-      } else {
-        setUser(null);
-      }
-    } catch (err) {
-      console.error("Auth refresh error:", err);
-      setSession(null);
+      setUser(data.authenticated && data.user ? data.user : null);
+    } catch {
+      setSession({ ok: false, authenticated: false });
       setUser(null);
     } finally {
       setLoading(false);

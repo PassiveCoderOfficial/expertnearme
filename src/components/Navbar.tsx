@@ -30,6 +30,10 @@ const FALLBACK_COUNTRIES: CountryOption[] = [
   { code: 'my', name: 'Malaysia', flagEmoji: '🇲🇾' },
 ];
 
+// Module-level cache — fetched once per browser session, not on every nav
+let _cachedCountries: CountryOption[] | null = null;
+let _cachedLogo: string | null | undefined = undefined; // undefined = not yet fetched
+
 const GLOBAL_ROUTES = new Set([
   '', 'login', 'signup', 'dashboard', 'create-expert-account',
   'for-experts', 'pricing', 'founding-experts', 'search', 'verify',
@@ -57,8 +61,12 @@ function UserMenu() {
   const [profileLink, setProfileLink] = useState<string | null>(null);
   const [expertCountry, setExpertCountry] = useState<string | null>(null);
   const [switching, setSwitching] = useState(false);
+  const expertFetched = useRef(false);
 
+  // Lazy: only fetch expert data when menu is first opened
   useEffect(() => {
+    if (!open || expertFetched.current) return;
+    expertFetched.current = true;
     fetch('/api/me/expert')
       .then(r => r.ok ? r.json() : null)
       .then(d => {
@@ -70,7 +78,7 @@ function UserMenu() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [open]);
 
   useEffect(() => {
     const onOutside = (e: MouseEvent) => {
@@ -234,8 +242,8 @@ function UserMenu() {
 }
 
 export default function Navbar() {
-  const [customLogo, setCustomLogo] = useState<string | null>(null);
-  const [countries, setCountries] = useState<CountryOption[]>(FALLBACK_COUNTRIES);
+  const [customLogo, setCustomLogo] = useState<string | null>(_cachedLogo ?? null);
+  const [countries, setCountries] = useState<CountryOption[]>(_cachedCountries ?? FALLBACK_COUNTRIES);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [blogOpen, setBlogOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -253,17 +261,24 @@ export default function Navbar() {
   const hasCountryPrefix = !!currentCode;
 
   useEffect(() => {
-    fetch('/api/admin/settings')
-      .then((r) => r.json())
-      .then((d) => setCustomLogo(d.logo || null))
-      .catch(() => {});
+    if (_cachedLogo === undefined) {
+      fetch('/api/admin/settings')
+        .then((r) => r.json())
+        .then((d) => { _cachedLogo = d.logo || null; setCustomLogo(_cachedLogo ?? null); })
+        .catch(() => { _cachedLogo = null; });
+    }
 
-    fetch('/api/countries')
-      .then((r) => r.json())
-      .then((d: CountryOption[]) => {
-        if (Array.isArray(d) && d.length > 0) setCountries(d);
-      })
-      .catch(() => {});
+    if (!_cachedCountries) {
+      fetch('/api/countries')
+        .then((r) => r.json())
+        .then((d: CountryOption[]) => {
+          if (Array.isArray(d) && d.length > 0) {
+            _cachedCountries = d;
+            setCountries(d);
+          }
+        })
+        .catch(() => {});
+    }
   }, []);
 
   useEffect(() => {

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Crown, Star, Tag } from "lucide-react";
+import Link from "next/link";
 
 type ExpertItem = {
   id: number;
@@ -74,14 +75,7 @@ export default function SearchBar({
     return () => clearTimeout(t);
   }, [query, currentCountry]);
 
-  const goExpert = (slug: string) => {
-    router.push(`/${currentCountry}/expert/${slug}`);
-    setOpen(false);
-    setQuery("");
-  };
-
-  const goCategory = (slug: string) => {
-    router.push(`/${currentCountry}/categories/${slug}`);
+  const closeAndClear = () => {
     setOpen(false);
     setQuery("");
   };
@@ -111,7 +105,7 @@ export default function SearchBar({
         />
         <button
           onClick={goSearch}
-          className="bg-orange-500 hover:bg-orange-400 px-5 py-3 text-slate-900 font-bold transition-colors text-sm shrink-0"
+          className="bg-orange-500 hover:bg-orange-400 px-5 py-3 text-white font-bold transition-colors text-sm shrink-0"
         >
           Search
         </button>
@@ -143,11 +137,13 @@ export default function SearchBar({
                       Sponsored
                     </span>
                   </div>
-                  <button
-                    onClick={() => goExpert(sponsored.profileLink)}
+                  <Link
+                    href={`/${currentCountry}/expert/${sponsored.profileLink}`}
+                    prefetch
+                    onClick={closeAndClear}
                     className="w-full text-left px-4 py-3 hover:bg-amber-50 dark:hover:bg-amber-500/8 transition-colors group flex items-center gap-3"
                   >
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-slate-900 font-bold text-xs shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-xs shrink-0">
                       {sponsored.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -164,7 +160,7 @@ export default function SearchBar({
                       )}
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
-                      <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-medium">
+                      <span className="text-xs bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-medium">
                         Sponsored
                       </span>
                       {sponsored.avgRating !== null && (
@@ -174,7 +170,7 @@ export default function SearchBar({
                         </span>
                       )}
                     </div>
-                  </button>
+                  </Link>
                 </div>
               )}
 
@@ -187,9 +183,11 @@ export default function SearchBar({
                     </span>
                   </div>
                   {providers.map((p) => (
-                    <button
+                    <Link
                       key={p.id}
-                      onClick={() => goExpert(p.profileLink)}
+                      href={`/${currentCountry}/expert/${p.profileLink}`}
+                      prefetch
+                      onClick={closeAndClear}
                       className="w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group flex items-center gap-3"
                     >
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500/40 to-amber-400/40 flex items-center justify-center text-orange-600 dark:text-orange-300 font-bold text-xs shrink-0">
@@ -214,7 +212,7 @@ export default function SearchBar({
                           {p.avgRating.toFixed(1)}
                         </span>
                       )}
-                    </button>
+                    </Link>
                   ))}
                 </div>
               )}
@@ -228,9 +226,11 @@ export default function SearchBar({
                     </span>
                   </div>
                   {categories.map((c) => (
-                    <button
+                    <Link
                       key={c.id}
-                      onClick={() => goCategory(c.slug)}
+                      href={`/${currentCountry}/categories/${c.slug}`}
+                      prefetch
+                      onClick={closeAndClear}
                       className="w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group flex items-center gap-3"
                     >
                       <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-lg shrink-0">
@@ -240,7 +240,7 @@ export default function SearchBar({
                         {c.name}
                       </p>
                       <span className="ml-auto text-xs text-slate-400 dark:text-slate-600">Category</span>
-                    </button>
+                    </Link>
                   ))}
                 </div>
               )}

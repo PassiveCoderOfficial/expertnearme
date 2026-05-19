@@ -4,7 +4,8 @@ import { MapPin, Star, Users, Shield, Crown, ChevronRight, ArrowRight, CheckCirc
 import SearchBar from "@/components/SearchBar";
 import ExpertMap, { MapExpert } from "@/components/ExpertMap";
 import { prisma } from "@/lib/db";
-import AdFeaturedExperts from "@/components/ads/AdFeaturedExperts";
+import AdFeaturedExpertsStatic from "@/components/ads/AdFeaturedExpertsStatic";
+import { fetchFeaturedExperts } from "@/lib/fetchFeaturedExperts";
 
 export const revalidate = 3600;
 
@@ -25,7 +26,7 @@ export default async function CountryPage({ params }: Props) {
   const { countryCode } = await params;
   const code = countryCode.toLowerCase();
 
-  const [country, experts, categories, reviewAgg] = await Promise.all([
+  const [country, experts, categories, reviewAgg, sponsoredExperts] = await Promise.all([
     prisma.country.findFirst({ where: { code, active: true } }),
     prisma.expert.findMany({
       where: { countryCode: code, verified: true },
@@ -52,6 +53,7 @@ export default async function CountryPage({ params }: Props) {
       where: { expert: { countryCode: code } },
       _avg: { rating: true },
     }),
+    fetchFeaturedExperts("COUNTRY_FEATURED", { country: code }),
   ]);
 
   if (!country) notFound();
@@ -158,9 +160,11 @@ export default async function CountryPage({ params }: Props) {
       )}
 
       {/* Paid sponsored featured experts */}
-      <section className="max-w-6xl mx-auto px-6 pb-6">
-        <AdFeaturedExperts spot="COUNTRY_FEATURED" country={code} title="Sponsored Experts" layout="list" />
-      </section>
+      {sponsoredExperts.length > 0 && (
+        <section className="max-w-6xl mx-auto px-6 pb-6">
+          <AdFeaturedExpertsStatic experts={sponsoredExperts} title="Sponsored Experts" />
+        </section>
+      )}
 
       {/* Organically featured */}
       {featured.length > 0 && (
