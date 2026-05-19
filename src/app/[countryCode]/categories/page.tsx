@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { prisma } from "@/lib/db";
 import CategoryGrid, { CategoryItem } from "@/components/CategoryGrid";
+import { getCategoriesListData } from "@/lib/cache";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -19,14 +20,8 @@ export default async function CountryCategoriesPage({ params }: Props) {
   const { countryCode } = await params;
   const code = countryCode.toLowerCase();
 
-  const country = await prisma.country.findFirst({ where: { code, active: true } });
+  const { country, categories } = await getCategoriesListData(code);
   if (!country) notFound();
-
-  const categories = await prisma.category.findMany({
-    where: { countryCode: code, active: true },
-    select: { id: true, name: true, slug: true, icon: true, _count: { select: { experts: true } } },
-    orderBy: { name: 'asc' },
-  });
 
   return (
     <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white">

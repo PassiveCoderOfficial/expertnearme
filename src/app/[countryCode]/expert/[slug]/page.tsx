@@ -17,6 +17,7 @@ import PortfolioLightbox from "@/components/PortfolioLightbox";
 import ShareProfileButton from "@/components/ShareProfileButton";
 import OwnerEditButton from "@/components/OwnerEditButton";
 import { notFound } from "next/navigation";
+import { getExpertProfileData } from "@/lib/cache";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -63,56 +64,13 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
   const { slug, countryCode } = await params;
 
   try {
-    const [expert, sidebarSponsored] = await Promise.all([
-      prisma.expert.findFirst({
-        where: { profileLink: slug, countryCode },
-        include: {
-          categories:     { include: { category: true } },
-          services:       { include: { category: true }, orderBy: { sortOrder: 'asc' } },
-          portfolio:      { orderBy: { sortOrder: 'asc' } },
-          reviews: {
-            include: { client: { select: { id: true, name: true } } },
-            orderBy: { createdAt: "desc" },
-            take: 30,
-          },
-          certifications: { orderBy: { sortOrder: 'asc' } },
-          skills:         true,
-          testimonials:   { orderBy: { sortOrder: 'asc' } },
-          industries:     true,
-          awards:         { orderBy: { sortOrder: 'asc' } },
-        },
-      }),
+    const [cached, sidebarSponsored] = await Promise.all([
+      getExpertProfileData(slug, countryCode),
       fetchFeaturedExperts("PROFILE_SIDEBAR", { country: countryCode }),
     ]);
 
-    if (!expert) notFound();
-
-    const categoryIds = expert.categories.map(c => c.categoryId);
-
-    // All dependent queries in parallel
-    const [expertUser, expertCompletedWork, nearbyRaw] = await Promise.all([
-      prisma.user.findUnique({ where: { email: expert.email }, select: { id: true } }).catch(() => null),
-      prisma.completedWork.findMany({
-        where: { expertId: expert.id, published: true },
-        orderBy: { createdAt: "desc" },
-        take: 12,
-      }).catch(() => []),
-      prisma.expert.findMany({
-        where: {
-          countryCode, verified: true, id: { not: expert.id },
-          latitude: { not: null }, longitude: { not: null },
-          categories: { some: { categoryId: { in: categoryIds } } },
-        },
-        select: {
-          id: true, name: true, businessName: true, profileLink: true,
-          latitude: true, longitude: true, verified: true, featured: true,
-          mapFeatured: true, shortDesc: true,
-          categories: { select: { category: { select: { name: true, icon: true, color: true } } }, take: 2 },
-        },
-        orderBy: [{ mapFeatured: "desc" }, { featured: "desc" }],
-        take: 12,
-      }).catch(() => []),
-    ]);
+    if (!cached) notFound();
+    const { expert, expertUser, expertCompletedWork, nearbyRaw } = cached;
 
     const isOwner = false;
     const displayName = expert.businessName || expert.name;

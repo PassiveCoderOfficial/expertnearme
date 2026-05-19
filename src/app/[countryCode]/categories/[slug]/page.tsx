@@ -5,6 +5,7 @@ import { Star, CheckCircle, Briefcase, DollarSign } from "lucide-react";
 import ExpertMap, { MapExpert } from "@/components/ExpertMap";
 import AdFeaturedExpertsStatic from "@/components/ads/AdFeaturedExpertsStatic";
 import { fetchFeaturedExperts } from "@/lib/fetchFeaturedExperts";
+import { getCategoryPageData } from "@/lib/cache";
 
 const AVAIL_DOT: Record<string, string> = {
   AVAILABLE: 'bg-green-500',
@@ -31,64 +32,13 @@ export default async function CountryCategoryPage({ params }: Props) {
   const countryCode = raw.toLowerCase();
 
   try {
-    // Fetch category & experts in parallel, skip reviews for now (load separately)
-    const [category, expertCategories, sponsoredExperts] = await Promise.all([
-      prisma.category.findFirst({
-        where: { slug, countryCode, active: true },
-        select: {
-          id: true, name: true, slug: true, icon: true, description: true,
-          _count: { select: { experts: true } },
-        },
-      }),
-      prisma.expertCategory.findMany({
-        where: {
-          category: { slug, countryCode, active: true },
-          expert: { countryCode, verified: true },
-        },
-        select: {
-          expert: {
-            select: {
-              id: true,
-              name: true,
-              businessName: true,
-              profilePicture: true,
-              shortDesc: true,
-              serviceTitle: true,
-              verified: true,
-              foundingExpert: true,
-              featured: true,
-              mapFeatured: true,
-              latitude: true,
-              longitude: true,
-              profileLink: true,
-              availabilityStatus: true,
-              yearsOfExperience: true,
-              startingRate: true,
-              startingRateUnit: true,
-              _count: { select: { reviews: true } },
-              categories: {
-                select: {
-                  category: { select: { name: true, icon: true, color: true } },
-                },
-                take: 3,
-              },
-            },
-          },
-        },
-        orderBy: { expert: { featured: "desc" } },
-      }),
+    const [cached, sponsoredExperts] = await Promise.all([
+      getCategoryPageData(countryCode, slug),
       fetchFeaturedExperts("CATEGORY_FEATURED", { country: countryCode, category: slug }),
     ]);
 
-    if (!category) notFound();
-
-    const expertIds = expertCategories.map(({ expert }) => expert.id);
-    const ratingAgg = expertIds.length > 0 ? await prisma.review.groupBy({
-      by: ['expertId'],
-      where: { expertId: { in: expertIds } },
-      _avg: { rating: true },
-    }) : [];
-    const ratingMap = new Map(ratingAgg.map(r => [r.expertId, r._avg.rating]));
+    if (!cached) notFound();
+    const { category, expertCategories, ratingMap } = cached;
 
     const experts = expertCategories.map(({ expert }) => {
       const avg = ratingMap.get(expert.id) ?? null;

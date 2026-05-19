@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import AdFeaturedExpertsStatic from "@/components/ads/AdFeaturedExpertsStatic";
 import { fetchFeaturedExperts } from "@/lib/fetchFeaturedExperts";
 import CategoryGrid, { CategoryItem } from "@/components/CategoryGrid";
+import { getCountryPageData } from "@/lib/cache";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -32,45 +33,11 @@ export default async function CountryPage({ params }: Props) {
   const { countryCode } = await params;
   const code = countryCode.toLowerCase();
 
-  const [country, expertsRaw, categories, reviewAgg, sponsoredExperts] = await Promise.all([
-    prisma.country.findFirst({ where: { code, active: true } }),
-    prisma.expert.findMany({
-      where: { countryCode: code, verified: true },
-      select: {
-        id: true, name: true, businessName: true, profileLink: true,
-        profilePicture: true, shortDesc: true, verified: true,
-        featured: true, foundingExpert: true, mapFeatured: true,
-        latitude: true, longitude: true,
-        _count: { select: { reviews: true } },
-        categories: {
-          select: { category: { select: { id: true, name: true, icon: true, color: true } } },
-        },
-      },
-      orderBy: [{ featured: 'desc' }, { foundingExpert: 'desc' }, { createdAt: 'desc' }],
-    }),
-    prisma.category.findMany({
-      where: { countryCode: code, active: true },
-      select: { id: true, name: true, slug: true, icon: true, _count: { select: { experts: true } } },
-      orderBy: [{ experts: { _count: 'desc' } }, { name: 'asc' }],
-    }),
-    prisma.review.aggregate({
-      where: { expert: { countryCode: code } },
-      _avg: { rating: true },
-    }),
+  const [cached, sponsoredExperts] = await Promise.all([
+    getCountryPageData(code),
     fetchFeaturedExperts("COUNTRY_FEATURED", { country: code }),
   ]);
-
-  const expertIds = expertsRaw.map(e => e.id);
-  const ratingsRaw = expertIds.length > 0 ? await prisma.review.groupBy({
-    by: ['expertId'],
-    where: { expertId: { in: expertIds } },
-    _avg: { rating: true },
-  }) : [];
-  const ratingMap = new Map(ratingsRaw.map(r => [r.expertId, r._avg.rating]));
-  const experts = expertsRaw.map(e => ({
-    ...e,
-    reviews: ratingMap.get(e.id) != null ? [{ rating: ratingMap.get(e.id)! }] : [],
-  }));
+  const { country, experts, categories, reviewAgg } = cached;
 
   if (!country) notFound();
 
