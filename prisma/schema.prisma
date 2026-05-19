@@ -154,6 +154,8 @@ model Expert {
   testimonials       ExpertTestimonial[]
   industries         ExpertIndustry[]
   awards             ExpertAward[]
+  invoices           Invoice[]
+  accountBook        AccountBook?
 
   @@unique([countryCode, profileLink])
   @@index([countryCode])
@@ -826,4 +828,111 @@ enum SupportPriority {
   NORMAL
   HIGH
   URGENT
+}
+
+// ===== Invoicing System =====
+
+model Invoice {
+  id            Int             @id @default(autoincrement())
+  expertId      Int
+  expert        Expert          @relation(fields: [expertId], references: [id], onDelete: Cascade)
+  clientName    String
+  clientEmail   String?
+  clientAddress String?
+  clientPhone   String?
+  invoiceNumber String          @unique
+  issueDate     DateTime        @default(now())
+  dueDate       DateTime?
+  status        InvoiceStatus   @default(DRAFT)
+  currency      String          @default("USD")
+  taxRate       Float?          @default(0)
+  discount      Float?          @default(0)
+  notes         String?
+  logoUrl       String?
+  fromName      String?
+  fromAddress   String?
+  fromEmail     String?
+  fromPhone     String?
+  items         InvoiceItem[]
+  payments      InvoicePayment[]
+  accountEntries AccountEntry[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([expertId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model InvoiceItem {
+  id          Int     @id @default(autoincrement())
+  invoiceId   Int
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Float   @default(1)
+  unitPrice   Float
+  amount      Float
+  sortOrder   Int     @default(0)
+
+  @@index([invoiceId])
+}
+
+model InvoicePayment {
+  id        Int     @id @default(autoincrement())
+  invoiceId Int
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount    Float
+  method    String?
+  reference String?
+  paidAt    DateTime @default(now())
+  notes     String?
+
+  @@index([invoiceId])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  VIEWED
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// ===== Accounting / Bookkeeping System =====
+
+model AccountBook {
+  id      Int            @id @default(autoincrement())
+  expertId Int           @unique
+  expert  Expert         @relation(fields: [expertId], references: [id], onDelete: Cascade)
+  currency String        @default("USD")
+  entries AccountEntry[]
+  createdAt DateTime     @default(now())
+}
+
+model AccountEntry {
+  id           Int          @id @default(autoincrement())
+  bookId       Int
+  book         AccountBook  @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  type         EntryType
+  amount       Float
+  category     String?
+  description  String
+  reference    String?
+  entryDate    DateTime     @default(now())
+  invoiceId    Int?
+  invoice      Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  attachmentUrl String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([bookId])
+  @@index([entryDate])
+  @@index([type])
+}
+
+enum EntryType {
+  DEBIT
+  CREDIT
 }
