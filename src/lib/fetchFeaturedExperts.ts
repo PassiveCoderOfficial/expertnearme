@@ -34,23 +34,28 @@ export async function fetchFeaturedExperts(
       include: {
         expert: {
           select: {
+            id: true,
             name: true,
             profileLink: true,
             profilePicture: true,
             countryCode: true,
             categories: { select: { category: { select: { name: true } } } },
-            reviews: { select: { rating: true }, take: 100 },
           },
         },
       },
     });
 
+    const expertIds = campaigns.map(c => c.expert.id);
+    const ratings = expertIds.length > 0 ? await prisma.review.groupBy({
+      by: ['expertId'],
+      where: { expertId: { in: expertIds } },
+      _avg: { rating: true },
+    }) : [];
+    const ratingMap = new Map(ratings.map(r => [r.expertId, r._avg.rating]));
+
     return campaigns.map((c) => {
-      const ratings = c.expert.reviews.map((r) => r.rating);
-      const avgRating =
-        ratings.length > 0
-          ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10
-          : null;
+      const avg = ratingMap.get(c.expert.id);
+      const avgRating = avg != null ? Math.round(avg * 10) / 10 : null;
       return {
         campaignId: c.id,
         expertSlug: c.expert.profileLink ?? "",

@@ -9,6 +9,11 @@ import { fetchFeaturedExperts } from "@/lib/fetchFeaturedExperts";
 import CategoryGrid, { CategoryItem } from "@/components/CategoryGrid";
 
 export const revalidate = 3600;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  return [];
+}
 
 interface Props {
   params: Promise<{ countryCode: string }>;

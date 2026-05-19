@@ -14,6 +14,11 @@ const AVAIL_DOT: Record<string, string> = {
 };
 
 export const revalidate = 3600;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  return [];
+}
 
 type Props = { params: Promise<{ countryCode: string; slug: string }> };
 

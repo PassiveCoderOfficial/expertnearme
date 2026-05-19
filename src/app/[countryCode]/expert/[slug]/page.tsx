@@ -19,6 +19,11 @@ import OwnerEditButton from "@/components/OwnerEditButton";
 import { notFound } from "next/navigation";
 
 export const revalidate = 3600;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  return [];
+}
 
 interface ExpertProfilePageProps {
   params: Promise<{ slug: string; countryCode: string }>;
@@ -98,11 +103,14 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
           latitude: { not: null }, longitude: { not: null },
           categories: { some: { categoryId: { in: categoryIds } } },
         },
-        include: {
-          categories: { include: { category: { select: { name: true, icon: true, color: true } } } },
+        select: {
+          id: true, name: true, businessName: true, profileLink: true,
+          latitude: true, longitude: true, verified: true, featured: true,
+          mapFeatured: true, shortDesc: true,
+          categories: { select: { category: { select: { name: true, icon: true, color: true } } }, take: 2 },
         },
         orderBy: [{ mapFeatured: "desc" }, { featured: "desc" }],
-        take: 20,
+        take: 12,
       }).catch(() => []),
     ]);
 
