@@ -726,6 +726,8 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
       </div>
     );
   } catch (err) {
+    // Re-throw Next.js notFound() signal so it renders the 404 page
+    if (err instanceof Error && (err as { digest?: string }).digest === 'NEXT_HTTP_ERROR_FALLBACK;404') throw err;
     console.error("[ExpertPage] DB error:", err);
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-center px-4">

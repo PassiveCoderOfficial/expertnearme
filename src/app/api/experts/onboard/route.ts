@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
-import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
 import { sendExpertWelcome } from '@/lib/email';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret';
 
 function slugify(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'expert';
@@ -73,6 +75,9 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         name,
         role: 'EXPERT',
+        roles: ['EXPERT'],
+        activeRole: 'EXPERT',
+        defaultRole: 'EXPERT',
         verified: true,
       },
     });
@@ -125,21 +130,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Auto-login: set session cookies (same keys read by getSession())
-    const jar = await cookies();
-    const cookieOpts = { httpOnly: true, path: '/', sameSite: 'lax' as const };
-    jar.set('userId', String(user.id), cookieOpts);
-    jar.set('role',   user.role,       cookieOpts);
-    jar.set('email',  user.email,      cookieOpts);
-
     sendExpertWelcome(email, displayName).catch(() => {});
 
-    return NextResponse.json({
+    // Auto-login: issue JWT same as login route
+    const token = jwt.sign(
+      { userId: user.id, role: 'EXPERT', activeRole: 'EXPERT', roles: ['EXPERT'], email: user.email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    const cookieOpts = { httpOnly: true, path: '/', sameSite: 'lax' as const, secure: process.env.NODE_ENV === 'production', maxAge: 60 * 60 * 24 * 7 };
+    const res = NextResponse.json({
       ok: true,
       slug:        expert.profileLink,
       countryCode: expert.countryCode,
       expertId:    expert.id,
     });
+    res.cookies.set({ name: 'token',  value: token,             ...cookieOpts });
+    res.cookies.set({ name: 'userId', value: String(user.id),   ...cookieOpts });
+    res.cookies.set({ name: 'email',  value: user.email,        ...cookieOpts });
+    res.cookies.set({ name: 'role',   value: 'EXPERT',          ...cookieOpts });
+    return res;
   } catch (err) {
     console.error('Onboard error:', err);
     const msg = err instanceof Error ? err.message : 'Registration failed. Please try again.';
