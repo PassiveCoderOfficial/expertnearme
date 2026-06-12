@@ -43,10 +43,25 @@ export default function SignupPage() {
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [ref, setRef] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && session?.authenticated) router.push("/dashboard");
   }, [loading, session, router]);
+
+  // Capture referral code from ?ref= so agent referrals are attributed
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("ref");
+    if (code) {
+      setRef(code);
+      try { sessionStorage.setItem("enm_ref", code); } catch {}
+    } else {
+      try {
+        const stored = sessionStorage.getItem("enm_ref");
+        if (stored) setRef(stored);
+      } catch {}
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,10 +71,11 @@ export default function SignupPage() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({ name, email, password, role, ref }),
       });
       const data = await res.json();
       if (data.ok) {
+        try { sessionStorage.removeItem("enm_ref"); } catch {}
         if (data.emailVerificationRequired === false) {
           const loginRes = await fetch("/api/auth/login", {
             method: "POST",

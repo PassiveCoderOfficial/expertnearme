@@ -71,6 +71,7 @@ const SEO_NAV: NavItem[] = [
 
 const SALES_NAV: NavItem[] = [
   { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
+  { name: "My Referrals",   href: "/dashboard/agents",              icon: <MdHandshake /> },
   { name: "Experts",        href: "/dashboard/experts",             icon: <MdPerson /> },
   { name: "Subscriptions",  href: "/dashboard/subscriptions",       icon: <MdCurrencyExchange /> },
   { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },

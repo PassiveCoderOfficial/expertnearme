@@ -7,7 +7,7 @@ type SignupRole = (typeof ALLOWED_SIGNUP_ROLES)[number];
 
 export async function POST(req: NextRequest): Promise<Response> {
   try {
-    const { name, email, password, role } = await req.json();
+    const { name, email, password, role, ref } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -56,6 +56,26 @@ export async function POST(req: NextRequest): Promise<Response> {
         where: { id: user.id },
         data: { verified: true },
       });
+    }
+
+    // Attribute to referring agent if a referral code was carried through signup
+    if (ref && typeof ref === "string") {
+      try {
+        const referral = await prisma.agentReferral.findUnique({
+          where: { referralCode: ref },
+        });
+        if (referral && referral.referrerId !== user.id) {
+          await prisma.agentReferral.update({
+            where: { id: referral.id },
+            data: {
+              referredUserId: referral.referredUserId ?? user.id,
+              status: referral.status === "PENDING" ? "ACTIVE" : referral.status,
+            },
+          });
+        }
+      } catch (e) {
+        console.error("referral attribution failed", e);
+      }
     }
 
     return NextResponse.json({ ok: true, emailVerificationRequired });

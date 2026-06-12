@@ -9,6 +9,7 @@ import MapPicker, { LatLng } from "@/components/MapPicker";
 
 type Expert = {
   id: number;
+  name?: string | null;
   businessName?: string | null;
   serviceTitle?: string | null;
   profileLink?: string | null;
@@ -494,7 +495,7 @@ export default function ExpertsPage() {
 
             {experts.map((expert) => (
               <tr key={expert.id} className="border-b border-white/5 hover:bg-white/3 transition-colors">
-                <td className="px-4 py-3 text-white font-medium">{expert.businessName || expert.serviceTitle || "—"}</td>
+                <td className="px-4 py-3 text-white font-medium">{expert.businessName || expert.name || expert.serviceTitle || "—"}</td>
                 <td className="px-4 py-3 text-slate-400 text-xs hidden sm:table-cell">{expert.email || "—"}</td>
                 <td className="px-4 py-3 text-slate-400 font-mono text-xs hidden md:table-cell">
                   {expert.countryCode ? <span className="text-orange-400 mr-1">{expert.countryCode.toUpperCase()}</span> : null}
