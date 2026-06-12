@@ -10,6 +10,7 @@ import {
   MdStar, MdMap, MdPayment, MdAdminPanelSettings, MdBarChart,
   MdFavorite, MdSearch, MdCampaign, MdSupportAgent, MdMessage, MdAccessTime,
   MdArticle, MdHandshake, MdBackup, MdSwapHoriz, MdReceiptLong, MdAccountBalanceWallet,
+  MdTrendingUp,
 } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
 import { LogoMark } from "@/components/Logo";
@@ -18,6 +19,7 @@ type NavItem = { name: string; href: string; icon: React.ReactNode };
 
 const ADMIN_NAV: NavItem[] = [
   { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
+  { name: "Analytics",      href: "/dashboard/analytics",           icon: <MdTrendingUp /> },
   { name: "Countries",      href: "/dashboard/countries",           icon: <MdPublic /> },
   { name: "Users",          href: "/dashboard/users",               icon: <MdPeople /> },
   { name: "Staff & Roles",  href: "/dashboard/staff",               icon: <MdAdminPanelSettings /> },
@@ -53,6 +55,7 @@ const MANAGER_NAV: NavItem[] = [
 
 const MARKETER_NAV: NavItem[] = [
   { name: "Dashboard",      href: "/dashboard",                     icon: <MdDashboard /> },
+  { name: "Analytics",      href: "/dashboard/analytics",           icon: <MdTrendingUp /> },
   { name: "Featured",       href: "/dashboard/featured",            icon: <MdStar /> },
   { name: "Categories",     href: "/dashboard/categories",          icon: <MdCategory /> },
   { name: "Pricing",        href: "/dashboard/pricing",             icon: <MdBarChart /> },
