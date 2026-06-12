@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireRole } from "@/lib/guard";
 import { prisma } from '@/lib/db';
 
 export async function GET() {
@@ -17,6 +18,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const body = await request.json();
     const { code, name, active, landingContent, currency, timezone, phoneCode, flagEmoji, metaTitle, metaDesc } = body;
@@ -65,6 +68,8 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');

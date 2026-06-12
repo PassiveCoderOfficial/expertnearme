@@ -1,5 +1,6 @@
 // File: src/app/api/dashboard/experts/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole } from "@/lib/guard";
 import { prisma } from "@/lib/prisma";
 import { slugify, getUniqueSlug } from "@/lib/filename";
 
@@ -13,6 +14,8 @@ async function resolveId(context: ParamsContext) {
 }
 
 export async function GET(_req: NextRequest, context: ParamsContext) {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const id = await resolveId(context);
     const expert = await prisma.expert.findUnique({
@@ -36,6 +39,8 @@ export async function GET(_req: NextRequest, context: ParamsContext) {
 }
 
 export async function PATCH(req: NextRequest, context: ParamsContext) {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const id = await resolveId(context);
     const body = await req.json();
@@ -154,6 +159,8 @@ export async function PATCH(req: NextRequest, context: ParamsContext) {
 }
 
 export async function DELETE(_req: NextRequest, context: ParamsContext) {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const id = await resolveId(context);
     await prisma.expert.delete({ where: { id } });

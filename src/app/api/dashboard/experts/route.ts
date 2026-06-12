@@ -1,5 +1,6 @@
 // File: src/app/api/dashboard/experts/route.ts
 import { NextResponse } from "next/server";
+import { requireRole } from "@/lib/guard";
 import { prisma } from "@/lib/prisma";
 import { slugify, getUniqueSlug } from "@/lib/filename";
 
@@ -40,6 +41,8 @@ type CreateBody = {
 };
 
 export async function GET(req: Request) {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search")?.trim() || "";
@@ -90,6 +93,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const raw = (await req.json()) as CreateBody;
 

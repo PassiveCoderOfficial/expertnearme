@@ -1,8 +1,11 @@
 // src/app/api/dashboard/settings/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole } from "@/lib/guard";
 import { getBoolean, setSetting } from "@/lib/settings";
 
 export async function GET(): Promise<Response> {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const emailVerificationRequired = await getBoolean("emailVerificationRequired", true);
     const allowGoogleLogin = await getBoolean("allowGoogleLogin", true);
@@ -20,6 +23,8 @@ export async function GET(): Promise<Response> {
 }
 
 export async function PATCH(req: NextRequest): Promise<Response> {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const body = await req.json();
 

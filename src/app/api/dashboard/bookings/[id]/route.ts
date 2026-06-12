@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole } from "@/lib/guard";
 import { prisma } from "@/lib/db";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const { id } = await params;
     const numId = Number(id);
@@ -30,6 +33,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const { id } = await params;
     const numId = Number(id);
@@ -61,6 +66,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const { id } = await params;
     const numId = Number(id);

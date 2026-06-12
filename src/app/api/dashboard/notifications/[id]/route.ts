@@ -1,6 +1,7 @@
 // File: src/app/api/dashboard/notifications/[id]/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole } from "@/lib/guard";
 import { prisma } from "@/lib/db";
 
 type MaybeAsyncParams = { id: string } | Promise<{ id: string }>;
@@ -9,6 +10,8 @@ export async function PATCH(
   request: NextRequest,
   context: { params: MaybeAsyncParams }
 ): Promise<Response> {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const { id } = await Promise.resolve(context.params);
     const body = await request.json();

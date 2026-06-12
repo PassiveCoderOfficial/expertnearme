@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { requireRole } from "@/lib/guard";
 
 export async function GET(req: NextRequest): Promise<Response> {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     // optional query ?q= or pagination later
     const users = await prisma.user.findMany({
@@ -27,6 +30,8 @@ export async function GET(req: NextRequest): Promise<Response> {
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const { name, email, password, role } = await req.json();
     if (!email || !password) {
@@ -74,6 +79,8 @@ export async function POST(req: NextRequest): Promise<Response> {
 }
 
 export async function PUT(req: NextRequest): Promise<Response> {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const { id, name, email, role, verified } = await req.json();
     if (!id) {
@@ -105,6 +112,8 @@ export async function PUT(req: NextRequest): Promise<Response> {
 }
 
 export async function DELETE(req: NextRequest): Promise<Response> {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const { id } = await req.json();
     if (!id) {
