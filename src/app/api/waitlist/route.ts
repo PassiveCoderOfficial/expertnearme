@@ -25,11 +25,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, id: entry.id });
   } catch (error) {
     console.error('Waitlist error:', error);
-    const url = new URL(request.url);
-    const detail = url.searchParams.get('__diag') === 'enm2026' && error instanceof Error
-      ? { name: error.name, message: String(error.message).slice(0, 500) }
-      : undefined;
-    return NextResponse.json({ error: 'Failed to join waitlist', detail }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to join waitlist' }, { status: 500 });
   }
 }
 
