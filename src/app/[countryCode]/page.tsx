@@ -20,6 +20,27 @@ interface Props {
   params: Promise<{ countryCode: string }>;
 }
 
+export async function generateMetadata({ params }: Props) {
+  const { countryCode } = await params;
+  const code = countryCode.toLowerCase();
+  const country = await prisma.country.findUnique({
+    where: { code },
+    select: { name: true, metaTitle: true, metaDesc: true },
+  }).catch(() => null);
+  if (!country) return { title: "ExpertNear.Me" };
+  const title = country.metaTitle || `Find Verified Local Experts in ${country.name} — ExpertNear.Me`;
+  const description = country.metaDesc
+    || `Browse trusted, verified local experts in ${country.name}. Compare profiles, read reviews, and connect directly — no middleman.`;
+  const url = `https://expertnear.me/${code}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, siteName: 'ExpertNear.Me', type: 'website' },
+    twitter: { card: 'summary', title, description },
+  };
+}
+
 function initials(name: string) {
   return name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 }
