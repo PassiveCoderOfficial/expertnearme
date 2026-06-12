@@ -130,6 +130,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Attribute to referring agent if a referral code was carried through
+    const ref = (body.ref ?? '').trim();
+    if (ref) {
+      try {
+        const referral = await prisma.agentReferral.findUnique({ where: { referralCode: ref } });
+        if (referral && referral.referrerId !== user.id) {
+          await prisma.agentReferral.update({
+            where: { id: referral.id },
+            data: {
+              referredUserId: referral.referredUserId ?? user.id,
+              referredExpertId: referral.referredExpertId ?? expert.id,
+              status: referral.status === 'PENDING' ? 'ACTIVE' : referral.status,
+            },
+          });
+        }
+      } catch (e) {
+        console.error('referral attribution failed', e);
+      }
+    }
+
     sendExpertWelcome(email, displayName).catch(() => {});
 
     // Auto-login: issue JWT same as login route

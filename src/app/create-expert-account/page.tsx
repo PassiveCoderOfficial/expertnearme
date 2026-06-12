@@ -19,6 +19,7 @@ function OnboardingForm() {
   const router     = useRouter();
   const params     = useSearchParams();
   const isFounder  = params.get('founding') === '1';
+  const refCode    = params.get('ref') || (typeof window !== 'undefined' ? sessionStorage.getItem('enm_ref') : null);
 
   const [step, setStep]           = useState(0);
   const [loading, setLoading]     = useState(false);
@@ -127,6 +128,7 @@ function OnboardingForm() {
           longitude:   form.longitude,
           mapLocation: form.mapAddress,
           claimFoundingSpot: isFounder,
+          ref: refCode,
         }),
       });
       const data = await res.json();
