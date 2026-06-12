@@ -105,6 +105,9 @@ export async function POST(req: NextRequest): Promise<Response> {
     return res;
   } catch (err) {
     console.error("switch-role error", err);
-    return NextResponse.json({ ok: false, error: "Server error" }, { status: 500 });
+    const diag = new URL(req.url).searchParams.get("__diag") === "enm2026" && err instanceof Error
+      ? { name: err.name, message: String(err.message).slice(0, 600) }
+      : undefined;
+    return NextResponse.json({ ok: false, error: "Server error", diag }, { status: 500 });
   }
 }
