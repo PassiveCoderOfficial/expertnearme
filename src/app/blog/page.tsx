@@ -10,23 +10,34 @@ export const metadata: Metadata = {
 
 export const revalidate = 300;
 
+async function getPosts() {
+  try {
+    return await prisma.blogPost.findMany({
+      where: { status: 'PUBLISHED' },
+      orderBy: { publishedAt: 'desc' },
+      select: {
+        slug: true,
+        title: true,
+        excerpt: true,
+        coverImage: true,
+        altText: true,
+        authorName: true,
+        publishedAt: true,
+        readingTimeMins: true,
+        categoryTag: true,
+        tags: true,
+      },
+    });
+  } catch (err) {
+    // DB can be unreachable during the build/prerender phase — ISR will
+    // repopulate within `revalidate` seconds once deployed.
+    console.error('[BlogIndex] failed to load posts:', err);
+    return [];
+  }
+}
+
 export default async function BlogIndexPage() {
-  const posts = await prisma.blogPost.findMany({
-    where: { status: 'PUBLISHED' },
-    orderBy: { publishedAt: 'desc' },
-    select: {
-      slug: true,
-      title: true,
-      excerpt: true,
-      coverImage: true,
-      altText: true,
-      authorName: true,
-      publishedAt: true,
-      readingTimeMins: true,
-      categoryTag: true,
-      tags: true,
-    },
-  });
+  const posts = await getPosts();
 
   return (
     <main className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">

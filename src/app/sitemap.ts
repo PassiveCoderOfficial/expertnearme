@@ -18,6 +18,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/signup`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
   );
 
+  // Dynamic DB-backed URLs. Wrapped so a build-time DB outage still yields a
+  // valid sitemap of the static pages (ISR repopulates the rest).
+  try {
   // Countries
   const countries = await prisma.country.findMany({ where: { active: true } });
   for (const country of countries) {
@@ -76,6 +79,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.6,
     });
+  }
+  } catch (err) {
+    console.error('[sitemap] failed to load dynamic URLs:', err);
   }
 
   return urls;

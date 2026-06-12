@@ -13,10 +13,15 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'ExpertNear.Me — Find Local Experts in Asia & Middle East',
+  metadataBase: new URL('https://expertnear.me'),
+  title: {
+    default: 'ExpertNear.Me — Find Local Experts in Asia & Middle East',
+    template: '%s — ExpertNear.Me',
+  },
   description: 'Discover verified local experts across Singapore, UAE, Bangladesh, and Saudi Arabia. No commissions, direct contact.',
   keywords: 'local experts, service providers, freelancers, Singapore, UAE, Bangladesh, Saudi Arabia',
   robots: { index: true, follow: true },
+  alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -24,11 +29,13 @@ export const metadata: Metadata = {
     siteName: 'ExpertNear.Me',
     title: 'ExpertNear.Me — Find Local Experts in Asia & Middle East',
     description: 'Discover verified local experts across Singapore, UAE, Bangladesh, and Saudi Arabia. No commissions, direct contact.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'ExpertNear.Me' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'ExpertNear.Me — Find Local Experts',
     description: 'Discover verified local experts across Singapore, UAE, Bangladesh, and Saudi Arabia.',
+    images: ['/og-image.png'],
   },
 };
 

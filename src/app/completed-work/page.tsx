@@ -10,29 +10,38 @@ export const metadata: Metadata = {
 
 export const revalidate = 300;
 
-export default async function CompletedWorkPage() {
-  const items = await prisma.completedWork.findMany({
-    where: { published: true },
-    orderBy: { createdAt: "desc" },
-    take: 48,
-    include: {
-      expert: {
-        select: {
-          id: true,
-          name: true,
-          businessName: true,
-          profileLink: true,
-          profilePicture: true,
-          verified: true,
-          countryCode: true,
-          categories: {
-            take: 1,
-            include: { category: { select: { name: true } } },
+async function getItems() {
+  try {
+    return await prisma.completedWork.findMany({
+      where: { published: true },
+      orderBy: { createdAt: "desc" },
+      take: 48,
+      include: {
+        expert: {
+          select: {
+            id: true,
+            name: true,
+            businessName: true,
+            profileLink: true,
+            profilePicture: true,
+            verified: true,
+            countryCode: true,
+            categories: {
+              take: 1,
+              include: { category: { select: { name: true } } },
+            },
           },
         },
       },
-    },
-  });
+    });
+  } catch (err) {
+    console.error("[CompletedWork] failed to load:", err);
+    return [];
+  }
+}
+
+export default async function CompletedWorkPage() {
+  const items = await getItems();
 
   return (
     <main className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white">
