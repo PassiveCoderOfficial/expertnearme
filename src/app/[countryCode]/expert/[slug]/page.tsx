@@ -15,6 +15,7 @@ import BookingWidget from "@/components/BookingWidget";
 import MessageButton from "@/components/MessageButton";
 import PortfolioLightbox from "@/components/PortfolioLightbox";
 import ShareProfileButton from "@/components/ShareProfileButton";
+import SaveExpertButton from "@/components/SaveExpertButton";
 import OwnerEditButton from "@/components/OwnerEditButton";
 import { notFound } from "next/navigation";
 import { getExpertProfileData } from "@/lib/cache";
@@ -253,6 +254,7 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
                     <Icon className="w-5 h-5" />
                   </a>
                 ))}
+                <SaveExpertButton expertId={expert.id} />
                 <ShareProfileButton name={displayName} />
               </div>
 

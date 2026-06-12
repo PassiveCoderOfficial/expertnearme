@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Globe, Search } from 'lucide-react';
 import FlagIcon from './FlagIcon';
@@ -25,8 +25,13 @@ export default function CountryPickerModal() {
   const [countries, setCountries] = useState<Country[]>([]);
   const [search, setSearch] = useState('');
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Suppress on dashboard + auth pages — country picker is for public browsing only
+  const suppressed = /^\/(dashboard|login|signup|create-expert-account)(\/|$)/.test(pathname || '');
 
   useEffect(() => {
+    if (suppressed) return;
     const stored = getStoredCountry();
     if (stored) return;
 
@@ -39,7 +44,10 @@ export default function CountryPickerModal() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [suppressed]);
+
+  // Close if navigation lands on a suppressed page
+  useEffect(() => { if (suppressed) setOpen(false); }, [suppressed]);
 
   const pick = (code: string) => {
     setStoredCountry(code);

@@ -148,3 +148,4 @@ prisma/dev.db
 .agents/
 skills/
 skills-lock.json
+mcp-server/
