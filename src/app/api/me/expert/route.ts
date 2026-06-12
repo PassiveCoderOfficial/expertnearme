@@ -89,6 +89,9 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ ok: true, expert });
   } catch (err) {
     console.error('PATCH /api/me/expert:', err);
-    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
+    const diag = new URL(request.url).searchParams.get('__diag') === 'enm2026' && err instanceof Error
+      ? { name: err.name, message: String(err.message).slice(0, 800) }
+      : undefined;
+    return NextResponse.json({ error: 'Failed to update profile', diag }, { status: 500 });
   }
 }
