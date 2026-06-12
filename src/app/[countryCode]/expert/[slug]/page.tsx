@@ -36,14 +36,29 @@ export async function generateMetadata({ params }: ExpertProfilePageProps): Prom
     const { slug, countryCode } = await params;
     const expert = await prisma.expert.findFirst({
       where: { profileLink: slug, countryCode },
-      select: { name: true, businessName: true, shortDesc: true, serviceTitle: true },
+      select: { name: true, businessName: true, shortDesc: true, serviceTitle: true, profilePicture: true, coverPhoto: true },
     });
     if (!expert) return { title: "Expert Not Found — ExpertNear.Me" };
     const displayName = expert.businessName || expert.name;
     const subtitle = expert.serviceTitle ? ` — ${expert.serviceTitle}` : '';
+    const title = `${displayName}${subtitle} — ExpertNear.Me`;
+    const description = expert.shortDesc
+      ?? `Connect with ${displayName} on ExpertNear.Me — a verified local expert in ${countryCode.toUpperCase()}.`;
+    const url = `https://expertnear.me/${countryCode}/expert/${slug}`;
+    const image = expert.coverPhoto || expert.profilePicture || undefined;
     return {
-      title: `${displayName}${subtitle} — ExpertNear.Me`,
-      description: expert.shortDesc ?? undefined,
+      title,
+      description,
+      alternates: { canonical: url },
+      openGraph: {
+        title, description, url, siteName: 'ExpertNear.Me', type: 'profile',
+        images: image ? [{ url: image }] : undefined,
+      },
+      twitter: {
+        card: image ? 'summary_large_image' : 'summary',
+        title, description,
+        images: image ? [image] : undefined,
+      },
     };
   } catch {
     return { title: "ExpertNear.Me" };
@@ -116,8 +131,34 @@ export default async function ExpertProfilePage({ params }: ExpertProfilePagePro
     const availability = (expert.availabilityStatus ?? 'AVAILABLE') as keyof typeof AVAILABILITY_CONFIG;
     const avail = AVAILABILITY_CONFIG[availability] ?? AVAILABILITY_CONFIG.AVAILABLE;
 
+    const profileUrl = `https://expertnear.me/${countryCode}/expert/${expert.profileLink || expert.id}`;
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'LocalBusiness',
+      name: displayName,
+      url: profileUrl,
+      ...(expert.shortDesc ? { description: expert.shortDesc } : {}),
+      ...(expert.profilePicture ? { image: expert.profilePicture } : {}),
+      ...(expert.phone ? { telephone: expert.phone } : {}),
+      ...(expert.officeAddress ? {
+        address: { '@type': 'PostalAddress', streetAddress: expert.officeAddress, addressCountry: countryCode.toUpperCase() },
+      } : { address: { '@type': 'PostalAddress', addressCountry: countryCode.toUpperCase() } }),
+      ...(expert.latitude && expert.longitude ? {
+        geo: { '@type': 'GeoCoordinates', latitude: expert.latitude, longitude: expert.longitude },
+      } : {}),
+      ...(avgRating && expert.reviews.length > 0 ? {
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: avgRating.toFixed(1),
+          reviewCount: expert.reviews.length,
+        },
+      } : {}),
+      ...(expert.categories.length ? { knowsAbout: expert.categories.map(c => c.category.name) } : {}),
+    };
+
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-slate-900 dark:text-white">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
         {/* Back nav */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-2">
