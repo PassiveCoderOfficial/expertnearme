@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
+import { requireRole } from '@/lib/guard';
 import { getSetting, setSetting } from '@/lib/settings';
 
 const DEFAULTS = {
@@ -12,6 +13,9 @@ const DEFAULTS = {
 };
 
 export async function GET() {
+  const gate = await requireRole(['SUPER_ADMIN']);
+  if (gate instanceof NextResponse) return gate;
+
   const entries = await Promise.all(
     Object.entries(DEFAULTS).map(async ([key, def]) => {
       const val = await getSetting(key);

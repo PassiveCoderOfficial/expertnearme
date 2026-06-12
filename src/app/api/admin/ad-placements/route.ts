@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { requireAuth } from "@/lib/guard";
 
 const ADMIN_ROLES = new Set(["SUPER_ADMIN", "ADMIN"]);
 
@@ -82,6 +83,9 @@ async function seedPlacements() {
 }
 
 export async function GET() {
+  const gate = await requireAuth();
+  if (gate instanceof NextResponse) return gate;
+
   try {
     await seedPlacements();
 
