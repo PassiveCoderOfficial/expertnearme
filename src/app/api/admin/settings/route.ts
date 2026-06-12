@@ -1,10 +1,12 @@
 // File: src/app/api/admin/settings/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { requireRole } from "@/lib/guard";
 import { getBoolean, setSetting } from "@/lib/settings";
 
 export async function GET() {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const [emailVerificationRequired, allowGoogleLogin, allowSignup, logo, favicon] = await Promise.all([
       getBoolean("emailVerificationRequired", true),
@@ -28,6 +30,8 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
+  const gate = await requireRole();
+  if (gate instanceof NextResponse) return gate;
   try {
     const body = await req.json();
 
