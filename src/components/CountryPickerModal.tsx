@@ -27,8 +27,9 @@ export default function CountryPickerModal() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Suppress on dashboard + auth pages — country picker is for public browsing only
-  const suppressed = /^\/(dashboard|login|signup|create-expert-account)(\/|$)/.test(pathname || '');
+  // Suppress on dashboard, auth, and legal/info pages — the country picker is
+  // only meant to greet users on browsing pages.
+  const suppressed = /^\/(dashboard|login|signup|create-expert-account|terms|privacy|refunds|cookies|support)(\/|$)/.test(pathname || '');
 
   useEffect(() => {
     if (suppressed) return;
