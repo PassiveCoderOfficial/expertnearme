@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { syncToPC } from "@/lib/pc-sync";
 
 const ALLOWED = new Set(["SUPER_ADMIN", "ADMIN", "MANAGER", "SALES_AGENT"]);
 
@@ -65,6 +66,16 @@ export async function POST(req: NextRequest) {
       status: "ACTIVE",
     },
   });
+
+  // Sync to PC (best-effort — don't fail if PC is down)
+  if (plan) {
+    const isPro = plan.price >= 80 && plan.duration !== -1;
+    const user = await prisma.user.findUnique({ where: { id: Number(userId) }, select: { email: true, name: true } });
+    if (user) {
+      syncToPC({ userId: Number(userId), email: user.email, name: user.name, tier: isPro ? "pro" : "free" })
+        .catch(err => console.error("[PC sync] create subscription", err));
+    }
+  }
 
   return NextResponse.json({ success: true, subscription: sub }, { status: 201 });
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MdCheckCircle, MdStar, MdOpenInNew, MdInbox } from "react-icons/md";
-import { Crown } from "lucide-react";
+import { Crown, Globe } from "lucide-react";
 
 type Plan = { id: number; name: string; price: number; currency: string; duration: number; features: string };
 type Sub  = {
@@ -79,13 +79,24 @@ export default function MySubscriptionPage() {
           <p className="text-slate-400 text-sm mb-6 max-w-sm mx-auto">
             Upgrade to unlock featured placement, priority in search, and all Pro features — locked in forever with the Founding Expert deal.
           </p>
-          <Link
-            href="/pricing"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-400 rounded-xl font-semibold text-slate-900 text-sm transition-colors"
-          >
-            <Crown className="w-4 h-4" />
-            View Pricing & Upgrade
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-400 rounded-xl font-semibold text-slate-900 text-sm transition-colors"
+            >
+              <Crown className="w-4 h-4" />
+              View Pricing & Upgrade
+            </Link>
+            <a
+              href="https://passivecoder.com/pricing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 border border-white/10 rounded-xl font-semibold text-slate-300 text-sm transition-colors"
+            >
+              <Globe className="w-4 h-4 text-orange-400" />
+              Create Your Website
+            </a>
+          </div>
         </div>
 
         {/* Free plan details */}
