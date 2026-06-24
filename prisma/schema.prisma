@@ -159,6 +159,8 @@ model Expert {
   awards             ExpertAward[]
   invoices           Invoice[]
   accountBook        AccountBook?
+  leads              Lead[]
+  apiKeys            ExpertApiKey[]
 
   @@unique([countryCode, profileLink])
   @@index([countryCode])
@@ -938,4 +940,59 @@ model AccountEntry {
 enum EntryType {
   DEBIT
   CREDIT
+}
+
+// ===== CRM: Leads =====
+
+enum LeadSource {
+  ENM_DIRECT    // buyer contacted via ENM profile
+  PC_WEBSITE    // sourced from a Passive Coder Pro website
+  MANUAL        // expert added manually
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  BOOKED
+  LOST
+}
+
+model Lead {
+  id          Int        @id @default(autoincrement())
+  expertId    Int
+  expert      Expert     @relation(fields: [expertId], references: [id], onDelete: Cascade)
+  source      LeadSource @default(ENM_DIRECT)
+  sourceUrl   String?    // PC site URL if source=PC_WEBSITE
+  name        String
+  email       String?
+  phone       String?
+  message     String?
+  status      LeadStatus @default(NEW)
+  notes       String?
+  bookingId   Int?       // linked booking if converted
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([expertId])
+  @@index([expertId, status])
+  @@index([createdAt])
+}
+
+// ===== Expert API Keys (for PC site integration) =====
+
+model ExpertApiKey {
+  id          Int      @id @default(autoincrement())
+  expertId    Int
+  expert      Expert   @relation(fields: [expertId], references: [id], onDelete: Cascade)
+  keyHash     String   @unique  // SHA-256 of raw key
+  keyPrefix   String            // first 8 chars shown to user
+  label       String?
+  scopes      String   @default("leads:write,bookings:write")
+  active      Boolean  @default(true)
+  lastUsedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([expertId])
+  @@index([keyHash])
 }

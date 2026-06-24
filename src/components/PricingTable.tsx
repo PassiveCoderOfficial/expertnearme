@@ -185,7 +185,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
           </p>
           <div className="inline-flex items-center gap-2 bg-green-500/10 border border-green-500/30 rounded-full px-4 py-2 text-green-700 dark:text-green-300 text-sm font-medium">
             <Globe className="h-4 w-4 shrink-0" />
-            Also get a website via <strong className="mx-1">1 year of Passive Coder Pro free</strong> — a $480 value
+            Also get a website via <strong className="mx-1">2 years of Passive Coder Pro free</strong> — a $960 value
           </div>
         </motion.div>
 
