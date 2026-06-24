@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Check, X, Crown, Clock, Users, Zap, Star,
-  ArrowRight, Bell, Lock, Shield, Trophy, Loader2,
+  ArrowRight, Bell, Lock, Shield, Trophy, Loader2, Globe,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -180,9 +180,13 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
             Get in <span className="text-orange-500 dark:text-orange-400">Early.</span>
             <br />Get in <span className="text-orange-500 dark:text-orange-400">Forever.</span>
           </h1>
-          <p className="text-lg text-slate-500 dark:text-slate-300 max-w-2xl mx-auto">
+          <p className="text-lg text-slate-500 dark:text-slate-300 max-w-2xl mx-auto mb-4">
             Secure your expert profile before ExpertNear.Me launches globally. Founding Experts get lifetime access, an exclusive badge, and a permanent place in our history.
           </p>
+          <div className="inline-flex items-center gap-2 bg-green-500/10 border border-green-500/30 rounded-full px-4 py-2 text-green-700 dark:text-green-300 text-sm font-medium">
+            <Globe className="h-4 w-4 shrink-0" />
+            Also get a website via <strong className="mx-1">1 year of Passive Coder Pro free</strong> — a $480 value
+          </div>
         </motion.div>
 
         {/* Countdown + Spots */}
