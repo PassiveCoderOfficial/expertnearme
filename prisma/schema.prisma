@@ -37,6 +37,9 @@ model User {
   referredBy        AgentReferral[]    @relation("ReferredBy")
   agentCommissions  AgentCommission[]  @relation("AgentCommissions")
   supportTickets    SupportTicket[]
+  // Passive Coder integration
+  pcTenantId        String?            @unique
+  pcTier            String?            @default("free") // "free" | "pro"
 }
 
 model UserProfile {
