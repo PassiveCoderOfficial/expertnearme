@@ -10,7 +10,7 @@ import {
   MdStar, MdMap, MdPayment, MdAdminPanelSettings, MdBarChart,
   MdFavorite, MdSearch, MdCampaign, MdSupportAgent, MdMessage, MdAccessTime,
   MdArticle, MdHandshake, MdBackup, MdSwapHoriz, MdReceiptLong, MdAccountBalanceWallet,
-  MdTrendingUp, MdContacts,
+  MdTrendingUp, MdContacts, MdBolt,
 } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
 import { LogoMark } from "@/components/Logo";
@@ -87,6 +87,7 @@ const EXPERT_NAV: NavItem[] = [
   { name: "My Profile",     href: "/dashboard/profile",             icon: <MdEdit /> },
   { name: "My Plan",        href: "/dashboard/my-subscription",     icon: <MdCurrencyExchange /> },
   { name: "CRM & Leads",    href: "/dashboard/leads",               icon: <MdContacts /> },
+  { name: "Follow-ups",     href: "/dashboard/follow-ups",          icon: <MdBolt /> },
   { name: "Promote",        href: "/dashboard/promote",             icon: <MdCampaign /> },
   { name: "Availability",   href: "/dashboard/availability",        icon: <MdAccessTime /> },
   { name: "Bookings",       href: "/dashboard/bookings",            icon: <MdCalendarToday /> },

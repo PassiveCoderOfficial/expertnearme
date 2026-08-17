@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { createHash } from 'crypto';
+import { enrollLead } from '@/lib/follow-up/engine';
 
 // PC Pro websites POST here with their expert API key to submit leads
 export async function POST(req: NextRequest) {
@@ -24,6 +25,12 @@ export async function POST(req: NextRequest) {
 
   const origin = req.headers.get('origin') || req.headers.get('referer') || sourceUrl || null;
 
+  // Link to an existing ENM account when the email matches, so follow-ups can
+  // go through in-app chat instead of email.
+  const buyerUser = email
+    ? await prisma.user.findUnique({ where: { email }, select: { id: true } })
+    : null;
+
   const [lead] = await prisma.$transaction([
     prisma.lead.create({
       data: {
@@ -35,6 +42,7 @@ export async function POST(req: NextRequest) {
         phone: phone || null,
         message: message || null,
         status: 'NEW',
+        buyerUserId: buyerUser?.id ?? null,
       },
     }),
     prisma.expertApiKey.update({
@@ -42,6 +50,11 @@ export async function POST(req: NextRequest) {
       data: { lastUsedAt: new Date() },
     }),
   ]);
+
+  // Never let follow-up wiring break lead capture.
+  enrollLead(lead.id, 'NEW_LEAD').catch((err) =>
+    console.error('follow-up enroll failed for lead', lead.id, err)
+  );
 
   return NextResponse.json({ ok: true, leadId: lead.id }, { status: 201 });
 }

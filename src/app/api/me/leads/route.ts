@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { enrollLead, stopEnrollments, creditRecovery } from '@/lib/follow-up/engine';
 
 async function getExpert(session: { userId: number }) {
   const user = await prisma.user.findUnique({ where: { id: session.userId }, select: { email: true } });
@@ -39,6 +40,10 @@ export async function POST(req: NextRequest) {
   const { name, email, phone, message, source, sourceUrl, notes } = body;
   if (!name) return NextResponse.json({ error: 'name required' }, { status: 400 });
 
+  const buyerUser = email
+    ? await prisma.user.findUnique({ where: { email }, select: { id: true } })
+    : null;
+
   const lead = await prisma.lead.create({
     data: {
       expertId: expert.id,
@@ -49,8 +54,14 @@ export async function POST(req: NextRequest) {
       source: source || 'MANUAL',
       sourceUrl: sourceUrl || null,
       notes: notes || null,
+      buyerUserId: buyerUser?.id ?? null,
     },
   });
+
+  enrollLead(lead.id, 'NEW_LEAD').catch((err) =>
+    console.error('follow-up enroll failed for lead', lead.id, err)
+  );
+
   return NextResponse.json({ lead }, { status: 201 });
 }
 
@@ -74,6 +85,19 @@ export async function PATCH(req: NextRequest) {
       ...(notes !== undefined ? { notes } : {}),
     },
   });
+
+  // Booked or lost ends the sequence; booking also credits the recovery.
+  if (status === 'BOOKED' || status === 'LOST') {
+    stopEnrollments(lead.id, status === 'BOOKED' ? 'BOOKED' : 'LOST').catch((err) =>
+      console.error('follow-up stop failed for lead', lead.id, err)
+    );
+    if (status === 'BOOKED') {
+      creditRecovery(lead.id).catch((err) =>
+        console.error('follow-up recovery credit failed for lead', lead.id, err)
+      );
+    }
+  }
+
   return NextResponse.json({ lead });
 }
 

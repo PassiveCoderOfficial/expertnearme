@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { markLeadReplied } from "@/lib/follow-up/engine";
 
 // GET /api/messages — list all conversations for current user
 export async function GET() {
@@ -65,6 +66,26 @@ export async function POST(req: NextRequest) {
       link:    `/dashboard/messages`,
     },
   });
+
+  // A buyer replying is a hard stop for their follow-up sequences, and is what
+  // credits the recovery. Never block the send on this.
+  prisma.user
+    .findUnique({ where: { id: otherId }, select: { email: true } })
+    .then((recipient) =>
+      recipient
+        ? prisma.lead.findFirst({
+            where: {
+              buyerUserId: uid,
+              repliedAt: null,
+              expert: { email: recipient.email },
+            },
+            orderBy: { createdAt: "desc" },
+            select: { id: true },
+          })
+        : null
+    )
+    .then((lead) => (lead ? markLeadReplied(lead.id) : null))
+    .catch((err) => console.error("follow-up reply hook failed:", err));
 
   return NextResponse.json({ conversation: conv, message }, { status: 201 });
 }

@@ -37,6 +37,7 @@ model User {
   referredBy        AgentReferral[]    @relation("ReferredBy")
   agentCommissions  AgentCommission[]  @relation("AgentCommissions")
   supportTickets    SupportTicket[]
+  buyerLeads        Lead[]             @relation("BuyerLeads")
   // Passive Coder integration
   pcTenantId        String?            @unique
   pcTier            String?            @default("free") // "free" | "pro"
@@ -161,6 +162,9 @@ model Expert {
   accountBook        AccountBook?
   leads              Lead[]
   apiKeys            ExpertApiKey[]
+  followUpSequences  FollowUpSequence[]
+  followUpEnrollments FollowUpEnrollment[]
+  followUpSettings   FollowUpSettings?
 
   @@unique([countryCode, profileLink])
   @@index([countryCode])
@@ -971,12 +975,24 @@ model Lead {
   status      LeadStatus @default(NEW)
   notes       String?
   bookingId   Int?       // linked booking if converted
+  value       Float?     // job value once known — powers recovered-revenue reporting
+  lastContactAt DateTime? // last outbound touch (manual or automated)
+  repliedAt   DateTime?  // buyer responded — hard stop for all sequences
+  // Set when the lead is a known ENM user — enables in-app chat delivery.
+  // Null for form-captured leads, which fall back to email.
+  buyerUserId Int?
+  buyerUser   User?      @relation("BuyerLeads", fields: [buyerUserId], references: [id])
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+
+  followUpEnrollments FollowUpEnrollment[]
 
   @@index([expertId])
   @@index([expertId, status])
   @@index([createdAt])
+  @@index([expertId, repliedAt])
+  @@index([lastContactAt])
+  @@index([buyerUserId])
 }
 
 // ===== Expert API Keys (for PC site integration) =====
@@ -995,4 +1011,159 @@ model ExpertApiKey {
 
   @@index([expertId])
   @@index([keyHash])
+}
+
+// ===== Follow-Up & Reactivation Engine =====
+// Recovers leads that would otherwise die in silence. Email-only in v1;
+// `channel` exists so SMS/WhatsApp can be added without a schema rewrite.
+
+enum FollowUpTrigger {
+  NEW_LEAD      // lead created, no reply yet
+  DORMANT_LEAD  // lead went quiet mid-conversation
+  REACTIVATION  // past customer, no activity in N days
+  POST_BOOKING  // after a completed booking (review ask)
+}
+
+// IN_APP is preferred: replies land in the expert's existing inbox and
+// reply-detection is exact. EMAIL is the fallback for form-captured leads
+// that have no ENM account to deliver to.
+enum FollowUpChannel {
+  IN_APP
+  EMAIL
+  AUTO      // resolver picks IN_APP when the lead has a user, else EMAIL
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED   // ran every step, no reply
+  STOPPED     // hard stop: replied / booked / lost / unsubscribed
+  FAILED      // unrecoverable send failure
+}
+
+enum EnrollmentStopReason {
+  REPLIED
+  BOOKED
+  LOST
+  UNSUBSCRIBED
+  MANUAL
+  NO_CONTACT_METHOD
+  SEQUENCE_DISABLED
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+model FollowUpSequence {
+  id          Int             @id @default(autoincrement())
+  expertId    Int?            // null = system default template, available to all
+  expert      Expert?         @relation(fields: [expertId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  trigger     FollowUpTrigger
+  active      Boolean         @default(true)
+  isSystem    Boolean         @default(false) // system templates are cloned, not edited
+  // REACTIVATION only: how many days of silence before enrolling
+  dormantAfterDays Int?
+  steps       FollowUpStep[]
+  enrollments FollowUpEnrollment[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([expertId, active])
+  @@index([trigger, active])
+}
+
+model FollowUpStep {
+  id          Int              @id @default(autoincrement())
+  sequenceId  Int
+  sequence    FollowUpSequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  stepOrder   Int              // 0-based position in the sequence
+  delayHours  Int              // hours after enrollment (not after previous step)
+  channel     FollowUpChannel  @default(AUTO)
+  subject     String?          // used by EMAIL; ignored for IN_APP
+  body        String           // supports {{name}} {{expertName}} {{businessName}} tokens
+  active      Boolean          @default(true)
+  messages    FollowUpMessage[]
+
+  @@unique([sequenceId, stepOrder])
+  @@index([sequenceId])
+}
+
+model FollowUpEnrollment {
+  id           Int                   @id @default(autoincrement())
+  leadId       Int
+  lead         Lead                  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  sequenceId   Int
+  sequence     FollowUpSequence      @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  expertId     Int
+  expert       Expert                @relation(fields: [expertId], references: [id], onDelete: Cascade)
+  status       EnrollmentStatus      @default(ACTIVE)
+  stopReason   EnrollmentStopReason?
+  currentStep  Int                   @default(0)
+  nextRunAt    DateTime?             // null when not ACTIVE
+  enrolledAt   DateTime              @default(now())
+  completedAt  DateTime?
+  // Attribution: set when the lead converts while/after this sequence ran
+  recoveredAt      DateTime?
+  recoveredValue   Float?
+  messages     FollowUpMessage[]
+
+  // one active enrollment per lead per sequence
+  @@unique([leadId, sequenceId])
+  @@index([status, nextRunAt])
+  @@index([expertId, status])
+  @@index([expertId, recoveredAt])
+}
+
+model FollowUpMessage {
+  id           Int                @id @default(autoincrement())
+  enrollmentId Int
+  enrollment   FollowUpEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  stepId       Int
+  step         FollowUpStep       @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  channel      FollowUpChannel    @default(AUTO) // resolved channel is written back on send
+  toAddress    String?            // email address, or null for IN_APP
+  chatMessageId Int?              // Message.id when delivered via in-app chat
+  subject      String?
+  body         String?
+  status       MessageStatus      @default(PENDING)
+  error        String?
+  sentAt       DateTime?
+  createdAt    DateTime           @default(now())
+
+  // dedupe guarantee: a step fires at most once per enrollment
+  @@unique([enrollmentId, stepId])
+  @@index([enrollmentId])
+  @@index([status])
+}
+
+model FollowUpSettings {
+  id                  Int      @id @default(autoincrement())
+  expertId            Int      @unique
+  expert              Expert   @relation(fields: [expertId], references: [id], onDelete: Cascade)
+  enabled             Boolean  @default(false) // opt-in: never send on a business's behalf without consent
+  preferredChannel    FollowUpChannel @default(AUTO)
+  emailFallback       Boolean  @default(true)  // email form-captured leads that have no ENM account
+  fromName            String?  // defaults to business/expert name
+  replyToEmail        String?  // where buyer replies land; defaults to expert email
+  quietHoursStart     Int?     @default(21) // local hour, no sends after
+  quietHoursEnd       Int?     @default(8)  // local hour, no sends before
+  timezone            String?  @default("UTC")
+  maxMessagesPerLead  Int      @default(4)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// Suppression list — honors unsubscribes across every sequence and expert.
+model FollowUpSuppression {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  reason    String   @default("unsubscribed")
+  createdAt DateTime @default(now())
+
+  @@index([email])
 }
