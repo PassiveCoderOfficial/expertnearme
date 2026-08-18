@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { onBookingCompleted } from "@/lib/follow-up/engine";
 
 export async function PATCH(
   req: NextRequest,
@@ -52,6 +53,13 @@ export async function PATCH(
         link:    "/dashboard/bookings",
       },
     });
+  }
+
+  // Completing a job ends any chase and starts the review request.
+  if (status === "DONE") {
+    onBookingCompleted(Number(id)).catch((err) =>
+      console.error("onBookingCompleted failed for booking", id, err)
+    );
   }
 
   return NextResponse.json({ booking: updated });

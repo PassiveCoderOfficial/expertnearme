@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/guard";
 import { prisma } from "@/lib/db";
+import { onBookingCompleted } from "@/lib/follow-up/engine";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
   const gate = await requireRole();
@@ -51,6 +52,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : undefined,
       },
     });
+
+    if (body.status === "DONE") {
+      onBookingCompleted(numId).catch((err) =>
+        console.error("onBookingCompleted failed for booking", numId, err)
+      );
+    }
 
     return NextResponse.json(updated);
   } catch (err: any) {

@@ -22,6 +22,7 @@ async function suppress(email: string) {
     select: { id: true },
   });
   if (leads.length) {
+    // Absolute stop — an unsubscribe cancels review requests too.
     await prisma.followUpEnrollment.updateMany({
       where: { leadId: { in: leads.map((l) => l.id) }, status: "ACTIVE" },
       data: {

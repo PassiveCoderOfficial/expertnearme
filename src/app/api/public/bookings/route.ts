@@ -78,31 +78,33 @@ export async function POST(req: NextRequest) {
   const endsAt = service?.duration ? new Date(scheduledDate.getTime() + service.duration * 60000) : null;
   const origin = req.headers.get('origin') || req.headers.get('referer') || null;
 
-  const [booking, lead] = await prisma.$transaction([
-    prisma.booking.create({
-      data: {
-        expertId, clientId,
-        serviceId: service?.id || null,
-        scheduledAt: scheduledDate,
-        endsAt,
-        notes: notes || null,
-        isUrgent: Boolean(isUrgent),
-        status: 'PENDING',
-      },
-    }),
-    prisma.lead.create({
-      data: {
-        expertId,
-        source: fromPcSite ? 'PC_WEBSITE' : 'ENM_DIRECT',
-        sourceUrl: origin,
-        name,
-        email: email || null,
-        phone: phone || null,
-        message: notes || null,
-        status: 'BOOKED',
-      },
-    }),
-  ]);
+  const booking = await prisma.booking.create({
+    data: {
+      expertId, clientId,
+      serviceId: service?.id || null,
+      scheduledAt: scheduledDate,
+      endsAt,
+      notes: notes || null,
+      isUrgent: Boolean(isUrgent),
+      status: 'PENDING',
+    },
+  });
+
+  // Link the lead to its booking so completion can find it later.
+  const lead = await prisma.lead.create({
+    data: {
+      expertId,
+      source: fromPcSite ? 'PC_WEBSITE' : 'ENM_DIRECT',
+      sourceUrl: origin,
+      name,
+      email: email || null,
+      phone: phone || null,
+      message: notes || null,
+      status: 'BOOKED',
+      bookingId: booking.id,
+      buyerUserId: clientId,
+    },
+  });
 
   if (apiKeyId) {
     await prisma.expertApiKey.update({ where: { id: apiKeyId }, data: { lastUsedAt: new Date() } });

@@ -70,9 +70,16 @@ export async function enrollLead(
     select: { id: true, expertId: true, repliedAt: true, status: true },
   });
   if (!lead) return 0;
-  // Never start a sequence for a lead that is already resolved.
-  if (lead.repliedAt) return 0;
-  if (["BOOKED", "LOST"].includes(lead.status)) return 0;
+
+  // Review requests and reactivation fire *because* the lead converted, so they
+  // are exempt from the resolved-lead guard that stops chase sequences.
+  const afterConversion = trigger === "POST_BOOKING" || trigger === "REACTIVATION";
+  if (!afterConversion) {
+    if (lead.repliedAt) return 0;
+    if (["BOOKED", "LOST"].includes(lead.status)) return 0;
+  } else if (lead.status === "LOST") {
+    return 0;
+  }
 
   const settings = await prisma.followUpSettings.findUnique({
     where: { expertId: lead.expertId },
@@ -115,13 +122,25 @@ export async function enrollLead(
   return created;
 }
 
-/** Hard-stop every active sequence for a lead. */
+/**
+ * Hard-stop active sequences for a lead. By default this spares post-conversion
+ * sequences (review ask, reactivation) — a buyer replying to a chase message
+ * should not cancel the review request that follows the finished job.
+ * Pass `includePostConversion` for unsubscribe and other absolute stops.
+ */
 export async function stopEnrollments(
   leadId: number,
-  reason: EnrollmentStopReason
+  reason: EnrollmentStopReason,
+  includePostConversion = false
 ): Promise<number> {
   const res = await prisma.followUpEnrollment.updateMany({
-    where: { leadId, status: "ACTIVE" },
+    where: {
+      leadId,
+      status: "ACTIVE",
+      ...(includePostConversion
+        ? {}
+        : { sequence: { trigger: { in: ["NEW_LEAD", "DORMANT_LEAD"] } } }),
+    },
     data: {
       status: "STOPPED",
       stopReason: reason,
@@ -151,7 +170,12 @@ export async function markLeadReplied(leadId: number): Promise<void> {
   });
 
   const active = await prisma.followUpEnrollment.findMany({
-    where: { leadId, status: "ACTIVE" },
+    where: {
+      leadId,
+      status: "ACTIVE",
+      // A reply ends the chase, not the review ask.
+      sequence: { trigger: { in: ["NEW_LEAD", "DORMANT_LEAD"] } },
+    },
     include: {
       messages: { where: { status: "SENT" }, orderBy: { sentAt: "desc" }, take: 1 },
     },
@@ -171,6 +195,62 @@ export async function markLeadReplied(leadId: number): Promise<void> {
       },
     });
   }
+}
+
+/**
+ * Called when a job is finished. Stops any chase sequence still running and
+ * enrols the customer into the review request — reviews drive local ranking,
+ * which is what generates the next month's enquiries.
+ */
+export async function onBookingCompleted(bookingId: number): Promise<void> {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: { id: true, expertId: true, clientId: true, completedAt: true },
+  });
+  if (!booking) return;
+
+  const now = new Date();
+  if (!booking.completedAt) {
+    await prisma.booking.update({
+      where: { id: bookingId },
+      data: { completedAt: now },
+    });
+  }
+
+  // Prefer the lead already linked to this booking; otherwise fall back to the
+  // most recent lead from the same buyer for this expert.
+  let lead = await prisma.lead.findFirst({
+    where: { bookingId },
+    select: { id: true },
+  });
+  if (!lead) {
+    lead = await prisma.lead.findFirst({
+      where: { expertId: booking.expertId, buyerUserId: booking.clientId },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    });
+    if (lead) {
+      await prisma.lead.update({ where: { id: lead.id }, data: { bookingId } });
+    }
+  }
+  if (!lead) return;
+
+  // A finished job ends the chase; the review ask is a separate sequence.
+  await prisma.followUpEnrollment.updateMany({
+    where: {
+      leadId: lead.id,
+      status: "ACTIVE",
+      sequence: { trigger: { in: ["NEW_LEAD", "DORMANT_LEAD"] } },
+    },
+    data: { status: "STOPPED", stopReason: "BOOKED", nextRunAt: null, completedAt: now },
+  });
+
+  await prisma.lead.update({
+    where: { id: lead.id },
+    data: { status: "BOOKED", repliedAt: null },
+  });
+
+  await enrollLead(lead.id, "POST_BOOKING");
 }
 
 /**
@@ -224,17 +304,24 @@ export async function runEnrollment(enrollmentId: number): Promise<
   const { lead, sequence, expert } = enrollment;
 
   // Re-check stop conditions — state may have changed since scheduling.
-  if (lead.repliedAt) {
-    await stopEnrollments(lead.id, "REPLIED");
-    return "stopped";
-  }
-  if (lead.status === "BOOKED") {
-    await stopEnrollments(lead.id, "BOOKED");
-    return "stopped";
-  }
+  // Post-conversion sequences (review ask, reactivation) are exempt: they exist
+  // precisely because the lead already converted.
+  const afterConversion =
+    sequence.trigger === "POST_BOOKING" || sequence.trigger === "REACTIVATION";
+
   if (lead.status === "LOST") {
     await stopEnrollments(lead.id, "LOST");
     return "stopped";
+  }
+  if (!afterConversion) {
+    if (lead.repliedAt) {
+      await stopEnrollments(lead.id, "REPLIED");
+      return "stopped";
+    }
+    if (lead.status === "BOOKED") {
+      await stopEnrollments(lead.id, "BOOKED");
+      return "stopped";
+    }
   }
 
   const settings = await prisma.followUpSettings.findUnique({
