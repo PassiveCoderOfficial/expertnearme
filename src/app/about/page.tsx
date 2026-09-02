@@ -150,7 +150,7 @@ export default function AboutPage() {
         <div className="max-w-4xl mx-auto px-6 py-16 text-center">
           <h2 className="text-3xl font-bold mb-4 text-slate-900 dark:text-white">Be part of what we're building.</h2>
           <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-xl mx-auto">
-            Founding Expert spots are open until August 15, 2026. Lock in lifetime access before launch and get your name in our Hall of Fame.
+            Founding Expert spots are limited to the first 500 experts. Lock in lifetime access and get your name in our Hall of Fame.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

@@ -213,10 +213,21 @@ export default function ExpertMap({ experts, countryCode, center, zoom, classNam
   const apiKey      = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
   const [selected, setSelected] = useState<MapExpert | null>(null);
   const [mapMounted, setMapMounted] = useState(mapsScriptStarted);
+  // Google signals a rejected key (expired, restricted, or billing disabled) by
+  // calling this global and painting its own error over the map. The script
+  // itself loads fine, so onerror never fires — this is the only hook we get.
+  const [mapAuthFailed, setMapAuthFailed] = useState(false);
   const { resolvedTheme, theme } = useTheme();
   const isDark = (resolvedTheme ?? theme ?? 'light') === 'dark';
   const withCoords = experts.filter(e => e.latitude && e.longitude);
   const containerStyle = height ? { height } : undefined;
+
+  useEffect(() => {
+    const w = window as Window & { gm_authFailure?: () => void };
+    const prev = w.gm_authFailure;
+    w.gm_authFailure = () => { setMapAuthFailed(true); prev?.(); };
+    return () => { w.gm_authFailure = prev; };
+  }, []);
 
   // Defer mounting the Google Maps Wrapper until after first paint
   // so it never blocks page render / hydration
@@ -254,6 +265,24 @@ export default function ExpertMap({ experts, countryCode, center, zoom, classNam
         <div className="text-center text-slate-400 dark:text-slate-500 text-sm py-12">
           <MapPin className="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-slate-700" />
           <p className="text-xs">No experts with location data yet.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Map unavailable: show the useful fact (how many experts are nearby) rather
+  // than Google's "This page can't load Google Maps correctly" error overlay.
+  if (mapAuthFailed) {
+    return (
+      <div className={`flex items-center justify-center bg-slate-100/60 dark:bg-slate-900/60 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 ${className}`} style={containerStyle}>
+        <div className="text-center text-slate-500 dark:text-slate-400 text-sm py-12 px-6">
+          <MapPin className="w-10 h-10 mx-auto mb-3 text-orange-400/70" />
+          <p className="font-semibold text-slate-700 dark:text-slate-200 mb-1">
+            {withCoords.length} {withCoords.length === 1 ? 'expert' : 'experts'} in this area
+          </p>
+          <p className="text-xs text-slate-400 dark:text-slate-500">
+            Map view is temporarily unavailable — browse the listings below.
+          </p>
         </div>
       </div>
     );

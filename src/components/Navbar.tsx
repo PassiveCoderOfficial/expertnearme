@@ -262,7 +262,9 @@ export default function Navbar() {
 
   useEffect(() => {
     if (_cachedLogo === undefined) {
-      fetch('/api/admin/settings')
+      // Public settings endpoint — the admin one 401s for signed-out visitors,
+      // which is every visitor on the marketing pages.
+      fetch('/api/admin/settings/site')
         .then((r) => r.json())
         .then((d) => { _cachedLogo = d.logo || null; setCustomLogo(_cachedLogo ?? null); })
         .catch(() => { _cachedLogo = null; });

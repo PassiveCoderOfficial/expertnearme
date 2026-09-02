@@ -17,11 +17,11 @@ export async function sendWaitlistConfirmation(email: string) {
         </div>
         <h1 style="font-size:24px;font-weight:700;margin:0 0 12px">You're on the list 🎉</h1>
         <p style="font-size:15px;color:#475569;line-height:1.6;margin:0 0 20px">
-          We'll notify you the moment Pro subscriptions go live on <strong>August 16, 2026</strong>.
+          We'll notify you the moment Pro subscriptions open.
         </p>
         <p style="font-size:15px;color:#475569;line-height:1.6;margin:0 0 28px">
           In the meantime — the <strong>Founding Expert</strong> lifetime deal is still open.
-          500 spots at a one-time price, before prices go up at launch.
+          500 spots at a one-time price.
         </p>
         <a href="https://expertnear.me/pricing" style="display:inline-block;background:#f97316;color:#fff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:12px;text-decoration:none">
           Claim Your Founding Spot →

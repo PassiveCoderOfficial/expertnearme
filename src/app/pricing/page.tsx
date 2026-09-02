@@ -68,7 +68,7 @@ const FAQS = [
   },
   {
     q: 'Which countries are supported at launch?',
-    a: 'Singapore, UAE, Bangladesh, and Saudi Arabia on launch day (August 16, 2026). More countries are added regularly via the admin dashboard.',
+    a: 'Singapore, UAE, Bangladesh, Malaysia, and Saudi Arabia are live today. More countries are added regularly.',
   },
   {
     q: 'What happens to the lifetime deal after August 15, 2026?',
@@ -93,9 +93,9 @@ const FAQS = [
 ];
 
 const STATS = [
-  { value: '5', label: 'Countries at launch' },
+  { value: '5', label: 'Countries live' },
   { value: '50+', label: 'Expert categories' },
-  { value: 'Aug 16', label: 'Launch date' },
+  { value: 'Free', label: 'To list your profile' },
   { value: '500', label: 'Founding spots only' },
 ];
 
@@ -110,7 +110,7 @@ export default function PricingPage() {
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }}>
           <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-full px-4 py-2 text-orange-600 dark:text-orange-300 text-sm font-medium mb-7">
             <Crown className="h-4 w-4" />
-            Pre-Launch · Founding Expert spots available
+            Now live · Founding Expert spots still available
           </div>
 
           <h1 className="text-5xl sm:text-6xl font-bold leading-tight mb-6 max-w-4xl mx-auto text-slate-900 dark:text-white">
@@ -121,7 +121,7 @@ export default function PricingPage() {
 
           <p className="text-lg text-slate-500 dark:text-slate-300 max-w-2xl mx-auto mb-10">
             ExpertNear.Me connects clients with trusted local experts across Asia and the Middle East.
-            Create your profile free — or secure lifetime access before we launch on August 16, 2026.
+            Create your profile free — or claim one of the remaining Founding Expert spots for lifetime access.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">

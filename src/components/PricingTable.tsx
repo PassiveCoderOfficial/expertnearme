@@ -174,7 +174,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-full px-4 py-2 text-orange-600 dark:text-orange-300 text-sm font-medium mb-6">
             <Clock className="h-4 w-4" />
-            Pre-Launch Offer · Expires August 15, 2026
+            Founding Expert Offer · Limited to the first 500 experts
           </div>
           <h1 className="text-5xl sm:text-6xl font-bold leading-tight mb-5 text-slate-900 dark:text-white">
             Get in <span className="text-orange-500 dark:text-orange-400">Early.</span>
@@ -448,7 +448,7 @@ export default function PricingTable({ asSection = false }: { asSection?: boolea
                 <>
                   <Bell className="h-8 w-8 text-orange-500 dark:text-orange-400 mb-4" />
                   <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Join the Pro Waitlist</h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">We&apos;ll notify you the moment Pro launches on August 16, 2026.</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">We&apos;ll notify you the moment Pro subscriptions open.</p>
                   <form onSubmit={handleWaitlist} className="space-y-4">
                     <input type="email" required value={waitlistEmail} onChange={e => setWaitlistEmail(e.target.value)} placeholder="your@email.com"
                       className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 focus:border-orange-500 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none text-sm" />
