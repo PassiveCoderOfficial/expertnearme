@@ -226,7 +226,17 @@ export default function ExpertMap({ experts, countryCode, center, zoom, classNam
     const w = window as Window & { gm_authFailure?: () => void };
     const prev = w.gm_authFailure;
     w.gm_authFailure = () => { setMapAuthFailed(true); prev?.(); };
-    return () => { w.gm_authFailure = prev; };
+
+    // gm_authFailure covers a rejected key, but a *billing* failure never calls
+    // it — Google only logs to the console and paints its dialog over the map.
+    // Watch for that dialog instead, so both failure modes hit the same
+    // fallback. Confirmed against the live BillingNotEnabledMapError.
+    const seen = () => !!document.querySelector('.dismissButton, .gm-err-container')
+      || /can't load Google Maps correctly/i.test(document.body.innerText);
+    const timers = [1500, 4000, 8000].map(ms =>
+      setTimeout(() => { if (seen()) setMapAuthFailed(true); }, ms));
+
+    return () => { w.gm_authFailure = prev; timers.forEach(clearTimeout); };
   }, []);
 
   // Defer mounting the Google Maps Wrapper until after first paint
