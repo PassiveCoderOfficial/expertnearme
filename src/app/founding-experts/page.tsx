@@ -94,7 +94,7 @@ export default async function FoundingExpertsPage({
               <CheckCircle className="h-5 w-5 shrink-0" />
               <div>
                 <p className="font-bold text-sm">Payment confirmed — you're a Founding Expert!</p>
-                <p className="text-xs text-slate-800">Now complete your profile so clients can find you on launch day.</p>
+                <p className="text-xs text-slate-800">Now complete your profile so clients can find you.</p>
               </div>
             </div>
             <Link
@@ -160,7 +160,7 @@ export default async function FoundingExpertsPage({
         {stillOpen && spotsLeft > 0 && (
           <div className="mt-8 inline-flex flex-col sm:flex-row items-center gap-3 bg-orange-500/10 border border-orange-500/30 rounded-2xl px-6 py-4">
             <p className="text-orange-300 text-sm">
-              <strong>{spotsLeft} spots</strong> still available until August 15, 2026
+              <strong>{spotsLeft} spots</strong> still available
             </p>
             <Link
               href="/for-experts#pricing"

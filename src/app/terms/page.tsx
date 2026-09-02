@@ -33,7 +33,7 @@ export default function TermsPage() {
               <li>Expert profiles are manually verified before going live. We reserve the right to reject or remove listings that are misleading, inappropriate, or violate these terms.</li>
               <li>Experts are responsible for the accuracy of their profile information, services, pricing, and availability.</li>
               <li>Experts must not list services they are not qualified or licensed to provide.</li>
-              <li>Founding Expert status is granted upon successful payment confirmation and profile approval. The Founding Expert deal is available until August 15, 2026 or until 500 spots are claimed.</li>
+              <li>Founding Expert status is granted upon successful payment confirmation and profile approval. The Founding Expert deal is available until all 500 spots are claimed.</li>
             </ul>
           </section>
 

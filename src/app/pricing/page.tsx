@@ -71,16 +71,16 @@ const FAQS = [
     a: 'Singapore, UAE, Bangladesh, Malaysia, and Saudi Arabia are live today. More countries are added regularly.',
   },
   {
-    q: 'What happens to the lifetime deal after August 15, 2026?',
-    a: 'The deal closes permanently on August 15 at midnight. Pro subscriptions open at $49/month or $299/year on launch day. No exceptions — no extensions.',
+    q: 'What happens when the lifetime deal ends?',
+    a: 'The deal closes permanently once all 500 Founding Expert spots are claimed. After that, Pro is available on a monthly or yearly subscription only. No exceptions — no extensions.',
   },
   {
     q: 'What is the Founding Experts page?',
-    a: 'A permanent, dedicated page on ExpertNear.Me honoring everyone who joined before the platform launched. Your name, profile link, and category — listed forever as one of the original 500 founders.',
+    a: 'A permanent, dedicated page on ExpertNear.Me honoring our earliest experts. Your name, profile link, and category — listed forever as one of the original 500 founders.',
   },
   {
-    q: 'Can I upgrade from Free to Pro after launch?',
-    a: 'Yes. When Pro launches on August 16, you can upgrade at any time directly from your dashboard.',
+    q: 'Can I upgrade from Free to Pro later?',
+    a: 'Yes. You can upgrade at any time directly from your dashboard.',
   },
   {
     q: 'Is there a refund on the lifetime deal?',
@@ -345,7 +345,7 @@ export default function PricingPage() {
             Ready to claim your founding spot?
           </h2>
           <p className="text-slate-500 dark:text-slate-300 mb-8 text-lg">
-            Secure your lifetime spot before August 15, 2026. After that — monthly plans only, no exceptions.
+            Secure one of the remaining lifetime spots. Once all 500 are claimed — monthly plans only, no exceptions.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
